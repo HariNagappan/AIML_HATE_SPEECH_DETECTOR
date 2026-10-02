@@ -4,22 +4,31 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 
 class PredictRequest(BaseModel):
-    """Request body for ``POST /api/v1/predict``."""
+    """Request body for ``POST /api/v1/predict``.
+
+    Both the project's historical names (``text`` / ``context``) and the
+    context-relationship names (``current_comment`` / ``previous_comment``)
+    are accepted for the same fields.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
 
     text: str = Field(
         ...,
         min_length=1,
         max_length=5000,
-        description="Current comment to analyse",
+        validation_alias=AliasChoices("text", "current_comment"),
+        description="Current comment to analyse (alias: current_comment)",
     )
     context: Optional[str] = Field(
         default=None,
         max_length=5000,
-        description="Previous comment / conversational context (optional)",
+        validation_alias=AliasChoices("context", "previous_comment"),
+        description="Previous comment / conversational context (alias: previous_comment)",
     )
 
     @field_validator("text")
@@ -72,6 +81,49 @@ class ReasonExplanation(BaseModel):
     grounded_in: ReasonExplanationGrounding
 
 
+class ReasoningLink(BaseModel):
+    """One heuristic reference link between the two comments."""
+
+    from_text: str
+    from_start: int
+    from_end: int
+    to_text: str
+    to_start: int
+    to_end: int
+    pronoun: str
+    relation: str
+
+
+class ReasoningEvidenceItem(BaseModel):
+    """One evidence item with its source comment and grounded rationale."""
+
+    text: str
+    source: str                     # current_comment | previous_comment
+    type: Optional[str] = None
+    reason: Optional[str] = None
+    start: Optional[int] = None
+    end: Optional[int] = None
+    score: Optional[float] = None
+
+
+class Reasoning(BaseModel):
+    """Context-relationship reasoning (deterministic, no generative model).
+
+    ``summary`` explains how the relationship between the previous comment
+    and the current comment contributed to the classification (or states
+    explicitly when no such relationship was identified). ``links`` carry
+    the pronoun -> antecedent connections with character offsets on both
+    sides; ``evidence`` lists grounded spans per source comment.
+    """
+
+    summary: str
+    method: str
+    context_used: bool = False
+    context_available: bool = False
+    links: List[ReasoningLink] = Field(default_factory=list)
+    evidence: List[ReasoningEvidenceItem] = Field(default_factory=list)
+
+
 class PredictResponse(BaseModel):
     """Structured explanation response for ``/api/v1/predict``.
 
@@ -87,5 +139,6 @@ class PredictResponse(BaseModel):
     reason_available: bool = False
     evidence: List[EvidenceItem] = Field(default_factory=list)
     reason_explanation: Optional[ReasonExplanation] = None
+    reasoning: Optional[Reasoning] = None
     context_used: bool = False
     evidence_available: bool = False

@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { to: "/", label: "Analyze", end: true },
   { to: "/history", label: "History", end: false },
   { to: "/about", label: "About", end: false },
+  { to: "/annotate", label: "Annotate", end: false },
 ];
 
 export default function Header() {

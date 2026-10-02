@@ -39,15 +39,21 @@ EXPECTED_KWARGS = {
 
 
 def _tiny_settings(**overrides) -> Settings:
+    # NOTE: build a plain Settings and apply overrides via model_copy —
+    # init kwargs for alias-carrying fields (e.g. checkpoint_path →
+    # MODEL_CHECKPOINT) are not resolved by pydantic-settings and would be
+    # silently ignored. auto_load_checkpoint=False keeps the tests hermetic
+    # (a test service must never pick up repo checkpoints).
     defaults = {
         "encoder_name": "bert-base-uncased",
         "init_backbone": "random",
         "device": "cpu",
         "evidence_ig_steps": 4,
         "evidence_top_k": 3,
+        "auto_load_checkpoint": False,
     }
     defaults.update(overrides)
-    return Settings(**defaults)
+    return Settings().model_copy(update=defaults)
 
 
 def test_untrained_bundle_reports_unavailable_heads():
@@ -182,3 +188,54 @@ def test_trained_checkpoint_predict(tmp_path, small_encoder, tokenizer):
     assert set(info["trained_heads"]) == {"hate", "target"}
     assert info["hidden_size"] == 64
     assert info["num_labels"]["hate"] == 3
+
+
+def test_trained_reasoning_links_current_to_previous_comment(
+    tmp_path, small_encoder, tokenizer
+):
+    """§17 Test 5: the reasoning block surfaces the pronoun -> context link."""
+    model = FullModel(
+        small_encoder,
+        ["hate", "offensive", "normal"],
+        ["race", "none"],
+        use_target=True,
+        use_reason=False,
+        use_evidence=False,
+        use_contrastive=False,
+        interaction_dim=32,
+    )
+    checkpoint_path = tmp_path / "best_context.pt"
+    torch.save(
+        {
+            "format_version": 1,
+            "model_state": model.state_dict(),
+            "optimizer_state": {},
+            "scheduler_state": {},
+            "epoch": 0,
+            "global_step": 0,
+            "config": {},
+            "label_maps": {
+                "hate": {"hate": 0, "offensive": 1, "normal": 2},
+                "target": {"race": 0, "none": 1},
+                "reason": {},
+            },
+            "metrics": {},
+            "model_kwargs": dict(EXPECTED_KWARGS),
+            "trained_heads": ["hate", "target"],
+        },
+        checkpoint_path,
+    )
+    service = InferenceService(_tiny_settings(checkpoint_path=str(checkpoint_path)))
+    result = service.predict("They should leave.", "Those immigrants were protesting.")
+
+    reasoning = result["reasoning"]
+    assert reasoning is not None
+    assert reasoning["context_used"] is True
+    assert reasoning["context_available"] is True
+    assert reasoning["links"]
+    link = reasoning["links"][0]
+    assert link["from_text"] == "They"
+    assert "immigrants" in link["to_text"]
+    assert isinstance(reasoning["summary"], str) and reasoning["summary"]
+    sources = {item["source"] for item in reasoning["evidence"]}
+    assert "previous_comment" in sources

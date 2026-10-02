@@ -3,6 +3,7 @@ import { Eraser, FlaskConical } from "lucide-react";
 import PageContainer from "../components/layout/PageContainer";
 import Badge from "../components/common/Badge";
 import AnalyzeButton from "../components/analysis/AnalyzeButton";
+import AttributionDetail from "../components/analysis/AttributionDetail";
 import CommentInput from "../components/analysis/CommentInput";
 import ContextInput from "../components/analysis/ContextInput";
 import ContextViewer from "../components/analysis/ContextViewer";
@@ -13,12 +14,14 @@ import ModelStatus from "../components/analysis/ModelStatus";
 import PredictionCard from "../components/analysis/PredictionCard";
 import ReasonCard from "../components/analysis/ReasonCard";
 import ReasonExplanationCard from "../components/analysis/ReasonExplanationCard";
+import ReasoningCard from "../components/analysis/ReasoningCard";
 import TargetCard from "../components/analysis/TargetCard";
 import ErrorState from "../components/common/ErrorState";
 import LoadingState from "../components/common/LoadingState";
 import { useAnalysisStore } from "../store/analysisStore";
 import { demoExamples } from "../utils/demoExamples";
 import { rankEvidence } from "../utils/evidence";
+import type { ReasoningLink } from "../types/analysis";
 
 export default function AnalyzePage() {
   const context = useAnalysisStore((state) => state.context);
@@ -32,12 +35,25 @@ export default function AnalyzePage() {
   const setCurrentComment = useAnalysisStore((state) => state.setCurrentComment);
 
   const [activeEvidence, setActiveEvidence] = useState<number | null>(null);
+  const [activeLink, setActiveLink] = useState<{
+    link: ReasoningLink;
+    index: number;
+  } | null>(null);
   const explanationRef = useRef<HTMLDivElement | null>(null);
+  const evidenceRef = useRef<HTMLDivElement | null>(null);
 
-  // New result ⇒ reset the hovered/selected evidence span.
+  // New result ⇒ reset the hovered/selected evidence span and active link.
   useEffect(() => {
     setActiveEvidence(null);
+    setActiveLink(null);
   }, [result]);
+
+  // Activating a context link scrolls the evidence section into view.
+  useEffect(() => {
+    if (activeLink) {
+      evidenceRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [activeLink]);
 
   const { rankByIndex, rankByText } = useMemo(() => {
     const indexMap = new Map<number, number>();
@@ -74,6 +90,41 @@ export default function AnalyzePage() {
     }
     const index = result.evidence.findIndex((item) => item.text === text);
     setActiveEvidence(index >= 0 ? index : null);
+  };
+
+  const reasoning = result?.reasoning ?? null;
+  const contextText = lastRequest?.context?.trim() ? lastRequest.context : null;
+
+  const contextEvidence = useMemo(() => {
+    if (!reasoning) {
+      return [];
+    }
+    return reasoning.evidence
+      .filter((item) => item.source === "previous_comment")
+      .map((item) => ({
+        text: item.text,
+        score: item.score ?? 0,
+        start: item.start ?? undefined,
+        end: item.end ?? undefined,
+      }));
+  }, [reasoning]);
+
+  const currentExtras = useMemo(() => {
+    if (!reasoning) {
+      return [];
+    }
+    return reasoning.links.map((link) => ({
+      text: link.from_text,
+      score: 0,
+      start: link.from_start,
+      end: link.from_end,
+    }));
+  }, [reasoning]);
+
+  const handleSelectLink = (link: ReasoningLink, index: number) => {
+    setActiveLink((previous) =>
+      previous?.index === index ? null : { link, index },
+    );
   };
 
   return (
@@ -170,9 +221,18 @@ export default function AnalyzePage() {
               <div className="lg:col-span-2">
                 <PredictionCard result={result} />
               </div>
-              <TargetCard result={result} />
-              <ReasonCard result={result} />
-              <div className="lg:col-span-2">
+              {/* <TargetCard result={result} />
+              <ReasonCard result={result} /> */}
+              {reasoning ? (
+                <div className="lg:col-span-2">
+                  <ReasoningCard
+                    reasoning={reasoning}
+                    onSelectLink={handleSelectLink}
+                    activeLinkIndex={activeLink?.index ?? null}
+                  />
+                </div>
+              ) : null}
+              <div className="lg:col-span-2" ref={evidenceRef}>
                 <EvidenceViewer
                   text={lastRequest?.text ?? ""}
                   evidence={result.evidence}
@@ -180,6 +240,14 @@ export default function AnalyzePage() {
                   activeIndex={activeEvidence}
                   onActivate={setActiveEvidence}
                   rankByIndex={rankByIndex}
+                  contextText={contextText}
+                  contextEvidence={contextEvidence}
+                  currentExtras={currentExtras}
+                  connection={
+                    activeLink
+                      ? `“${activeLink.link.from_text}” → “${activeLink.link.to_text}”`
+                      : null
+                  }
                 />
               </div>
               {result.evidence.length > 0 ? (
@@ -192,6 +260,12 @@ export default function AnalyzePage() {
                   />
                 </div>
               ) : null}
+              <div className="lg:col-span-2">
+                <AttributionDetail
+                  request={lastRequest}
+                  enabled={Boolean(result.prediction_available)}
+                />
+              </div>
               {result.reason_explanation ? (
                 <div className="lg:col-span-2" ref={explanationRef}>
                   <ReasonExplanationCard

@@ -25,6 +25,7 @@ from app.core.logging import get_logger
 from app.datasets.tokenizer import TokenizerWrapper, token_character_offsets
 from app.reasoning.attribution import compute_attributions
 from app.reasoning.evidence_extractor import evidence_to_dict, extract_evidence
+from app.reasoning.context_reasoner import build_context_reasoning, fallback_reasoning
 from app.reasoning.reason_explainer import explain_reason
 from app.reasoning.structured_explanation import build_explanation
 
@@ -403,6 +404,28 @@ class InferenceService:
                 context_used=context_used,
             )
 
+        # Context-relationship reasoning: built deterministically from the
+        # prediction, the attribution spans and a transparent reference
+        # analysis of the two comments. A reasoning failure must never fail
+        # the classification request (spec §16) - degrade explicitly instead.
+        try:
+            reasoning = build_context_reasoning(
+                label=hate_prediction.get("label") if hate_prediction else None,
+                evidence_spans=evidence_spans,
+                previous_comment=context,
+                current_comment=text,
+                context_used=context_used,
+                target_label=(
+                    target_prediction.get("label") if target_prediction else None
+                ),
+            )
+        except Exception as exc:  # noqa: BLE001 - never break classification
+            logger.warning("Context reasoning failed: %s", exc)
+            reasoning = fallback_reasoning(
+                context_used=context_used,
+                context_available=bool(context and context.strip()),
+            )
+
         return build_explanation(
             hate=hate_prediction,
             target=target_prediction,
@@ -411,6 +434,7 @@ class InferenceService:
             context_used=context_used,
             reason_explanation=reason_explanation,
             evidence_available="hate" in trained,
+            reasoning=reasoning,
         )
 
     def explain(

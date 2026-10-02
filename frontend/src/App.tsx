@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Header from "./components/layout/Header";
 import AboutPage from "./pages/AboutPage";
 import AnalyzePage from "./pages/AnalyzePage";
+import AnnotationPage from "./pages/AnnotationPage";
 import HistoryPage from "./pages/HistoryPage";
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<AnalyzePage />} />
           <Route path="/analyze" element={<AnalyzePage />} />
+          <Route path="/annotate" element={<AnnotationPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

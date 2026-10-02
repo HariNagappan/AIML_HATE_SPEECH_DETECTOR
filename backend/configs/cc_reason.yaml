@@ -21,7 +21,12 @@ dataset: counter_context
 datasets:
   counter_context:
     train_file: data/processed/counter_context_reason_train.jsonl
-    val_file: data/processed/counter_context_reason_val.jsonl
+    # Validation uses the standard split: annotation samples are drawn from the
+    # train split, so val carries no reason labels (validation reason metrics
+    # are simply absent — nothing is fabricated). Annotate val comments too and
+    # point this at a merged counter_context_reason_val.jsonl if you want
+    # reason metrics on the validation split.
+    val_file: data/processed/counter_context_val.jsonl
     test_file: data/processed/counter_context_test.jsonl
 
 model:

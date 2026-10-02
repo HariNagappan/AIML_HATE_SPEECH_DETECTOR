@@ -118,3 +118,46 @@ describe("EvidenceList", () => {
     expect(container).toBeEmptyDOMElement();
   });
 });
+
+describe("EvidenceViewer context block", () => {
+  it("renders the previous comment with context evidence highlighted and the connection line", () => {
+    const contextText = "I saw a group of immigrants protesting downtown.";
+    render(
+      <EvidenceViewer
+        text="They should leave."
+        evidence={[{ text: "should leave", score: 0.8, start: 5, end: 17 }]}
+        headAvailable={true}
+        activeIndex={null}
+        onActivate={() => {}}
+        rankByIndex={new Map([[0, 1]])}
+        contextText={contextText}
+        contextEvidence={[
+          { text: "group of immigrants", score: 0, start: 8, end: 27 },
+        ]}
+        connection={"“They” → “group of immigrants”"}
+      />,
+    );
+    expect(screen.getByText(/previous comment \(context\)/i)).toBeInTheDocument();
+    const mark = document.querySelector("mark");
+    expect(mark).not.toBeNull();
+    expect(mark?.textContent).toBe("group of immigrants");
+    expect(screen.getByText(/connection:/i)).toBeInTheDocument();
+  });
+
+  it("highlights the referring pronoun when passed as a current-extra span", () => {
+    render(
+      <EvidenceViewer
+        text="They should leave."
+        evidence={[{ text: "should leave", score: 0.8, start: 5, end: 17 }]}
+        headAvailable={true}
+        activeIndex={null}
+        onActivate={() => {}}
+        rankByIndex={new Map([[0, 1]])}
+        currentExtras={[{ text: "They", score: 0, start: 0, end: 4 }]}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: /evidence span "they"/i }),
+    ).toBeInTheDocument();
+  });
+});

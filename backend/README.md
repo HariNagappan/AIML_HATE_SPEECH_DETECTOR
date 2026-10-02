@@ -148,6 +148,51 @@ unavailable, no explanation is produced (`reason_explanation: null`).
 Templates are defined in code and can be overridden via an optional
 `configs/reason_templates.yaml` file.
 
+### Context-relationship reasoning (deterministic)
+
+`app/reasoning/context_reasoner.py` explains *why* a classification happened
+through the relationship between the previous comment and the current comment
+(e.g. `"They"` -> `"group of immigrants"`). It is a transparent layer around
+the classifier - **not** model attention and **not** an LLM:
+
+* **Reference analysis** - a small, auditable pronoun -> antecedent heuristic
+  links a referring word in the current comment to the phrase it points back
+  to in the previous comment, with character offsets on both sides. The
+  output is presented *as* a heuristic (`method` marks the analysis as
+  deterministic).
+* **Evidence sources** - every evidence item carries `source`
+  (`current_comment` / `previous_comment`) and a one-line grounded rationale;
+  current-comment spans come from attribution, context spans from the
+  reference analysis.
+* **Abstention** - when no reference relationship is identified the summary
+  says so; non-hateful results are described without inventing hateful
+  evidence; reasoning failures degrade to `"Reasoning unavailable."` without
+  failing the request.
+
+The `/api/v1/predict` request accepts both `{text, context}` and
+`{current_comment, previous_comment}`; the response adds a structured
+`reasoning` block alongside the existing fields:
+
+```json
+{
+  "reasoning": {
+    "summary": "The current comment uses \"They\" to refer to \"group of immigrants\" from the previous comment and expresses hostile or exclusionary language toward that target.",
+    "method": "deterministic evidence + context-reference analysis",
+    "context_used": true,
+    "context_available": true,
+    "links": [{"from_text": "They", "from_start": 0, "from_end": 4,
+               "to_text": "group of immigrants", "to_start": 8, "to_end": 27,
+               "pronoun": "they", "relation": "refers_to"}],
+    "evidence": [
+      {"text": "should all be kicked out", "source": "current_comment",
+       "type": "current_span", "reason": "Strongest attribution signal ...", "score": 0.9},
+      {"text": "group of immigrants", "source": "previous_comment",
+       "type": "context_target", "reason": "Identified by the reference analysis ..."}
+    ]
+  }
+}
+```
+
 ### Supervising the reason head (own annotations)
 
 The standard splits in this repository contain no reason labels, so the reason
@@ -185,7 +230,12 @@ uvicorn app.main:app
 Options: `--allow-unmatched` appends annotations that match nothing as new
 reason-only examples; `--strict` fails without writing when any row is invalid
 or conflicts with an existing label. A sample file lives at
-`data/reason_annotations.example.jsonl`.
+`data/reason_annotations.example.jsonl`, and the frontend ships an
+**annotation workspace** (the *Annotate* tab) that produces this exact format.
+Note: `cc_reason.yaml` keeps the standard validation split — validation reason
+metrics appear only if you annotate validation comments too (create
+`data/processed/counter_context_reason_val.jsonl` and point the config at it);
+the reason head is still fully supervised from the merged train file.
 
 ## Structured explanation (the API output)
 

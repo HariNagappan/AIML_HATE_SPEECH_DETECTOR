@@ -22,7 +22,8 @@ export default function ReasonCard({ result }: ReasonCardProps) {
               Not available for this model
             </p>
             <p className="mt-0.5 text-xs text-ink-mute">
-              Reason classification requires a reason-annotated model.
+              Reason classification needs a reason-annotated model — label data
+              in the Annotate tab to enable it.
             </p>
           </div>
         </div>

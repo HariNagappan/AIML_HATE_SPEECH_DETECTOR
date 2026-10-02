@@ -69,7 +69,7 @@
     <div class="meta-strip">
       <div><span class="label">Status</span><span class="status-badge">Complete</span></div>
       <div><span class="label">Backend tests</span><span class="value">126 passed · 2 skipped (integration verified) <span class="pass">✓</span></span></div>
-      <div><span class="label">Frontend</span><span class="value">18 tests · strict build <span class="pass">✓</span></span></div>
+      <div><span class="label">Frontend</span><span class="value">30 tests · strict build <span class="pass">✓</span></span></div>
       <div><span class="label">Models</span><span class="value">2 GPU-trained checkpoints</span></div>
       <div><span class="label">Walkthrough</span><span class="value">8 screenshots (E2E report)</span></div>
     </div>
@@ -117,10 +117,11 @@ npm run dev        # http://localhost:5173</pre>
         <thead><tr><th>Check</th><th>Result</th></tr></thead>
         <tbody>
           <tr><td>Backend test suite</td><td><span class="tag">PASS</span> 128 collected &middot; 126 passed &middot; 2 skipped by default (the integration pair; separately executed and passing with <span class="mono">RUN_INTEGRATION_TESTS=1</span> &mdash; real bert-base-uncased forward + full attribution pipeline, rc 0)</td></tr>
-          <tr><td>Frontend test suite</td><td><span class="tag">PASS</span> 4 files &middot; 18 tests (vitest + jsdom + Testing Library)</td></tr>
+          <tr><td>Frontend test suite</td><td><span class="tag">PASS</span> 7 files &middot; 30 tests (vitest + jsdom + Testing Library)</td></tr>
           <tr><td>Frontend build</td><td><span class="tag">PASS</span> strict tsc + vite &middot; 1672 modules &middot; JS 277.6 kB / CSS 21.5 kB</td></tr>
           <tr><td>End-to-end browser walkthrough</td><td><span class="tag">PASS</span> headless Edge against the live GPU checkpoint: analyze flow, evidence hover readouts, history persistence, about page &mdash; 8 screenshots; zero console errors after the favicon fix</td></tr>
           <tr><td>Live API smokes</td><td><span class="tag">PASS</span> predict/explain with character offsets + extended fields; serve-lean export checkpoint loaded and served end-to-end</td></tr>
+          <tr><td>Reason-annotation loop (browser)</td><td><span class="tag">PASS</span> annotation workspace &rarr; JSONL export &rarr; import merge matched 3/3 (3,325 rows preserved); token-level attribution view loads; zero console errors</td></tr>
           <tr><td>Repository hygiene</td><td><span class="tag">PASS</span> delivered trees byte-identical to verified copies &middot; ports released &middot; working tree clean @ <span class="mono">6726288</span> (branch <span class="mono">main</span>)</td></tr>
         </tbody>
       </table>
@@ -160,6 +161,7 @@ npm run dev        # http://localhost:5173</pre>
           <tr><td class="mono">scripts/import_reason_annotations.py</td><td>Custom reason annotations &rarr; training-ready data (standalone dataset or merge into existing splits; validation, normalization, conflict/unmatched reporting; 28 tests)</td></tr>
           <tr><td class="mono">scripts/export_serving_checkpoint.py</td><td>Serve-lean checkpoint export (drops optimizer/scheduler state; 1288 &rarr; 431 MB verified by serving the result; 6 tests)</td></tr>
           <tr><td class="mono">configs/cc_reason.yaml</td><td>Ready training config for the reason head once annotations exist</td></tr>
+          <tr><td class="mono">frontend &middot; /annotate</td><td>Annotation workspace — label comments with the eight reason categories; exports the exact JSONL above (ships with a 400-comment sample drawn from the Counter Context train split); keyboard-driven, browser-persisted</td></tr>
         </tbody>
       </table>
     </section>
@@ -198,7 +200,7 @@ npm run dev        # http://localhost:5173</pre>
 python scripts/train.py --config cc_reason
 # point MODEL_CHECKPOINT (or checkpoints/default.json) at checkpoints/cc_reason/best.pt</pre>
       <ul>
-        <li>Optional extras: a per-token <span class="mono">/api/v1/explain</span> visualization in the frontend; longer/higher-quality training runs; and pushing the local commit to GitHub when ready (<span class="mono">git push</span>).</li>
+        <li>The per-token <span class="mono">/api/v1/explain</span> visualization and the <strong>annotation workspace</strong> (frontend <em>Annotate</em> tab &rarr; export &rarr; import &rarr; train) are now shipped. Still open: improving model quality with longer training runs.</li>
       </ul>
     </section>
   </main>

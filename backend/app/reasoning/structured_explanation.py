@@ -22,6 +22,7 @@ def build_explanation(
     context_used: bool = False,
     reason_explanation: Optional[Dict[str, Any]] = None,
     evidence_available: bool = False,
+    reasoning: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Assemble the unified structured explanation object.
 
@@ -52,6 +53,7 @@ def build_explanation(
         "reason_available": reason is not None,
         "evidence": evidence_items,
         "reason_explanation": reason_explanation,
+        "reasoning": reasoning,
         "context_used": bool(context_used),
         "evidence_available": bool(evidence_available),
     }

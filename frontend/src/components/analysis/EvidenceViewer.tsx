@@ -16,6 +16,17 @@ interface EvidenceViewerProps {
   onActivate: (index: number | null) => void;
   /** 1-based display rank per evidence index (matches the evidence list). */
   rankByIndex: Map<number, number>;
+  /** Previous comment text, rendered as a second ("context") block. */
+  contextText?: string | null;
+  /** Evidence spans located in the previous comment (offsets into contextText). */
+  contextEvidence?: EvidenceItem[];
+  /**
+   * Display-only extra spans injected into the current-comment highlight
+   * (e.g. the referring pronoun found by the context analysis).
+   */
+  currentExtras?: EvidenceItem[];
+  /** Active connection line, e.g. `“They” → “group of immigrants”`. */
+  connection?: string | null;
 }
 
 export default function EvidenceViewer({
@@ -25,8 +36,24 @@ export default function EvidenceViewer({
   activeIndex,
   onActivate,
   rankByIndex,
+  contextText = null,
+  contextEvidence = [],
+  currentExtras = [],
+  connection = null,
 }: EvidenceViewerProps) {
-  const highlight = useMemo(() => buildHighlight(text, evidence), [text, evidence]);
+  const displayEvidence = useMemo(
+    () => [...evidence, ...currentExtras],
+    [evidence, currentExtras],
+  );
+  const highlight = useMemo(
+    () => buildHighlight(text, displayEvidence),
+    [text, displayEvidence],
+  );
+  const hasContext = Boolean(contextText && contextText.trim());
+  const contextHighlight = useMemo(
+    () => buildHighlight(contextText ?? "", contextEvidence),
+    [contextText, contextEvidence],
+  );
 
   if (!headAvailable) {
     return (
@@ -41,7 +68,7 @@ export default function EvidenceViewer({
     );
   }
 
-  if (evidence.length === 0) {
+  if (evidence.length === 0 && currentExtras.length === 0 && contextEvidence.length === 0) {
     return (
       <Card title="Evidence">
         <p className="text-sm text-ink-soft">
@@ -52,9 +79,10 @@ export default function EvidenceViewer({
   }
 
   const activeItem =
-    activeIndex !== null && activeIndex >= 0 && activeIndex < evidence.length
-      ? evidence[activeIndex]
+    activeIndex !== null && activeIndex < displayEvidence.length
+      ? displayEvidence[activeIndex]
       : null;
+  const activeIsOriginal = activeIndex !== null && activeIndex < evidence.length;
 
   return (
     <Card
@@ -68,7 +96,13 @@ export default function EvidenceViewer({
         are not generated natural-language explanations.
       </p>
 
-      <div className="mt-4 rounded-lg border border-edge bg-raised/50 p-4 sm:p-5">
+      {hasContext ? <p className="kicker mt-4">Current comment</p> : null}
+      <div
+        className={[
+          "rounded-lg border border-edge bg-raised/50 p-4 sm:p-5",
+          hasContext ? "mt-2" : "mt-4",
+        ].join(" ")}
+      >
         <p className="max-w-[75ch] break-words text-[15px] leading-8 text-ink">
           {highlight.segments.map((segment, segmentIndex) =>
             segment.evidenceIndex === null ? (
@@ -85,7 +119,7 @@ export default function EvidenceViewer({
                     : "",
                 ].join(" ")}
                 aria-label={`Evidence span "${segment.text}", attribution ${formatScore(
-                  evidence[segment.evidenceIndex]?.score ?? 0,
+                  displayEvidence[segment.evidenceIndex]?.score ?? 0,
                 )}`}
                 onClick={() =>
                   onActivate(
@@ -114,11 +148,42 @@ export default function EvidenceViewer({
         </p>
       </div>
 
+      {hasContext ? (
+        <div className="mt-3 rounded-lg border border-dashed border-edge-strong bg-raised/30 p-4 sm:p-5">
+          <p className="kicker mb-2">Previous comment (context)</p>
+          <p className="max-w-[75ch] break-words text-[15px] leading-8 text-ink-soft">
+            {contextHighlight.segments.map((segment, segmentIndex) =>
+              segment.evidenceIndex === null ? (
+                <span key={segmentIndex}>{segment.text}</span>
+              ) : (
+                <mark
+                  key={segmentIndex}
+                  className="rounded-[4px] border-b-2 border-accent/60 bg-accent/10 px-0.5 text-ink"
+                >
+                  {segment.text}
+                </mark>
+              ),
+            )}
+          </p>
+        </div>
+      ) : null}
+
+      {connection ? (
+        <p className="mt-3 font-mono text-xs text-accent" role="status">
+          Connection: {connection}
+        </p>
+      ) : null}
+
       <div className="mt-3 min-h-[1.5rem]" aria-live="polite">
         {activeItem ? (
           <p className="font-mono text-xs text-ink-soft">
-            Evidence {activeIndex !== null ? rankByIndex.get(activeIndex) ?? "-" : "-"}{' '}
-            · “{activeItem.text}” · attribution {formatScore(activeItem.score)}
+            {activeIsOriginal
+              ? `Evidence ${rankByIndex.get(activeIndex as number) ?? "-"} · `
+              : "Referring span · "}
+            “{activeItem.text}”
+            {activeIsOriginal
+              ? ` · attribution ${formatScore(activeItem.score)}`
+              : ""}
           </p>
         ) : (
           <p className="text-xs text-ink-mute">

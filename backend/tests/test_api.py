@@ -116,3 +116,86 @@ def test_explain_rejects_invalid_target(client):
         "/api/v1/explain", json={"text": "Some comment.", "target": "bogus"}
     )
     assert response.status_code == 422
+
+
+def test_predict_untrained_reasoning_reports_no_classification(client):
+    response = client.post(
+        "/api/v1/predict",
+        json={
+            "previous_comment": "I saw a group of immigrants protesting downtown.",
+            "current_comment": "They should all be kicked out.",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    reasoning = payload["reasoning"]
+    assert reasoning is not None
+    assert reasoning["context_used"] is True
+    assert reasoning["context_available"] is True
+    assert "no reasoning could be derived" in reasoning["summary"].lower()
+    # the reference analysis still runs and is exposed transparently
+    assert reasoning["links"]
+    link = reasoning["links"][0]
+    assert link["from_text"] == "They"
+    assert link["to_text"] == "group of immigrants"
+
+
+def test_predict_accepts_modern_and_legacy_field_names(client):
+    modern = client.post(
+        "/api/v1/predict",
+        json={
+            "previous_comment": "Those immigrants were protesting.",
+            "current_comment": "They should leave.",
+        },
+    )
+    legacy = client.post(
+        "/api/v1/predict",
+        json={
+            "context": "Those immigrants were protesting.",
+            "text": "They should leave.",
+        },
+    )
+    assert modern.status_code == 200 and legacy.status_code == 200
+    assert modern.json()["context_used"] is True
+    assert legacy.json()["context_used"] is True
+
+
+def test_predict_without_context_reasoning_says_so(client):
+    payload = client.post(
+        "/api/v1/predict", json={"current_comment": "You are disgusting."}
+    ).json()
+    reasoning = payload["reasoning"]
+    assert payload["context_used"] is False
+    assert reasoning["context_available"] is False
+    assert "no previous comment was provided" in reasoning["summary"].lower()
+
+
+def test_predict_validation_with_modern_names(client):
+    assert (
+        client.post("/api/v1/predict", json={"current_comment": ""}).status_code
+        == 422
+    )
+    assert (
+        client.post(
+            "/api/v1/predict", json={"previous_comment": "ctx only"}
+        ).status_code
+        == 422
+    )
+
+
+def test_predict_reasoning_failure_degrades_gracefully(client, monkeypatch):
+    import app.services.inference as inference_module
+
+    def _boom(**kwargs):
+        raise RuntimeError("test reasoning crash")
+
+    monkeypatch.setattr(inference_module, "build_context_reasoning", _boom)
+    response = client.post(
+        "/api/v1/predict",
+        json={"current_comment": "Some comment.", "previous_comment": "Some context."},
+    )
+    assert response.status_code == 200  # classification path unharmed
+    reasoning = response.json()["reasoning"]
+    assert reasoning["summary"] == "Reasoning unavailable."
+    assert reasoning["evidence"] == []
+    assert reasoning["links"] == []
