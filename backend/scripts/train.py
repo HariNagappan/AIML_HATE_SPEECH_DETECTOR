@@ -4,7 +4,7 @@ Examples::
 
     python scripts/train.py --config baseline
     python scripts/train.py --config context --dataset counter_context
-    python scripts/train.py --config full --resume checkpoints/full/last.pt
+    python scripts/train.py --config cc_context --resume checkpoints/cc_context/best.pt
 """
 
 from __future__ import annotations

@@ -2,7 +2,7 @@
 
 Examples::
 
-    python scripts/evaluate.py --checkpoint checkpoints/full/best.pt
+    python scripts/evaluate.py --checkpoint checkpoints/cc_context/best.pt
     python scripts/evaluate.py --config context --dataset counter_context
 """
 

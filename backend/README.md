@@ -278,7 +278,7 @@ pip install -r requirements.txt
 python scripts/train.py --config baseline                      # Experiment 1
 python scripts/train.py --config context  --dataset counter_context
 python scripts/train.py --config full                          # multi-task
-python scripts/train.py --config full --resume checkpoints/full/last.pt
+python scripts/train.py --config cc_context --resume checkpoints/cc_context/best.pt  # resume a run
 ```
 
 The trainer supports: train/val/test splits, warmup + linear decay, gradient
@@ -290,7 +290,7 @@ and full reproducibility (`seed` everywhere).
 ## Evaluation
 
 ```bash
-python scripts/evaluate.py --checkpoint checkpoints/full/best.pt
+python scripts/evaluate.py --checkpoint checkpoints/cc_context/best.pt
 ```
 
 * **Hate**: accuracy, macro/weighted precision/recall/F1, per-class F1,
@@ -315,7 +315,7 @@ numbers only — it never claims an improvement without experimental evidence.
 uvicorn app.main:app --reload
 
 # serve a specific checkpoint explicitly
-set MODEL_CHECKPOINT=checkpoints/full/best.pt   # PowerShell: $env:MODEL_CHECKPOINT="..."
+set MODEL_CHECKPOINT=checkpoints/cc_context/best.pt   # PowerShell: $env:MODEL_CHECKPOINT="..."
 uvicorn app.main:app --reload
 ```
 
@@ -431,7 +431,7 @@ checkpoint paths), and the API endpoints (including validation errors).
 ```bash
 docker build -t hate-speech-backend .
 docker run -p 8000:8000 -v /path/to/checkpoints:/srv/backend/checkpoints \
-  -e MODEL_CHECKPOINT=/srv/backend/checkpoints/full/best.pt hate-speech-backend
+  -e MODEL_CHECKPOINT=/srv/backend/checkpoints/cc_context/best.pt hate-speech-backend
 ```
 
 ## Limitations
@@ -471,7 +471,8 @@ python scripts/train.py --config cc_context
 python scripts/train.py --config hx_full
 python scripts/import_reason_annotations.py --annotations data/reason_annotations.jsonl
 python scripts/train.py --config cc_reason   # needs the merged reason files
-python scripts/evaluate.py --checkpoint checkpoints/full/best.pt
+python scripts/evaluate.py --checkpoint checkpoints/cc_context/best.pt
+python scripts/export_serving_checkpoint.py --checkpoint checkpoints/cc_context/best.pt
 python scripts/explain.py --text "They should all be kicked out." \
   --context "Those immigrants are ruining everything."
 uvicorn app.main:app --reload

@@ -2,7 +2,7 @@
 
 Example::
 
-    python scripts/explain.py --checkpoint checkpoints/full/best.pt \\
+    python scripts/explain.py --checkpoint checkpoints/cc_context/best.pt \\
         --text "They should all be kicked out." \\
         --context "Those immigrants are ruining everything."
 """
@@ -22,7 +22,7 @@ from app.core.logging import setup_logging  # noqa: E402
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Structured explanation for one comment")
-    parser.add_argument("--checkpoint", default=None, help="checkpoint path (default: checkpoints/full/best.pt)")
+    parser.add_argument("--checkpoint", default=None, help="checkpoint path (default: auto-resolved from checkpoints/)")
     parser.add_argument("--text", required=True, help="current comment")
     parser.add_argument("--context", default=None, help="previous comment (optional)")
     parser.add_argument("--target", default="hate", choices=["hate", "target", "reason"])
@@ -32,11 +32,9 @@ def main() -> int:
     settings = get_settings()
     setup_logging(settings.log_level)
 
+    # None -> the inference service auto-resolves the checkpoint
+    # (checkpoints/default.json, then cc_context / hx_full best files).
     checkpoint = args.checkpoint
-    if checkpoint is None:
-        candidate = settings.checkpoints_dir / "full" / "best.pt"
-        if candidate.exists():
-            checkpoint = str(candidate)
 
     from app.services.inference import InferenceService
 
