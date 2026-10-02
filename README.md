@@ -53,6 +53,9 @@ npm run dev        # http://localhost:5173
   WHICH PARTS (evidence with numbered markers and attribution scores) →
   DID CONTEXT MATTER (context flag). Unavailable sections are hidden with an
   explanation — never faked.
+* **How reasoning works** — [`REASONING.md`](REASONING.md): the full pipeline
+  (prediction → attribution evidence → context-reference analysis →
+  explanation), with the honesty rules it follows.
 * **Honest by design** — evidence comes from Integrated Gradients over the
   model, explanations are deterministic template composition grounded in the
   predicted fields, and every section renders only from real model outputs
