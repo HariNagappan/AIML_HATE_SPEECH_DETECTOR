@@ -1,0 +1,14 @@
+# Experiments 4–6 — full model: context + contrastive + multi-task heads.
+# Individual components stay switchable; a loss is skipped automatically when a
+# batch has no ground-truth labels for that head (e.g. no reason annotations).
+# Merge target: configs/base.yaml.
+
+mode: full
+model:
+  use_context: true
+  use_contrastive: true
+  use_target: true
+  use_reason: true          # auto-skipped unless reason annotations are available
+  use_evidence: true
+training:
+  output_dir: checkpoints/full

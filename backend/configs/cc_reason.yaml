@@ -1,0 +1,38 @@
+# Training/serving config: context-aware model + reason head, trained on the
+# Counter Context corpus with YOUR OWN reason annotations merged in.
+#
+# Prerequisite - build the merged processed files first (see README,
+# "Supervising the reason head"):
+#
+#   python scripts/import_reason_annotations.py \
+#       --annotations data/reason_annotations.jsonl \
+#       --merge-into data/processed/counter_context_train.jsonl \
+#       --output data/processed/counter_context_reason_train.jsonl
+#   python scripts/import_reason_annotations.py \
+#       --annotations data/reason_annotations.jsonl \
+#       --merge-into data/processed/counter_context_val.jsonl \
+#       --output data/processed/counter_context_reason_val.jsonl
+#
+# Train:  python scripts/train.py --config cc_reason
+
+mode: context
+dataset: counter_context
+
+datasets:
+  counter_context:
+    train_file: data/processed/counter_context_reason_train.jsonl
+    val_file: data/processed/counter_context_reason_val.jsonl
+    test_file: data/processed/counter_context_test.jsonl
+
+model:
+  use_context: true
+  use_contrastive: true
+  use_target: false
+  use_reason: true          # <- the reason head trains only when labels exist
+  use_evidence: false
+
+training:
+  epochs: 4
+  batch_size: 12
+  output_dir: checkpoints/cc_reason
+  log_every_n_steps: 20

@@ -1,0 +1,58 @@
+# Base training configuration — shared defaults for all experiment configs.
+# Override values in a specific config (baseline.yaml / context.yaml / full.yaml),
+# or copy a config and edit it.
+
+seed: 42
+mode: full                  # baseline | context | full
+
+encoder:
+  freeze_mode: full         # full | frozen | partial
+  frozen_layers: 4          # (partial mode) bottom N transformer layers frozen
+  max_seq_length: 128
+
+model:
+  use_context: true         # context interaction module
+  use_contrastive: true     # contrastive projection + InfoNCE loss
+  use_target: true          # target head (needs target annotations)
+  use_reason: false         # reason head training (needs REAL reason annotations!)
+  use_evidence: true        # supervised token-level rationale head (needs rationales)
+
+training:
+  lr: 2.0e-5
+  batch_size: 16
+  eval_batch_size: 32
+  epochs: 5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  grad_accum_steps: 1
+  max_grad_norm: 1.0
+  amp: auto                 # auto | true | false  (mixed precision, CUDA only)
+  early_stopping_patience: 2
+  log_every_n_steps: 50
+  output_dir: checkpoints
+
+loss_weights:
+  hate: 1.0
+  target: 1.0
+  reason: 1.0
+  contrastive: 0.5
+  evidence: 1.0
+
+contrastive:
+  temperature: 0.07
+  projection_dim: 256
+  negative_strategy: shuffled_context   # how contrasting contexts are sampled
+
+datasets:
+  hatexplain:
+    processed_file: data/processed/hatexplain.jsonl
+  counter_context:
+    processed_file: data/processed/counter_context.jsonl
+    # NOTE: label ids come from the corpus JSONL as strings "0"/"1"/"2".
+    # The paper (Yu, Blanco & Hong, NAACL 2022) defines the three classes as
+    # hate speech / counter speech / neither. VERIFY the numeric order against
+    # the paper before productive training and adjust here if needed.
+    label_map:
+      "0": hate_speech
+      "1": counter_speech
+      "2": neither

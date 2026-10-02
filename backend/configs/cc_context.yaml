@@ -1,0 +1,20 @@
+# Serving config: context-aware model trained on the Counter Context corpus
+# (comment + preceding context, contrastive learning). Merge target: base.yaml.
+#
+# Train:  python scripts/train.py --config cc_context
+
+mode: context
+dataset: counter_context
+
+model:
+  use_context: true
+  use_contrastive: true
+  use_target: false
+  use_reason: false
+  use_evidence: false
+
+training:
+  epochs: 4
+  batch_size: 12          # smaller batch keeps the contrastive passes inside 8 GB VRAM
+  output_dir: checkpoints/cc_context
+  log_every_n_steps: 20

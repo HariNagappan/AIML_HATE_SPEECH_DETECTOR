@@ -1,0 +1,143 @@
+/**
+ * Wire types for the backend API (see `backend/app/api/schemas/`).
+ *
+ * IMPORTANT: the backend's label sets are configurable — different datasets
+ * train different label spaces (HateXplain uses hate/offensive/normal; the
+ * Counter Context experiments use their own set). Labels are therefore typed
+ * as `string`; never assume binary classification or a fixed enumeration.
+ */
+
+/** Known HateXplain hate labels (documentation only — the wire type is string). */
+export type KnownHateLabel = "hate" | "offensive" | "normal";
+
+/** One classification head's output. */
+export interface HeadPrediction {
+  label: string;
+  /** 0..1 */
+  confidence: number;
+  probabilities?: Record<string, number> | null;
+}
+
+/** One evidence span, grounded in the input text. */
+export interface EvidenceItem {
+  text: string;
+  /** Attribution score (higher = stronger contribution). */
+  score: number;
+  type?: string | null;
+  /**
+   * Character offsets into the original comment (end exclusive) — the primary
+   * mechanism for frontend highlighting. Present when the backend provides
+   * them; the highlight utility falls back to text matching when absent.
+   */
+  start?: number;
+  end?: number;
+  /** Inclusive token indices in the tokenized sequence (when provided). */
+  token_start?: number;
+  token_end?: number;
+}
+
+/** The structured fields a reason explanation is grounded in. */
+export interface ReasonExplanationGrounding {
+  reason: string;
+  target: string | null;
+  evidence: string[];
+}
+
+/** Deterministic explanation connecting the predicted reason to evidence. */
+export interface ReasonExplanation {
+  summary: string;
+  details: string;
+  grounded_in: ReasonExplanationGrounding;
+}
+
+/** The structured explanation returned by `POST /api/v1/predict`. */
+export interface AnalysisResult {
+  prediction: HeadPrediction | null;
+  prediction_available: boolean;
+  target: HeadPrediction | null;
+  target_available: boolean;
+  reason: HeadPrediction | null;
+  reason_available: boolean;
+  evidence: EvidenceItem[];
+  reason_explanation?: ReasonExplanation | null;
+  context_used: boolean;
+  evidence_available?: boolean;
+}
+
+/** Request body for `POST /api/v1/predict`. */
+export interface PredictRequest {
+  text: string;
+  context?: string | null;
+}
+
+/** `GET /health`. */
+export interface HealthStatus {
+  status: string;
+  model_loaded: boolean;
+}
+
+/** `GET /api/v1/model/info`. */
+export interface ModelInfo {
+  model_name: string | null;
+  device: string | null;
+  hidden_size: number | null;
+  num_labels: Record<string, number>;
+  trained: boolean;
+  trained_heads: string[];
+  version: string;
+  architecture: string | null;
+  checkpoint: string | null;
+  loaded: boolean;
+  error: string | null;
+}
+
+/** `POST /api/v1/explain`. */
+export interface ExplainRequest {
+  text: string;
+  context?: string | null;
+  target?: "hate" | "target" | "reason";
+  top_k?: number;
+}
+
+export interface ExplainToken {
+  index: number;
+  token: string;
+  score: number;
+}
+
+export interface ExplainResponse {
+  available: boolean;
+  message: string | null;
+  target: string;
+  method: string;
+  steps: number;
+  predicted_label: string | null;
+  predicted_confidence: number | null;
+  explained_label: string | null;
+  context_used: boolean;
+  tokens: ExplainToken[];
+  spans: EvidenceItem[];
+}
+
+/** One stored local analysis (browser history). */
+export interface HistoryEntry {
+  id: string;
+  timestamp: number;
+  request: PredictRequest;
+  result: AnalysisResult;
+}
+
+/** Normalised error information for the UI. */
+export type ApiErrorKind =
+  | "network"
+  | "timeout"
+  | "validation"
+  | "model_unavailable"
+  | "server"
+  | "unknown";
+
+export interface ApiErrorInfo {
+  kind: ApiErrorKind;
+  message: string;
+  status?: number;
+}

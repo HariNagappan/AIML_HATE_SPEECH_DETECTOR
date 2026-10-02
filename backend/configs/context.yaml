@@ -1,0 +1,12 @@
+# Experiments 2/3 — BERT + context interaction (hate head only, no contrastive).
+# Merge target: configs/base.yaml.
+
+mode: context
+model:
+  use_context: true
+  use_contrastive: false
+  use_target: false
+  use_reason: false
+  use_evidence: false
+training:
+  output_dir: checkpoints/context

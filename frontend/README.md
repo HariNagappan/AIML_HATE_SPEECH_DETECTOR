@@ -1,0 +1,80 @@
+# Context-Aware Hate Speech Analyzer — Frontend
+
+A dark-first React + TypeScript interface for the research backend in
+`../backend` (Context-Aware Hate Speech Detection with Structured
+Evidence-Based Reasoning).
+
+The UI is a **renderer of model results** — it never classifies text, never
+infers reasons, and never generates explanations. Every prediction, confidence
+and evidence span comes from the backend API.
+
+## Prerequisites
+
+- Node.js 18+ (developed against Node 22) and npm
+- The backend running locally (see `../backend/README.md`):
+  ```bash
+  cd ../backend
+  uvicorn app.main:app --reload
+  ```
+
+## Setup
+
+```bash
+npm install
+cp .env.example .env        # Windows: copy .env.example .env
+npm run dev                 # http://localhost:5173
+```
+
+`VITE_API_BASE_URL` (default `http://localhost:8000`) points at the backend.
+
+> Serving without a trained checkpoint is allowed: the backend reports
+> `available: false` for untrained heads and the UI renders explicit
+> "Not available" states instead of fabricating outputs.
+
+## Scripts
+
+| Script | Purpose |
+| --- | --- |
+| `npm run dev` | Vite dev server with HMR |
+| `npm run build` | Type-check (`tsc`) + production build |
+| `npm run preview` | Serve the production build locally |
+| `npm run typecheck` | Type-check only |
+| `npm test` | Run unit tests (vitest + jsdom) |
+
+## Features
+
+- **Analyze** (`/`, `/analyze`) — comment + optional context → structured
+  result: prediction, confidence, target, reason, evidence spans, context flag.
+- **Evidence** — inline highlighting of the original comment (offset-aware,
+  repeated-phrase safe, list fallback when mapping is unreliable) + ranked
+  evidence list with attribution scores.
+- **Reason explanation** — a "Why this classification?" section generated
+  deterministically from the predicted reason + extracted evidence (never by
+  an LLM), with numbered, clickable evidence references. Hidden automatically
+  when the served model has no trained reason head.
+- **History** (`/history`) — analyses stored in `localStorage`; click to
+  reopen a stored result.
+- **About** (`/about`) — architecture and limitations explained.
+
+## Structure
+
+```
+src/
+├── api/            # axios client + analysis API (the only HTTP layer)
+├── components/     # layout · analysis · history · common (reusable UI)
+├── pages/          # AnalyzePage · HistoryPage · AboutPage
+├── store/          # zustand store (form state, result, history)
+├── types/          # wire types matching the backend schemas
+└── utils/          # evidence highlighting · formatting · demo inputs
+```
+
+## Notes
+
+- Evidence highlighting prefers backend character offsets when available and
+  falls back to robust text matching (case/whitespace tolerant, handles
+  repeated phrases by consuming matches left-to-right).
+- The reason explanation is rendered from the backend's deterministic
+  `reason_explanation` field; the frontend never composes explanation text.
+- Attribution scores shown in the UI are model signals — not human-verified
+  causal explanations.
+- Demo buttons only fill the inputs; results always come from the backend.

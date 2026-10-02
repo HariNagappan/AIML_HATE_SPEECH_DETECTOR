@@ -1,0 +1,20 @@
+# Serving config: multi-task model trained on HateXplain
+# (hate/offensive/normal + target classification + token-level evidence).
+# Merge target: base.yaml.
+#
+# Train:  python scripts/train.py --config hx_full
+
+mode: full
+dataset: hatexplain
+
+model:
+  use_context: true       # no context in HateXplain — interaction stays at its zero fallback
+  use_contrastive: false
+  use_target: true
+  use_reason: false
+  use_evidence: true
+
+training:
+  epochs: 2
+  output_dir: checkpoints/hx_full
+  log_every_n_steps: 50

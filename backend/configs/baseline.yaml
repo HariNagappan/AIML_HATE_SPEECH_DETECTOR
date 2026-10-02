@@ -1,0 +1,12 @@
+# Experiment 1 — BERT baseline (current comment only, no context).
+# Merge target: configs/base.yaml. See README "Ablation experiments".
+
+mode: baseline
+model:
+  use_context: false
+  use_contrastive: false
+  use_target: false
+  use_reason: false
+  use_evidence: false
+training:
+  output_dir: checkpoints/baseline

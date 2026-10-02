@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Environment
+.env
+
+# Model checkpoints / experiment outputs
+checkpoints/*
+!checkpoints/.gitkeep
+experiments/*
+!experiments/.gitkeep
+
+# Datasets (never commit downloaded raw data)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db

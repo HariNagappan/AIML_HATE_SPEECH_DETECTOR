@@ -1,0 +1,6 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "integration: tests that require the real pretrained model (network download); enable with RUN_INTEGRATION_TESTS=1",
+]

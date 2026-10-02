@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-base font-sans text-[15px] leading-relaxed text-ink;
+  }
+
+  ::selection {
+    @apply bg-accent/30 text-ink;
+  }
+
+  :focus-visible {
+    @apply rounded-sm outline-none ring-2 ring-accent/50;
+  }
+
+  /* Subtle scrollbars for dark surfaces */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #2b343e transparent;
+  }
+}
+
+@layer components {
+  .input-base {
+    @apply w-full resize-y rounded-lg border border-edge bg-panel px-3.5 py-3 text-sm
+      text-ink placeholder:text-ink-mute/80 transition-colors focus:border-accent/60
+      focus:outline-none focus:ring-2 focus:ring-accent/25;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5
+      py-2.5 text-sm font-semibold text-[#071018] transition-colors hover:bg-[#74b4fa]
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-edge
+      bg-transparent px-4 py-2 text-sm font-medium text-ink-soft transition-colors
+      hover:border-edge-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .kicker {
+    @apply font-mono text-[11px] uppercase tracking-[0.14em] text-ink-mute;
+  }
+}
+
+/* Indeterminate animations only — we never fake progress percentages */
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 1s linear infinite;
+}
