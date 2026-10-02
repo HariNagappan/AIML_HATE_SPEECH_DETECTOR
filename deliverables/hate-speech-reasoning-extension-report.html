@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reasoning Layer Extension — Build &amp; Verification Report</title>
+<style>
+  :root{
+    --bg:#101214; --panel:#14171a; --panel-2:#0d0f11;
+    --ink:#edf0f2; --ink-soft:#b7bfc6; --ink-mute:#87919a;
+    --line:rgba(255,255,255,.09); --line-strong:rgba(255,255,255,.18);
+    --accent:#79b8ae; --ok:#86b17a;
+    --font-display:Bahnschrift,"DIN Alternate","Segoe UI Semibold","Segoe UI",sans-serif;
+    --font-body:"Segoe UI","Helvetica Neue",Arial,sans-serif;
+    --font-mono:"Cascadia Mono",Consolas,"SF Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .page{max-width:1120px;margin:0 auto;padding:56px 40px 96px;}
+  .kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute);}
+  header.doc{padding-bottom:28px;border-bottom:1px solid var(--line-strong);}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(34px,4.2vw,52px);line-height:1.06;letter-spacing:-.02em;margin:18px 0 10px;max-width:26ch;}
+  .subtitle{color:var(--ink-soft);font-size:18px;max-width:66ch;margin:0 0 26px;}
+  .meta-strip{display:flex;flex-wrap:wrap;border-top:1px solid var(--line);}
+  .meta-strip div{padding:14px 26px 14px 0;margin-right:26px;border-right:1px solid var(--line);}
+  .meta-strip div:last-child{border-right:0;}
+  .meta-strip .label{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute);display:block;margin-bottom:4px;}
+  .meta-strip .value{font-family:var(--font-mono);font-size:13px;color:var(--ink-soft);}
+  .pass{color:var(--ok);}
+  .grid{display:grid;grid-template-columns:206px minmax(0,1fr);gap:52px;margin-top:42px;}
+  nav.toc{position:sticky;top:32px;align-self:start;}
+  nav.toc .toc-title{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute);padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:12px;}
+  nav.toc a{display:block;font-size:13px;color:var(--ink-mute);text-decoration:none;padding:5px 0 5px 12px;border-left:2px solid transparent;font-family:var(--font-mono);}
+  nav.toc a:hover{color:var(--ink);border-left-color:var(--accent);}
+  nav.toc a .n{color:var(--accent);margin-right:8px;}
+  main{min-width:0;}
+  section{margin-bottom:60px;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:25px;letter-spacing:-.01em;margin:0 0 6px;}
+  h2 .sec{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;color:var(--accent);display:block;margin-bottom:8px;}
+  .rule{height:1px;background:var(--line-strong);border:0;margin:0 0 22px;}
+  p{max-width:70ch;color:var(--ink-soft);margin:0 0 14px;}
+  p strong{color:var(--ink);font-weight:550;}
+  ul{max-width:70ch;color:var(--ink-soft);padding-left:20px;margin:0 0 16px;}
+  li{margin:6px 0;}
+  code{font-family:var(--font-mono);font-size:.88em;background:var(--panel);border:1px solid var(--line);padding:1px 5px;border-radius:2px;color:var(--ink);}
+  pre{font-family:var(--font-mono);font-size:12.5px;line-height:1.55;background:var(--panel-2);border:1px solid var(--line);padding:16px 18px;overflow-x:auto;border-radius:2px;color:var(--ink-soft);margin:0 0 18px;}
+  table{width:100%;border-collapse:collapse;margin:0 0 18px;font-size:14px;}
+  caption{caption-side:top;text-align:left;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute);padding-bottom:8px;}
+  th{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mute);text-align:left;font-weight:400;padding:8px 14px 8px 0;border-bottom:1px solid var(--line-strong);}
+  td{padding:9px 14px 9px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-soft);}
+  td:first-child{color:var(--ink);}
+  .mono{font-family:var(--font-mono);font-size:12.5px;}
+  .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ok);white-space:nowrap;}
+  .tag.verify{color:var(--ink-mute);}
+  .status-badge{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);border:1px solid rgba(134,177,122,.4);padding:3px 9px;border-radius:2px;white-space:nowrap;}
+  .note{border-left:1px solid var(--line-strong);padding:2px 0 2px 18px;margin:0 0 18px;color:var(--ink-soft);font-size:14.5px;max-width:70ch;}
+  footer.colophon{margin-top:76px;padding-top:22px;border-top:1px solid var(--line-strong);font-family:var(--font-mono);font-size:11px;color:var(--ink-mute);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  @media (max-width:900px){.page{padding:34px 22px 70px;}.grid{grid-template-columns:1fr;gap:28px;}nav.toc{position:static;}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc">
+    <div class="kicker">Extension Build &amp; Verification Report — 2026-10-02</div>
+    <h1>Reason Explanation Layer</h1>
+    <p class="subtitle">Deterministic reason explanation + evidence character offsets, added across the FastAPI backend and the React frontend.</p>
+    <div class="meta-strip">
+      <div><span class="label">Scope</span><span class="value">backend + frontend</span></div>
+      <div><span class="label">Backend tests</span><span class="value">92 passed · 2 skipped <span class="pass">✓</span></span></div>
+      <div><span class="label">Frontend tests</span><span class="value">7 passed <span class="pass">✓</span></span></div>
+      <div><span class="label">Builds</span><span class="value">pytest · tsc strict · vite <span class="pass">✓</span></span></div>
+      <div><span class="label">Status</span><span class="status-badge">Complete</span></div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <nav class="toc">
+      <div class="toc-title">Contents</div>
+      <a href="#outcome"><span class="n">01</span>Outcome</a>
+      <a href="#backend"><span class="n">02</span>Backend changes</a>
+      <a href="#frontend"><span class="n">03</span>Frontend changes</a>
+      <a href="#verification"><span class="n">04</span>Verification evidence</a>
+      <a href="#caveats"><span class="n">05</span>Caveats &amp; activation</a>
+    </nav>
+
+    <main>
+      <section id="outcome">
+        <h2><span class="sec">01</span>Outcome</h2>
+        <hr class="rule">
+        <p><strong>The reasoning pipeline is complete: prediction → target → reason → evidence (with character offsets) → deterministic reason explanation → structured response → UI.</strong></p>
+        <ul>
+          <li><strong>Evidence offsets</strong> — every span now carries <span class="mono">start</span>/<span class="mono">end</span> character offsets into the original comment (end-exclusive) plus inclusive token ranges; live-verified to slice-match the input exactly.</li>
+          <li><strong>Reason explanation engine</strong> — <span class="mono">app/reasoning/reason_explainer.py</span>: fixed templates for all 8 reason categories → <span class="mono">{summary, details, grounded_in}</span>. Deterministic, grounded, configurable. No LLM anywhere.</li>
+          <li><strong>Extended contract</strong> — <span class="mono">/api/v1/predict</span> returns <span class="mono">reason_explanation</span> + <span class="mono">evidence_available</span>; <span class="mono">/explain</span> updated as well.</li>
+          <li><strong>Frontend</strong> — a "Why this classification?" section with numbered, clickable evidence cross-references; evidence numbering on highlights and in the list; About page updated; vitest test suite added.</li>
+        </ul>
+        <div class="note">Honesty constraints hold: no explanation without a trained reason head; no intent claims; no causal context claims; everything renders from structured fields only.</div>
+      </section>
+
+      <section id="backend">
+        <h2><span class="sec">02</span>Backend changes</h2>
+        <hr class="rule">
+        <table>
+          <caption>Modules touched</caption>
+          <thead><tr><th>Module</th><th>Change</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">datasets/tokenizer.py</td><td><span class="mono">token_character_offsets()</span> — per-token character ranges via fast-tokenizer offset mapping.</td></tr>
+            <tr><td class="mono">reasoning/evidence_extractor.py</td><td>Spans gain <span class="mono">start</span>/<span class="mono">end</span> (when offsets are provided); JSON output includes offsets + <span class="mono">token_start</span>/<span class="mono">token_end</span>.</td></tr>
+            <tr><td class="mono">reasoning/reason_explainer.py <em>(new)</em></td><td>Deterministic templates per reason category; <span class="mono">explain_reason(reason, target, evidence, context_used)</span> → summary / details / grounded_in; returns <span class="mono">None</span> without a reason. Overridable via <span class="mono">configs/reason_templates.yaml</span>.</td></tr>
+            <tr><td class="mono">reasoning/structured_explanation.py</td><td>Adds <span class="mono">reason_explanation</span> + <span class="mono">evidence_available</span> to the canonical object.</td></tr>
+            <tr><td class="mono">services/inference.py</td><td>Offset enrichment for predict &amp; explain; explanation built from predicted reason + target + extracted spans; availability flags.</td></tr>
+            <tr><td class="mono">api/schemas/*</td><td><span class="mono">EvidenceItem</span> offsets; <span class="mono">ReasonExplanation</span> / <span class="mono">ReasonExplanationGrounding</span> models; response fields on both endpoints.</td></tr>
+            <tr><td class="mono">tests/</td><td>New explainer suite (all categories, missing reason/target, empty evidence, no unsupported claims, template overrides); offset tests; service + API coverage. 94 collected total.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="frontend">
+        <h2><span class="sec">03</span>Frontend changes</h2>
+        <hr class="rule">
+        <table>
+          <caption>Modules touched</caption>
+          <thead><tr><th>Area</th><th>Change</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">types/analysis.ts</td><td>Offsets + token ranges on <span class="mono">EvidenceItem</span>; <span class="mono">ReasonExplanation</span> types; extended <span class="mono">AnalysisResult</span>.</td></tr>
+            <tr><td class="mono">api/analysis.ts</td><td><span class="mono">analyzeComment()</span> naming per spec; UI stays axios-free.</td></tr>
+            <tr><td class="mono">ReasonExplanationCard.tsx <em>(new)</em></td><td>"Why this classification?" — reason, summary, "Why?" details, "Based on" evidence chips (clickable), honesty note. Accent-tinted border distinguishes it from raw evidence.</td></tr>
+            <tr><td class="mono">EvidenceViewer / EvidenceList</td><td>Rank numbers on inline highlights and list rows; clicking a list item scrolls to the explanation and highlights the span; offsets are the primary highlight mechanism.</td></tr>
+            <tr><td class="mono">AnalyzePage / AboutPage / README</td><td>Rank map + explanation wiring; About explains the full reasoning pipeline; README updated.</td></tr>
+            <tr><td>tests (new)</td><td>vitest + jsdom + Testing Library: highlight offsets, repeated phrases, fallback behavior, ranking, explanation card rendering + interactions. 7 tests.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="verification">
+        <h2><span class="sec">04</span>Verification evidence</h2>
+        <hr class="rule">
+        <table>
+          <caption>Executed checks</caption>
+          <thead><tr><th>Check</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td>Backend suite <span class="mono">pytest -q</span></td><td><span class="tag">PASS</span> 94 collected · 92 passed · 2 skipped (opt-in integration) · rc 0</td></tr>
+            <tr><td>Frontend <span class="mono">npm test</span></td><td><span class="tag">PASS</span> 2 files · 7 tests · rc 0</td></tr>
+            <tr><td>Frontend <span class="mono">npm run build</span></td><td><span class="tag">PASS</span> strict tsc + vite · 1672 modules</td></tr>
+            <tr><td>Live server (zero-config auto-load, GPU)</td><td><span class="tag">PASS</span> predict returns extended keys; <span class="mono">evidence_available: true</span>; explanation field present (null while no reason model)</td></tr>
+            <tr><td>Evidence offsets (live)</td><td><span class="tag">PASS</span> "people" → 6–12 · "disgusting and should leave" → 17–44 — both slice-match the input</td></tr>
+            <tr><td>Delivered trees vs verified copies</td><td><span class="tag">PASS</span> byte-identical (backend + frontend, incl. lockfiles)</td></tr>
+          </tbody>
+        </table>
+        <p>Sample of the deterministic explanation text (real output of the new layer, shown for a reason-trained model scenario):</p>
+        <pre>{
+  "summary": "The highlighted language expresses exclusion by advocating that
+              members of the targeted group be removed or kept out.",
+  "details": "The phrase 'should be kicked out' advocates removing or keeping out
+              members of the targeted group (predicted target: nationality),
+              which corresponds to the predicted exclusion category. The analysis
+              included the provided conversational context.",
+  "grounded_in": {"reason": "exclusion", "target": "nationality",
+                  "evidence": ["should be kicked out"]}
+}</pre>
+      </section>
+
+      <section id="caveats">
+        <h2><span class="sec">05</span>Caveats &amp; activation</h2>
+        <hr class="rule">
+        <ul>
+          <li><strong>"Why this classification?" is availability-gated.</strong> It renders only when the served model has a trained reason head. The current checkpoints have no reason-annotated training data (no fabricated labels), so the section stays hidden for now.</li>
+          <li><strong>Activation path is wired, tooled and tested</strong> — train with <span class="mono">use_reason: true</span> and real reason annotations (the backend ships <span class="mono">scripts/import_reason_annotations.py</span> + <span class="mono">configs/cc_reason.yaml</span> for this); the explanation then appears automatically (the unit/integration test proves the full path end-to-end).</li>
+          <li>Offsets are end-exclusive; token ranges inclusive. Both documented in schemas and README.</li>
+          <li>The explanation describes the model's structured output — not the author's intent, and not proven causation ("context was included", never "context caused").</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <footer class="colophon">
+    <span><a href="hate-speech-final-delivery-report.html" style="color:#79b8ae;text-decoration:none;">&larr; Final delivery report</a></span>
+    <span>AutoClaw · reasoning layer extension report · 2026-10-02</span>
+    <span>AIML_Project · single-file deliverable · no external assets</span>
+  </footer>
+</div>
+</body>
+</html>

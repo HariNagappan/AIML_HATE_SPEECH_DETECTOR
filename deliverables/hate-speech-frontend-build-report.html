@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build &amp; Verification Report — Context-Aware Hate Speech Analyzer (Frontend)</title>
+<style>
+  :root{
+    --bg:#101214;
+    --panel:#14171a;
+    --panel-2:#0d0f11;
+    --ink:#edf0f2;
+    --ink-soft:#b7bfc6;
+    --ink-mute:#87919a;
+    --line:rgba(255,255,255,.09);
+    --line-strong:rgba(255,255,255,.18);
+    --accent:#79b8ae;
+    --ok:#86b17a;
+    --font-display:Bahnschrift,"DIN Alternate","Segoe UI Semibold","Segoe UI",sans-serif;
+    --font-body:"Segoe UI","Helvetica Neue",Arial,sans-serif;
+    --font-mono:"Cascadia Mono",Consolas,"SF Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .page{max-width:1160px;margin:0 auto;padding:56px 40px 96px;}
+  .kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute);}
+  header.doc{padding-bottom:28px;border-bottom:1px solid var(--line-strong);}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(36px,4.4vw,56px);line-height:1.06;letter-spacing:-.02em;margin:18px 0 10px;max-width:24ch;}
+  .subtitle{color:var(--ink-soft);font-size:19px;max-width:64ch;margin:0 0 26px;}
+  .meta-strip{display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--line);}
+  .meta-strip div{padding:14px 26px 14px 0;margin-right:26px;border-right:1px solid var(--line);}
+  .meta-strip div:last-child{border-right:0;}
+  .meta-strip .label{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute);display:block;margin-bottom:4px;}
+  .meta-strip .value{font-family:var(--font-mono);font-size:13px;color:var(--ink-soft);}
+  .pass{color:var(--ok);}
+  .grid{display:grid;grid-template-columns:212px minmax(0,1fr);gap:56px;margin-top:44px;}
+  nav.toc{position:sticky;top:32px;align-self:start;}
+  nav.toc .toc-title{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute);padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:12px;}
+  nav.toc a{display:block;font-size:13px;color:var(--ink-mute);text-decoration:none;padding:5px 0;border-left:2px solid transparent;padding-left:12px;font-family:var(--font-mono);}
+  nav.toc a:hover{color:var(--ink);border-left-color:var(--accent);}
+  nav.toc a .n{color:var(--accent);margin-right:8px;}
+  main{min-width:0;}
+  section{margin-bottom:64px;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:26px;letter-spacing:-.01em;margin:0 0 6px;}
+  h2 .sec{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;color:var(--accent);display:block;margin-bottom:8px;}
+  .rule{height:1px;background:var(--line-strong);border:0;margin:0 0 22px;}
+  h3{font-family:var(--font-display);font-weight:600;font-size:16px;margin:30px 0 10px;}
+  p{max-width:70ch;color:var(--ink-soft);margin:0 0 14px;}
+  p strong{color:var(--ink);font-weight:550;}
+  ul,ol{max-width:70ch;color:var(--ink-soft);padding-left:20px;margin:0 0 16px;}
+  li{margin:6px 0;}
+  code{font-family:var(--font-mono);font-size:.88em;background:var(--panel);border:1px solid var(--line);padding:1px 5px;border-radius:2px;color:var(--ink);}
+  pre{font-family:var(--font-mono);font-size:12.5px;line-height:1.55;background:var(--panel-2);border:1px solid var(--line);padding:18px 20px;overflow-x:auto;border-radius:2px;color:var(--ink-soft);margin:0 0 18px;}
+  pre .c{color:var(--ink-mute);}
+  table{width:100%;border-collapse:collapse;margin:0 0 18px;font-size:14px;}
+  caption{caption-side:top;text-align:left;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute);padding-bottom:8px;}
+  th{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mute);text-align:left;font-weight:400;padding:8px 14px 8px 0;border-bottom:1px solid var(--line-strong);}
+  td{padding:9px 14px 9px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-soft);}
+  td:first-child{color:var(--ink);}
+  .mono{font-family:var(--font-mono);font-size:12.5px;}
+  .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ok);white-space:nowrap;}
+  .tag.verify{color:var(--ink-mute);}
+  .status-badge{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);border:1px solid rgba(134,177,122,.4);padding:3px 9px;border-radius:2px;white-space:nowrap;}
+  .note{border-left:1px solid var(--line-strong);padding:2px 0 2px 18px;margin:0 0 18px;color:var(--ink-soft);font-size:14.5px;max-width:70ch;}
+  footer.colophon{margin-top:80px;padding-top:22px;border-top:1px solid var(--line-strong);font-family:var(--font-mono);font-size:11px;color:var(--ink-mute);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  @media (max-width:900px){.page{padding:34px 22px 70px;}.grid{grid-template-columns:1fr;gap:30px;}nav.toc{position:static;}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc">
+    <div class="kicker">Frontend Build &amp; Verification Report — 2026-10-02</div>
+    <h1>Context-Aware Hate Speech Analyzer</h1>
+    <p class="subtitle">React + TypeScript interface for the structured, evidence-based reasoning backend — built and verified in <span class="mono">AIML_Project/frontend</span>.</p>
+    <div class="meta-strip">
+      <div><span class="label">Deliverable</span><span class="value">AIML_Project\frontend</span></div>
+      <div><span class="label">Stack</span><span class="value">React 18 · TS strict · Vite 5 · Tailwind 3 · Zustand · Axios</span></div>
+      <div><span class="label">Source</span><span class="value">44 files · 2,274 src lines</span></div>
+      <div><span class="label">Build</span><span class="value">tsc + vite <span class="pass">PASS</span></span></div>
+      <div><span class="label">Status</span><span class="status-badge">Complete</span></div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <nav class="toc">
+      <div class="toc-title">Contents</div>
+      <a href="#outcome"><span class="n">01</span>Outcome</a>
+      <a href="#built"><span class="n">02</span>What was built</a>
+      <a href="#verification"><span class="n">03</span>Verification evidence</a>
+      <a href="#run"><span class="n">04</span>How to run</a>
+      <a href="#ux"><span class="n">05</span>UX contract highlights</a>
+      <a href="#caveats"><span class="n">06</span>Caveats &amp; next steps</a>
+    </nav>
+
+    <main>
+      <section id="outcome">
+        <h2><span class="sec">01</span>Outcome</h2>
+        <hr class="rule">
+        <p><strong>The complete frontend is implemented, type-checked, built and served successfully.</strong> It pairs with the existing FastAPI backend (<span class="mono">AIML_Project/backend</span>) and renders the structured reasoning pipeline: prediction, confidence, target, reason, evidence spans and context usage.</p>
+        <p>The UI is a <strong>renderer of model results</strong> — it never classifies text, never infers reasons, and never generates explanations. Availability flags (<span class="mono">reason_available</span>, etc.) are respected: unavailable heads show explicit "Not available" states instead of fabricated output.</p>
+        <ul>
+          <li><span class="tag">Done</span> &nbsp;Implementation — components, pages, API layer, store, utilities, configs.</li>
+          <li><span class="tag">Done</span> &nbsp;Type-check + production build pass (strict TypeScript).</li>
+          <li><span class="tag">Done</span> &nbsp;Preview server serves the built app (HTML + assets, HTTP 200).</li>
+          <li><span class="tag">Done</span> &nbsp;Cross-origin contract verified against the live backend (CORS preflight + POST).</li>
+        </ul>
+        <div class="note">Delivered via the native toolchain: the delegated executor (ZCode) failed at dispatch with a model-request error before any changes, and per its fallback contract the build was completed directly with full local verification.</div>
+      </section>
+
+      <section id="built">
+        <h2><span class="sec">02</span>What was built</h2>
+        <hr class="rule">
+        <table>
+          <caption>Module map</caption>
+          <thead><tr><th>Area</th><th>Modules</th><th>Responsibility</th></tr></thead>
+          <tbody>
+            <tr><td>api/</td><td class="mono">client.ts · analysis.ts</td><td>The only HTTP layer (axios). Typed error mapping: network / timeout / 422 / 503 / 500 — no raw stack traces.</td></tr>
+            <tr><td>store/</td><td class="mono">analysisStore.ts</td><td>Zustand: form state, result, error, isAnalyzing + localStorage-persisted history (capped at 50).</td></tr>
+            <tr><td>components/analysis/</td><td class="mono">ContextInput · CommentInput · AnalyzeButton · PredictionCard · TargetCard · ReasonCard · EvidenceViewer · EvidenceList · ContextViewer · ModelArchitecture · ModelStatus</td><td>Inputs with validation &amp; char counts; result cards; the inline evidence highlighter; architecture drawer; live model status from <span class="mono">/health</span> + <span class="mono">/model/info</span>.</td></tr>
+            <tr><td>components/common/</td><td class="mono">Card · Badge · ConfidenceBar · LoadingState · ErrorState</td><td>Reusable primitives; indeterminate loading (no fake progress); friendly error surfaces.</td></tr>
+            <tr><td>utils/</td><td class="mono">evidence.ts · formatting.ts · demoExamples.ts</td><td>Offset-preferred, repeated-phrase-safe span mapping for highlighting; label/score/time formatting; clearly-marked demo inputs.</td></tr>
+            <tr><td>pages/</td><td class="mono">AnalyzePage · HistoryPage · AboutPage</td><td>Routes <span class="mono">/</span> and <span class="mono">/analyze</span> (workspace), <span class="mono">/history</span>, <span class="mono">/about</span>.</td></tr>
+          </tbody>
+        </table>
+        <h3>Source tree</h3>
+        <pre>frontend/
+├── src/
+│   ├── api/         <span class="c"># client + analysis endpoints</span>
+│   ├── components/  <span class="c"># layout · analysis · history · common</span>
+│   ├── pages/       <span class="c"># AnalyzePage · HistoryPage · AboutPage</span>
+│   ├── store/       <span class="c"># zustand store (form + result + history)</span>
+│   ├── types/       <span class="c"># wire types matching backend schemas</span>
+│   └── utils/       <span class="c"># evidence highlighting · formatting · demo inputs</span>
+├── package.json · package-lock.json · tsconfig.json · vite.config.ts
+├── tailwind.config.js · postcss.config.js · index.html
+└── .env (port note) · .env.example · .gitignore · README.md</pre>
+      </section>
+
+      <section id="verification">
+        <h2><span class="sec">03</span>Verification evidence</h2>
+        <hr class="rule">
+        <p>All checks below were executed on this machine against the final delivered tree (a byte-identical copy outside OneDrive was used for the build).</p>
+        <table>
+          <caption>Verification matrix</caption>
+          <thead><tr><th>Check</th><th>Command / method</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td>Dependencies</td><td class="mono">npm install</td><td><span class="tag">PASS</span> rc 0 · 162 packages · lockfile included</td></tr>
+            <tr><td>Type-check + build</td><td class="mono">npm run build</td><td><span class="tag">PASS</span> 1,671 modules · JS 274 kB / CSS 21 kB</td></tr>
+            <tr><td>Preview serve</td><td class="mono">vite preview (port 8765)</td><td><span class="tag">PASS</span> 200 · <span class="mono">#root</span> present · JS asset 200</td></tr>
+            <tr><td>Delivered tree integrity</td><td>SHA-1 compare vs verified copy</td><td><span class="tag">PASS</span> identical (code + config files)</td></tr>
+            <tr><td>Cross-origin contract</td><td>preflight + POST against backend :8001 with Origin :5173</td><td><span class="tag">PASS</span> 200 · allow-origin · <span class="mono">context_used: true</span></td></tr>
+            <tr><td>In-browser walkthrough</td><td>—</td><td><span class="tag verify">Not run</span> open the app while the backend runs</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="run">
+        <h2><span class="sec">04</span>How to run</h2>
+        <hr class="rule">
+        <div class="note"><strong>Port note (this machine):</strong> port 8000 is already occupied by a Windows portproxy (→ WSL), and the 4105–4204 range is reserved by Windows — so run the backend on <strong>8001</strong> and keep the frontend's <span class="mono">.env</span> in sync (already set to <span class="mono">http://localhost:8001</span>).</div>
+<pre><span class="c"># 1) backend (from backend/)</span>
+uvicorn app.main:app --reload --port 8001
+
+<span class="c"># 2) frontend (from frontend/)</span>
+npm install
+npm run dev        <span class="c"># http://localhost:5173</span></pre>
+        <p>Serve a trained model by pointing the backend at a checkpoint (<span class="mono">$env:MODEL_CHECKPOINT="checkpoints\full\best.pt"</span>). Without one, the UI renders in its "untrained model" state — every head reports Not available, honestly.</p>
+      </section>
+
+      <section id="ux">
+        <h2><span class="sec">05</span>UX contract highlights</h2>
+        <hr class="rule">
+        <ul>
+          <li><strong>Inputs</strong> — Conversation Context (optional) and Current Comment (required, char count, Ctrl/⌘+Enter, clear validation); demo fill-buttons are labeled as inputs only.</li>
+          <li><strong>Results</strong> — Prediction card with semantic color + icon + label (never color alone); Target and Reason cards with explicit "Not available for this model" states; Reason notes it "requires a reason-annotated model".</li>
+          <li><strong>Evidence (core feature)</strong> — the original comment with inline highlights; hover/focus/tap reveals the attribution score; offsets used when provided; repeated phrases handled left-to-right; partial mapping degrades gracefully to the ranked list.</li>
+          <li><strong>Context</strong> — shows "Context used" only when the backend reports <span class="mono">context_used</span>; wording stays neutral ("Context was included in this analysis").</li>
+          <li><strong>Model status</strong> — live from <span class="mono">/health</span> + <span class="mono">/api/v1/model/info</span>: device, trained state, per-head availability, backend online/offline.</li>
+          <li><strong>Loading / errors</strong> — indeterminate animated state (no fake steps or percentages); errors mapped to the spec's messages (backend unavailable, timeout, validation, model unavailable).</li>
+          <li><strong>History</strong> — localStorage; click an item to reopen a stored analysis; explicit "Clear history" with confirmation.</li>
+        </ul>
+      </section>
+
+      <section id="caveats">
+        <h2><span class="sec">06</span>Caveats &amp; next steps</h2>
+        <hr class="rule">
+        <ul>
+          <li><strong>In-browser walkthrough not performed</strong> — type-check, build, preview and the CORS contract are verified; open the app once while the backend runs to eyeball the visuals.</li>
+          <li><strong>Target / Reason / Evidence states depend on the served model</strong> — with a trained checkpoint they populate; because the runtime renders availability flags directly, this was exercised at the contract level, not per-head at runtime.</li>
+          <li><strong>Evidence mapping is attribution-based display</strong> — offsets are not yet provided by the backend; the matcher handles this, and the types already accept <span class="mono">start</span>/<span class="mono">end</span> when it changes.</li>
+          <li><strong>Demo buttons never fabricate results</strong> — they only fill the inputs.</li>
+        </ul>
+        <h3>Suggested next steps</h3>
+        <ol>
+          <li>Run backend (<span class="mono">--port 8001</span>) + <span class="mono">npm run dev</span>; analyze one demo example end-to-end.</li>
+          <li>Train the model (<span class="mono">python scripts\train.py --config full</span>) and serve it to see populated reason/target/evidence panels.</li>
+          <li>Optional polish: add per-token attribution view using <span class="mono">/api/v1/explain</span> (already typed in the API layer).</li>
+        </ol>
+      </section>
+    </main>
+  </div>
+
+  <footer class="colophon">
+    <span><a href="hate-speech-final-delivery-report.html" style="color:#79b8ae;text-decoration:none;">&larr; Final delivery report</a></span>
+    <span>AutoClaw · frontend build &amp; verification report · 2026-10-02</span>
+    <span>AIML_Project\frontend · single-file deliverable · no external assets</span>
+  </footer>
+</div>
+</body>
+</html>

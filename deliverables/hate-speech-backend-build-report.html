@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build &amp; Verification Report — Context-Aware Hate Speech Detection backend</title>
+<style>
+  :root{
+    --bg:#101214;
+    --panel:#14171a;
+    --panel-2:#0d0f11;
+    --ink:#edf0f2;
+    --ink-soft:#b7bfc6;
+    --ink-mute:#87919a;
+    --line:rgba(255,255,255,.09);
+    --line-strong:rgba(255,255,255,.18);
+    --accent:#79b8ae;
+    --ok:#86b17a;
+    --font-display:Bahnschrift,"DIN Alternate","Segoe UI Semibold","Segoe UI",sans-serif;
+    --font-body:"Segoe UI","Helvetica Neue",Arial,sans-serif;
+    --font-mono:"Cascadia Mono",Consolas,"SF Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--font-body);font-size:16px;line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:1160px;margin:0 auto;padding:56px 40px 96px;}
+  /* ---------- header ---------- */
+  .kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute);}
+  header.doc{padding-bottom:28px;border-bottom:1px solid var(--line-strong);}
+  h1{
+    font-family:var(--font-display);font-weight:600;font-size:clamp(38px,4.6vw,58px);
+    line-height:1.06;letter-spacing:-.02em;margin:18px 0 10px;max-width:22ch;
+  }
+  .subtitle{color:var(--ink-soft);font-size:19px;max-width:62ch;margin:0 0 26px;}
+  .meta-strip{display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--line);}
+  .meta-strip div{padding:14px 26px 14px 0;margin-right:26px;border-right:1px solid var(--line);}
+  .meta-strip div:last-child{border-right:0;}
+  .meta-strip .label{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute);display:block;margin-bottom:4px;}
+  .meta-strip .value{font-family:var(--font-mono);font-size:13px;color:var(--ink-soft);}
+  .pass{color:var(--ok);}
+  /* ---------- layout ---------- */
+  .grid{display:grid;grid-template-columns:212px minmax(0,1fr);gap:56px;margin-top:44px;}
+  nav.toc{position:sticky;top:32px;align-self:start;}
+  nav.toc .toc-title{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute);padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:12px;}
+  nav.toc a{display:block;font-size:13px;color:var(--ink-mute);text-decoration:none;padding:5px 0;border-left:2px solid transparent;padding-left:12px;font-family:var(--font-mono);letter-spacing:.01em;}
+  nav.toc a:hover{color:var(--ink);border-left-color:var(--accent);}
+  nav.toc a .n{color:var(--accent);margin-right:8px;}
+  main{min-width:0;}
+  section{margin-bottom:64px;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:26px;letter-spacing:-.01em;margin:0 0 6px;}
+  h2 .sec{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;color:var(--accent);display:block;margin-bottom:8px;}
+  .rule{height:1px;background:var(--line-strong);border:0;margin:0 0 22px;}
+  h3{font-family:var(--font-display);font-weight:600;font-size:16px;letter-spacing:0;margin:30px 0 10px;}
+  p{max-width:70ch;color:var(--ink-soft);margin:0 0 14px;}
+  p strong{color:var(--ink);font-weight:550;}
+  ul,ol{max-width:70ch;color:var(--ink-soft);padding-left:20px;margin:0 0 16px;}
+  li{margin:6px 0;}
+  li::marker{color:var(--ink-mute);}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(121,184,174,.35);}
+  a:hover{border-bottom-color:var(--accent);}
+  code{font-family:var(--font-mono);font-size:.88em;background:var(--panel);border:1px solid var(--line);padding:1px 5px;border-radius:2px;color:var(--ink);}
+  pre{font-family:var(--font-mono);font-size:12.5px;line-height:1.55;background:var(--panel-2);border:1px solid var(--line);padding:18px 20px;overflow-x:auto;border-radius:2px;color:var(--ink-soft);margin:0 0 18px;}
+  pre .c{color:var(--ink-mute);}
+  pre .a{color:var(--accent);}
+  /* ---------- tables ---------- */
+  table{width:100%;border-collapse:collapse;margin:0 0 18px;font-size:14px;}
+  caption{caption-side:top;text-align:left;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute);padding-bottom:8px;}
+  th{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mute);text-align:left;font-weight:400;padding:8px 14px 8px 0;border-bottom:1px solid var(--line-strong);}
+  td{padding:9px 14px 9px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-soft);}
+  td:first-child{color:var(--ink);}
+  .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;}
+  th.num{text-align:right;}
+  .mono{font-family:var(--font-mono);font-size:12.5px;}
+  .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ok);white-space:nowrap;}
+  .tag.verify{color:var(--ink-mute);}
+  .status-badge{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);border:1px solid rgba(134,177,122,.4);padding:3px 9px;border-radius:2px;white-space:nowrap;}
+  /* ---------- misc ---------- */
+  .note{border-left:1px solid var(--line-strong);padding:2px 0 2px 18px;margin:0 0 18px;color:var(--ink-soft);font-size:14.5px;max-width:70ch;}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:34px;}
+  .cols table{margin-bottom:0;}
+  footer.colophon{margin-top:80px;padding-top:22px;border-top:1px solid var(--line-strong);font-family:var(--font-mono);font-size:11px;color:var(--ink-mute);letter-spacing:.02em;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  @media (max-width:900px){
+    .page{padding:34px 22px 70px;}
+    .grid{grid-template-columns:1fr;gap:30px;}
+    nav.toc{position:static;}
+    .cols{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ================= HEADER ================= -->
+  <header class="doc">
+    <div class="kicker">Build &amp; Verification Report — 2026-10-02</div>
+    <h1>Context-Aware Hate Speech Detection</h1>
+    <p class="subtitle">Complete Python ML research backend with structured, evidence-based reasoning — built and verified in <span class="mono">AIML_Project/backend</span>.</p>
+    <div class="meta-strip">
+      <div><span class="label">Deliverable</span><span class="value">AIML_Project\backend</span></div>
+      <div><span class="label">Stack</span><span class="value">Python · PyTorch · HF Transformers · FastAPI</span></div>
+      <div><span class="label">Source files</span><span class="value">68 .py · 5,530 lines</span></div>
+      <div><span class="label">Tests</span><span class="value">76 passed · 2 skipped <span class="pass">✓</span></span></div>
+      <div><span class="label">Status</span><span class="status-badge">Complete</span></div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- ================= TOC ================= -->
+    <nav class="toc">
+      <div class="toc-title">Contents</div>
+      <a href="#outcome"><span class="n">01</span>Outcome</a>
+      <a href="#built"><span class="n">02</span>What was built</a>
+      <a href="#architecture"><span class="n">03</span>Architecture</a>
+      <a href="#datasets"><span class="n">04</span>Datasets (verified)</a>
+      <a href="#verification"><span class="n">05</span>Verification evidence</a>
+      <a href="#run"><span class="n">06</span>How to run</a>
+      <a href="#caveats"><span class="n">07</span>Caveats &amp; next steps</a>
+    </nav>
+
+    <main>
+      <!-- ================= 01 ================= -->
+      <section id="outcome">
+        <h2><span class="sec">01</span>Outcome</h2>
+        <hr class="rule">
+        <p><strong>The full backend is implemented, tested and verified against the real datasets.</strong> All ten development phases from the project specification are covered: dataset adapters, baseline, context interaction, contrastive learning, multi-task heads, evidence extraction (Integrated Gradients), structured explanation, training pipeline with checkpointing, FastAPI serving, and the ablation experiment scaffold.</p>
+        <p>The test suite passes end-to-end on this machine (76 passed, 2 opt-in integration tests skipped by design), the API was smoke-tested as a live uvicorn server, and two miniature training runs on the <em>real</em> preprocessed corpora completed with checkpoints saved.</p>
+        <ul>
+          <li><span class="tag">Done</span> &nbsp;Implementation — 68 Python files, configs, docs, Docker, scripts.</li>
+          <li><span class="tag">Done</span> &nbsp;Automated tests — unit + API + trainer smoke, offline-safe.</li>
+          <li><span class="tag">Done</span> &nbsp;Real-data validation — both corpora downloaded, parsed, processed.</li>
+          <li><span class="tag verify">Verify</span> &nbsp;Counter Context numeric label order — flagged, configurable (see §07).</li>
+        </ul>
+        <div class="note">Delivered via the native toolchain: the delegated executor (ZCode) failed at dispatch with a model-request error before any changes were made, and per its fallback contract the implementation was completed directly with full local verification.</div>
+      </section>
+
+      <!-- ================= 02 ================= -->
+      <section id="built">
+        <h2><span class="sec">02</span>What was built</h2>
+        <hr class="rule">
+        <table>
+          <caption>Module map</caption>
+          <thead><tr><th>Area</th><th>Modules</th><th>Responsibility</th></tr></thead>
+          <tbody>
+            <tr><td>models/</td><td class="mono">bert_encoder, context_interaction, contrastive, hate_head, target_head, reason_head, evidence_head, baseline, full_model</td><td>Shared-weight BERT encoder; D/M interaction; InfoNCE; configurable multi-task heads.</td></tr>
+            <tr><td>reasoning/</td><td class="mono">attribution, evidence_extractor, structured_explanation</td><td>Integrated Gradients + gradient×input; span merging; deterministic explanation builder.</td></tr>
+            <tr><td>datasets/</td><td class="mono">hatexplain, counter_context, unified, label_mapping, preprocessing, tokenizer, collator</td><td>Two separate adapters → one internal format; label mapping; conservative preprocessing.</td></tr>
+            <tr><td>training/</td><td class="mono">trainer, losses, contrastive_loss, configs</td><td>AMP, accumulation, warmup, early stopping, save/resume checkpoints; per-component loss logging.</td></tr>
+            <tr><td>evaluation/</td><td class="mono">classification, rationale, ablation</td><td>Accuracy/F1/confusion; token-level evidence P/R/F1; 6-experiment ablation runner.</td></tr>
+            <tr><td>services/</td><td class="mono">inference</td><td>Singleton model lifecycle: loaded once at startup, reused per request; checkpoint rebuild.</td></tr>
+            <tr><td>api/</td><td class="mono">routes: health, prediction, explanation, model · schemas</td><td>Endpoints <span class="mono">/health</span>, <span class="mono">/api/v1/predict</span>, <span class="mono">/api/v1/explain</span>, <span class="mono">/api/v1/model/info</span>.</td></tr>
+            <tr><td>core/</td><td class="mono">config, logging</td><td>Env/.env + YAML configuration; nothing hardcoded in model classes.</td></tr>
+          </tbody>
+        </table>
+        <h3>Repository layout</h3>
+        <pre>backend/
+├── app/           <span class="c"># ml model · reasoning · datasets · training · evaluation · services · api</span>
+├── configs/       <span class="c"># base / baseline / context / full (YAML)</span>
+├── data/          <span class="c"># raw + processed (git-ignored) — <span class="a">already downloaded &amp; preprocessed</span></span>
+├── checkpoints/   <span class="c"># written by training (last.pt / best.pt)</span>
+├── experiments/   <span class="c"># ablation results (JSON + CSV)</span>
+├── scripts/       <span class="c"># download_data · preprocess · train · evaluate · explain · inspect_dataset</span>
+├── tests/         <span class="c"># 13 test modules + conftest (78 collected)</span>
+├── requirements.txt · .env.example · Dockerfile · pyproject.toml · README.md</pre>
+      </section>
+
+      <!-- ================= 03 ================= -->
+      <section id="architecture">
+        <h2><span class="sec">03</span>Architecture at a glance</h2>
+        <hr class="rule">
+        <pre>current comment ─┐
+                 ├─&gt; SHARED BERT ─&gt; E_c, E_p
+previous context ┘                  │
+      D = |E_c − E_p|                │
+      M = E_c ⊙ E_p                  ▼
+      E_int = [E_c;E_p;D;M] → 3072 → Linear→GELU→Dropout → final repr
+                                                            │
+              ┌──────────────┬──────────────┬───────────────┴─────────┐
+              ▼              ▼              ▼                         ▼
+          HATE HEAD      TARGET HEAD    REASON HEAD        EVIDENCE (token-level)
+        (hate/offensive  (9 canonical   (8 categories,     + post-hoc attribution:
+         /normal)         categories)    only when          Integrated Gradients →
+                                         annotated)         input-grounded spans</pre>
+        <div class="cols">
+          <div>
+            <h3>Design guarantees</h3>
+            <ul>
+              <li>One encoder, weight-shared for comment &amp; context.</li>
+              <li>No context → zero-vector fallback, <span class="mono">context_used=false</span>.</li>
+              <li>Contrastive learning is training-only; never used at inference.</li>
+              <li>Reason head never trained on fabricated labels.</li>
+              <li>Evidence = actual input spans, not generated text.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Structured output</h3>
+<pre>{
+  <span class="c">"prediction"</span>: {"label": "hate", "confidence": 0.94, ...},
+  <span class="c">"prediction_available"</span>: true,
+  <span class="c">"target"</span>: { "label": "nationality", <span class="c">/* ... */</span> },
+  <span class="c">"reason"</span>: null,
+  <span class="c">"reason_available"</span>: false,   <span class="c"># explicit, not fabricated</span>
+  <span class="c">"evidence"</span>: [{"text": "kicked out", "score": 0.82}],
+  <span class="c">"context_used"</span>: true
+}</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 04 ================= -->
+      <section id="datasets">
+        <h2><span class="sec">04</span>Datasets — verified against the real corpora</h2>
+        <hr class="rule">
+        <p>Both datasets were downloaded and fully parsed by the adapters. They are <strong>never merged at the raw level</strong> — each has its own adapter and its own label mapping into the shared internal format.</p>
+        <table>
+          <caption>Processed splits on disk</caption>
+          <thead><tr><th>Dataset</th><th>Adapters</th><th class="num">Train</th><th class="num">Val</th><th class="num">Test</th><th>Annotations</th></tr></thead>
+          <tbody>
+            <tr><td>HateXplain (primary)</td><td class="mono">hatexplain.py</td><td class="num">15,383</td><td class="num">1,922</td><td class="num">1,924</td><td>hate/offensive/normal · targets · token rationales (59% of records)</td></tr>
+            <tr><td>Counter Context (gold)</td><td class="mono">counter_context.py</td><td class="num">3,325</td><td class="num">713</td><td class="num">713</td><td>hate_speech/counter_speech/neither · parent-context pairs (100%)</td></tr>
+            <tr><td>Counter Context (silver)</td><td class="mono">counter_context.py</td><td class="num">1,675</td><td class="num">419</td><td class="num">—</td><td>same schema; kept separate from gold</td></tr>
+          </tbody>
+        </table>
+        <h3>Findings from live schema inspection</h3>
+        <ul>
+          <li><strong>HateXplain layout:</strong> the corpus file is an <span class="mono">id → record</span> mapping (20,148 records), and records carry <span class="mono">post_id</span> — the adapter was aligned to the real format and re-verified on all records.</li>
+          <li><strong>Rationale coverage:</strong> token-level rationales exist for 9,132 / 15,383 training records (≈59%). Evidence training and evaluation use exactly this annotated subset; the rest carry <span class="mono">None</span> (never fabricated).</li>
+          <li><strong>Counter Context naming quirk:</strong> the field <span class="mono">"target"</span> holds the <em>current comment</em> and <span class="mono">"context"</span> the <em>preceding comment</em> — documented in the adapter; the unified format renames them to <span class="mono">current_text</span>/<span class="mono">context_text</span>.</li>
+          <li><strong>Target vocabulary:</strong> real community strings (e.g. <em>Heterosexual, Buddhism, Minority, Indian</em>) were mapped to the canonical categories — the gold splits now contain <strong>zero unmapped targets</strong>.</li>
+          <li><strong>Label order (Counter Context):</strong> ids "0/1/2" map by default to hate_speech / counter_speech / neither; kept configurable — see §07.</li>
+        </ul>
+      </section>
+
+      <!-- ================= 05 ================= -->
+      <section id="verification">
+        <h2><span class="sec">05</span>Verification evidence</h2>
+        <hr class="rule">
+        <p>All checks below were executed on this machine against the final synced tree.</p>
+        <table>
+          <caption>Verification matrix</caption>
+          <thead><tr><th>Check</th><th>Command / method</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td>Syntax — all modules</td><td class="mono">python -m compileall -q .</td><td><span class="tag">PASS</span> exit 0</td></tr>
+            <tr><td>Full test suite</td><td class="mono">python -m pytest -q</td><td><span class="tag">PASS</span> 76 passed · 2 skipped (opt-in integration)</td></tr>
+            <tr><td>API smoke (live server)</td><td class="mono">uvicorn app.main:app</td><td><span class="tag">PASS</span> /health ✓ · /predict ✓ · /model/info ✓</td></tr>
+            <tr><td>Real-data pipeline</td><td class="mono">download_data.py → preprocess.py</td><td><span class="tag">PASS</span> 8 processed files · 0 unmapped targets</td></tr>
+            <tr><td>Training smoke — Counter Context</td><td>1 epoch, tiny random model, real data</td><td><span class="tag">PASS</span> heads trained: [hate] · checkpoint saved</td></tr>
+            <tr><td>Training smoke — HateXplain</td><td>1 epoch, tiny random model, real data</td><td><span class="tag">PASS</span> heads trained: [hate, target, evidence]</td></tr>
+          </tbody>
+        </table>
+        <h3>What the tests cover</h3>
+        <p>Preprocessing · tokenization and subword rationale alignment · encoder shapes (including the 768-dimension spec checks: E_c/E_p/D/M = [batch, 768]; E_int = [batch, 3072]) · interaction math · InfoNCE contrastive loss · all four heads · full-model forward with component switches · evidence extraction (merging, ranking, dedupe, empty cases) · both dataset adapters on synthetic and real-shaped fixtures · label mapping · trainer smoke with checkpoint save + resume · inference service (untrained and trained-checkpoint paths) · API validation and explicit availability statuses.</p>
+        <p>The two skipped tests are marked <span class="mono">@pytest.mark.integration</span> (they download the full pretrained BERT weights) and run on demand:</p>
+        <pre>RUN_INTEGRATION_TESTS=1 python -m pytest -m integration   <span class="c"># PowerShell: $env:RUN_INTEGRATION_TESTS="1"</span></pre>
+      </section>
+
+      <!-- ================= 06 ================= -->
+      <section id="run">
+        <h2><span class="sec">06</span>How to run</h2>
+        <hr class="rule">
+        <p>Everything runs from inside <span class="mono">backend/</span>. The datasets are already downloaded and preprocessed on this machine, so training can start immediately.</p>
+<pre><span class="c"># 1) install dependencies (Python 3.11+)</span>
+pip install -r requirements.txt
+
+<span class="c"># 2) datasets (already done here; scripts are idempotent)</span>
+python scripts\download_data.py --dataset all
+python scripts\preprocess.py
+
+<span class="c"># 3) train</span>
+python scripts\train.py --config baseline                    <span class="c"># BERT only</span>
+python scripts\train.py --config context --dataset counter_context
+python scripts\train.py --config full                        <span class="c"># multi-task</span>
+
+<span class="c"># 4) evaluate + explain</span>
+python scripts\evaluate.py --checkpoint checkpoints\full\best.pt
+python scripts\explain.py --text "They should all be kicked out." --context "Those immigrants are ruining everything."
+
+<span class="c"># 5) serve (point MODEL_CHECKPOINT at a trained checkpoint)</span>
+$env:MODEL_CHECKPOINT="checkpoints\full\best.pt"
+uvicorn app.main:app --reload
+
+<span class="c"># 6) tests</span>
+python -m pytest -q</pre>
+        <p>Example API call:</p>
+<pre>POST /api/v1/predict
+{"text": "They should all be kicked out.", "context": "Those immigrants are ruining everything."}
+
+→ {"prediction": {"label": "hate", "confidence": 0.94, ...},
+   "target": {"label": "nationality", ...}, "reason": null,
+   "reason_available": false, "evidence": [{"text": "kicked out", "score": 0.82}],
+   "context_used": true}</pre>
+        <div class="note">A ready-to-use verification environment with all dependencies exists at <span class="mono">C:\Users\Haris\.aiml_backend_verify</span> (torch + transformers + fastapi + pytest) — useful for running the suite immediately. Serving without a checkpoint is allowed: untrained heads report <span class="mono">available: false</span> instead of fabricating outputs.</div>
+      </section>
+
+      <!-- ================= 07 ================= -->
+      <section id="caveats">
+        <h2><span class="sec">07</span>Caveats &amp; next steps</h2>
+        <hr class="rule">
+        <ul>
+          <li><strong>[verify] Counter Context label order.</strong> The default mapping "0→hate_speech, 1→counter_speech, 2→neither" could not be independently confirmed from the paper during this build (search services were degraded). Verify against the NAACL 2022 paper and adjust <span class="mono">configs/base.yaml → datasets.counter_context.label_map</span> if needed.</li>
+          <li><strong>Evidence supervision uses ~59% of HateXplain.</strong> Records without rationale annotations are excluded from evidence loss/eval automatically — no fake targets.</li>
+          <li><strong>Reason head is untrained by default.</strong> It requires a reason-annotated dataset or a custom annotation file (wired in configs); until then the API reports <span class="mono">reason_available: false</span>.</li>
+          <li><strong>Train before serving meaningful output.</strong> Without <span class="mono">MODEL_CHECKPOINT</span> the backend runs but reports all heads as unavailable (deliberate honesty rule).</li>
+          <li><strong>CPU training is slow</strong> — <span class="mono">DEVICE=auto</span> enables CUDA automatically when available.</li>
+        </ul>
+        <h3>Suggested next steps</h3>
+        <ol>
+          <li>Verify the Counter Context label order; adjust the YAML if needed.</li>
+          <li>Train <span class="mono">baseline</span> → <span class="mono">context</span> → <span class="mono">full</span> and run the ablations (<span class="mono">experiments/</span>).</li>
+          <li>Plug in a reason-annotated dataset when available to supervise the reason head.</li>
+          <li>Build the frontend chat UI against <span class="mono">POST /api/v1/predict</span> (already designed for it).</li>
+        </ol>
+      </section>
+    </main>
+  </div>
+
+  <footer class="colophon">
+    <span><a href="hate-speech-final-delivery-report.html" style="color:#79b8ae;text-decoration:none;">&larr; Final delivery report</a></span>
+    <span>AutoClaw · build &amp; verification report · 2026-10-02</span>
+    <span>AIML_Project\backend · single-file deliverable · no external assets</span>
+  </footer>
+</div>
+</body>
+</html>
