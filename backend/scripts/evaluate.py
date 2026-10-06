@@ -4,6 +4,11 @@ Examples::
 
     python scripts/evaluate.py --checkpoint checkpoints/cc_context/best.pt
     python scripts/evaluate.py --config context --dataset counter_context
+
+The script also writes a machine-readable copy of the results next to the
+evaluated checkpoint (``<checkpoint-stem>.metrics.json``; override with
+``--output``). ``GET /api/v1/model/info`` picks that file up automatically and
+the frontend renders it in the "Evaluation metrics" card.
 """
 
 from __future__ import annotations
@@ -11,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -26,6 +32,14 @@ def main() -> int:
     parser.add_argument("--config", default="full")
     parser.add_argument("--dataset", default=None)
     parser.add_argument("--max-evidence-examples", type=int, default=100)
+    parser.add_argument(
+        "--output",
+        default=None,
+        help=(
+            "where to write the metrics JSON "
+            "(default: <checkpoint-stem>.metrics.json next to the checkpoint)"
+        ),
+    )
     args = parser.parse_args()
 
     settings = get_settings()
@@ -60,6 +74,29 @@ def main() -> int:
         print("evidence metrics:", json.dumps(evidence, indent=2))
     else:
         print("evidence metrics: not available (no rationales / no trained hate head)")
+
+    # Persist machine-readable results for the API/frontend. The UI never
+    # hardcodes scores - it renders exactly what a real evaluation produced.
+    payload = {
+        "checkpoint": str(checkpoint),
+        "config": config.config_name,
+        "dataset": config.dataset_name,
+        "split": "test",
+        "num_examples": metrics.get("num_examples", len(test_examples)),
+        "evaluated_at": datetime.now(timezone.utc).isoformat(),
+        "hate": metrics.get("hate"),
+        "target": metrics.get("target"),
+        "evidence": evidence,
+    }
+    output_path = (
+        Path(args.output)
+        if args.output
+        else checkpoint.with_name(checkpoint.stem + ".metrics.json")
+    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, indent=2, ensure_ascii=False)
+    print(f"Metrics written to {output_path}")
     return 0
 
 

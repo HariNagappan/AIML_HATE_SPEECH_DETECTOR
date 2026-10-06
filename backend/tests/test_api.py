@@ -67,6 +67,7 @@ def test_model_info(client):
     assert payload["trained"] is False  # untrained by construction
     assert payload["loaded"] is True
     assert "version" in payload
+    assert payload["metrics"] is None  # no evaluation file for the dev model
 
 
 def test_predict_untrained_returns_explicit_status(client):

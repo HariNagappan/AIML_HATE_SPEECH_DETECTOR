@@ -37,7 +37,8 @@ python scripts/inspect_dataset.py --path data/raw/counter_context/gold/train.jso
 `target` is **not** a hate-target annotation. The adapter documents this and
 the unified format renames the fields to `current_text` / `context_text`.
 
-⚠️ **Label mapping caveat**: the corpus label ids (`"0"|"1"|"2"`) map by
-default to `hate_speech | counter_speech | neither` (see
-`configs/base.yaml`); verify the exact order against the paper before
-productive training and override in the YAML if needed.
+**Label mapping (verified)**: corpus ids map `"0"` → `hate_speech`,
+`"1"` → `neither` (neutral), `"2"` → `counter_speech` — verified against the
+paper (Yu, Blanco & Hong, NAACL 2022: ~28% / ~49% / ~23% class shares over
+6,846 pairs). See `configs/base.yaml` and `app/datasets/label_mapping.py`;
+override in the YAML if you ever need a different order.

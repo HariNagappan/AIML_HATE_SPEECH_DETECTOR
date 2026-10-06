@@ -35,8 +35,24 @@ python scripts/download_data.py --dataset all
 python scripts/preprocess.py
 # train (GPU recommended, auto-detected): e.g.
 python scripts/train.py --config cc_context
+# evaluate the checkpoint (writes checkpoints/cc_context/best.metrics.json,
+# which the API serves and the UI shows in the "Evaluation metrics" card):
+python scripts/evaluate.py --config cc_context
 # serve:
 uvicorn app.main:app --port 8001
+```
+
+To train **everything** (all configurations across both datasets, full train
+splits) on Windows with the CUDA `ml-gpu` conda env — full walkthrough in
+[`backend/README.md` → Training](backend/README.md#training):
+
+```powershell
+$py = "C:\Users\Haris\anaconda3\envs\ml-gpu\python.exe"
+& $py scripts\train.py --config baseline                     # hatexplain, comment-only
+& $py scripts\train.py --config context --dataset counter_context
+& $py scripts\train.py --config full                         # multi-task
+& $py scripts\train.py --config cc_context                   # context-aware
+& $py scripts\train.py --config hx_full                      # hate + target + evidence
 ```
 
 **2. Frontend** (backend URL is configured in `frontend/.env`):
@@ -51,8 +67,13 @@ npm run dev        # http://localhost:5173
 
 * **Structured reasoning UI** — WHAT (prediction) → WHO (target) → WHY (reason) →
   WHICH PARTS (evidence with numbered markers and attribution scores) →
-  DID CONTEXT MATTER (context flag). Unavailable sections are hidden with an
-  explanation — never faked.
+  DID CONTEXT MATTER (context flag). Unavailable sections render an explicit
+  "Not available" state (e.g. when the served checkpoint has no target/reason
+  head) — never faked.
+* **Evaluation metrics in the UI** — `scripts/evaluate.py` writes
+  `<checkpoint>.metrics.json`; `/api/v1/model/info` serves the summary and the
+  frontend renders an "Evaluation metrics" card (accuracy, macro
+  precision/recall/F1) for the served checkpoint — no hardcoded numbers.
 * **How reasoning works** — [`REASONING.md`](REASONING.md): the full pipeline
   (prediction → attribution evidence → context-reference analysis →
   explanation), with the honesty rules it follows.

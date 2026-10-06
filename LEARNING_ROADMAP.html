@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Learning Roadmap — from scratch to understanding this project end to end</title>
+<style>
+  :root {
+    --bg:#0f1117; --panel:#161922; --panel2:#1c2029; --line:#2a2f3a;
+    --ink:#e7e9ee; --dim:#a8afbd; --faint:#7c8494;
+    --accent:#6ea8fe; --accent2:#7ee2b8; --warn:#ffcc66; --bad:#ff8080; --violet:#c6a8ff;
+    --mono: ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+    --sans: system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16.5px;line-height:1.68}
+  .wrap{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1520px;margin:0 auto}
+  nav{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:26px 16px 40px;border-right:1px solid var(--line);background:#101319;font-size:13.3px}
+  nav h2{font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin:0 0 12px}
+  nav h2.mt{margin-top:22px}
+  nav a{display:block;color:var(--dim);text-decoration:none;padding:3.5px 8px;border-radius:6px;border-left:2px solid transparent}
+  nav a:hover{color:var(--ink);background:var(--panel2);border-left-color:var(--accent)}
+  nav .ph{color:var(--faint);font-size:11.5px;letter-spacing:.06em;padding:10px 8px 3px;text-transform:uppercase}
+  main{padding:40px 46px 140px;min-width:0}
+  h1{font-size:32px;line-height:1.24;margin:0 0 6px;letter-spacing:-.01em}
+  .sub{color:var(--dim);font-size:16px;margin:0 0 24px}
+  h2{font-size:24px;margin:58px 0 12px;padding-top:20px;border-top:1px solid var(--line);letter-spacing:-.01em}
+  h2 .n{color:var(--accent);font-family:var(--mono);font-size:17px;margin-right:10px}
+  h3{font-size:18px;margin:32px 0 8px;color:#dfe4ee}
+  h4{font-size:14.5px;margin:20px 0 5px;color:var(--accent2);font-weight:600}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0 10px 2px;padding-left:22px}
+  li{margin:5px 0}
+  code{font-family:var(--mono);font-size:13.4px;background:#232833;padding:1.5px 5px;border-radius:5px;color:#ffd9a0}
+  pre{background:#0b0e13;border:1px solid var(--line);border-left:3px solid var(--accent);padding:15px 18px;border-radius:10px;overflow-x:auto;font-size:12.9px;line-height:1.55;font-family:var(--mono);color:#cdd6e6}
+  pre code{background:none;padding:0;color:inherit;font-size:12.9px}
+  pre.ascii{border-left-color:var(--accent2);font-size:12.4px;line-height:1.45}
+  table{border-collapse:collapse;width:100%;margin:15px 0;font-size:14.2px}
+  th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);font-weight:600;color:#dbe1ec;font-size:13.4px}
+  td code{font-size:12.7px}
+  .lead{font-size:17px;color:#d3d9e4}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:16px 0}
+  .note{border-left:3px solid var(--accent);background:#12161f;padding:12px 16px;border-radius:8px;margin:15px 0}
+  .warn{border-left:3px solid var(--warn);background:#1a1710;padding:12px 16px;border-radius:8px;margin:15px 0}
+  .bad{border-left:3px solid var(--bad);background:#1c1315;padding:12px 16px;border-radius:8px;margin:15px 0}
+  .good{border-left:3px solid var(--accent2);background:#101a16;padding:12px 16px;border-radius:8px;margin:15px 0}
+  .phase{border:1px solid var(--line);border-radius:14px;margin:26px 0;overflow:hidden;background:var(--panel)}
+  .phase > header{padding:16px 22px;background:linear-gradient(90deg,#1b2233,#161922);border-bottom:1px solid var(--line)}
+  .phase > header .kicker{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+  .phase > header h3{margin:3px 0 0;font-size:20px;color:#eef1f6}
+  .phase > header .meta{color:var(--faint);font-size:13px;margin-top:6px}
+  .phase .body{padding:6px 22px 18px}
+  .done{background:#101a16;border:1px solid #26543f;border-radius:10px;padding:12px 16px;margin:14px 0 4px}
+  .done b{color:var(--accent2)}
+  .tag{display:inline-block;font-family:var(--mono);font-size:11.4px;letter-spacing:.04em;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--dim);background:var(--panel2);margin:0 6px 4px 0;white-space:nowrap}
+  .tag.hot{color:#ffb4b4;border-color:#5a2a2a;background:#241518}
+  .tag.ok{color:#a9e9cf;border-color:#26543f;background:#12241c}
+  .tag.acc{color:#bcd4ff;border-color:#2c4570;background:#141c2c}
+  .tag.v{color:#d9c8ff;border-color:#3d2f5e;background:#1a1426}
+  .muted{color:var(--faint);font-size:14px}
+  .file{font-family:var(--mono);font-size:12.5px;color:var(--accent)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:1180px){.grid2,.grid3{grid-template-columns:1fr}}
+  .kv{font-family:var(--mono);font-size:13px}
+  .chk{list-style:none;padding-left:0}
+  .chk li{padding-left:26px;position:relative}
+  .chk li:before{content:"☐";position:absolute;left:4px;color:var(--accent)}
+  footer{color:var(--faint);font-size:13.4px;border-top:1px solid var(--line);margin-top:60px;padding-top:18px}
+  .toc-tree{font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#b9c2d2}
+  .toc-tree .c{color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <h2>Contents</h2>
+  <a href="#truth">Read this first</a>
+  <a href="#spine">The 4-layer spine of the project</a>
+  <a href="#gap">Phase 0 · The Python gap</a>
+  <a href="#math">Phase 1 · The maths that matters</a>
+  <a href="#torch">Phase 2 · PyTorch mechanics</a>
+  <a href="#nlp">Phase 3 · Transformers / how BERT works</a>
+  <a href="#mt">Phase 4 · Multi-task learning</a>
+  <a href="#contrast">Phase 5 · Contrastive learning</a>
+  <a href="#xai">Phase 6 · Explainability &amp; Integrated Gradients</a>
+  <a href="#serve">Phase 7 · Serving, FastAPI, config</a>
+  <a href="#dataeng">Phase 8 · Data engineering</a>
+  <a href="#eval">Phase 9 · Evaluation &amp; ablations</a>
+  <a href="#build">Phase 10 · Rebuild it yourself</a>
+  <h2 class="mt">Reference</h2>
+  <a href="#map">Which phase maps to which file</a>
+  <a href="#schedule">A realistic schedule</a>
+  <a href="#skip">What you can skip</a>
+  <a href="#trap">The 7 traps in this codebase</a>
+  <a href="#questions">Questions you must be able to answer</a>
+  <a href="#tracker">Progress tracker</a>
+</nav>
+
+<main>
+  <h1>Learning roadmap: from scratch to understanding this project end to end</h1>
+  <p class="sub">
+    Ten phases, ordered so that no phase ever needs a concept from a later one.
+    <span class="muted">Python · numpy · PyTorch · Transformers · FastAPI · explainability</span>
+  </p>
+
+  <div class="note">
+    <strong>Measured facts about the size of this project, so you can calibrate:</strong>
+    52 Python files / <strong>5,987 lines</strong> in <code>backend/app</code>; 18 test files
+    (149 passing, 47.7 s); 9 files that define an <code>nn.Module</code>; exactly
+    <strong>1</strong> file that uses autograd; 47 TypeScript files / 4,303 lines in the frontend
+    (which this roadmap ignores — it's a separate skill).
+    <br><br>
+    So: you are not learning 6,000 lines. You are learning <strong>about 25 concepts</strong> and
+    then watching them get arranged in one particular way.
+  </div>
+
+  <h2 id="truth">Read this first: three truths that change how you study this</h2>
+
+  <div class="grid3">
+    <div class="card">
+      <h4>1. The project reuses ~25 concepts, not ~200</h4>
+      <p class="muted" style="margin:0">Almost every file is a permutation of the same small set:
+      a dataclass, an <code>nn.Module</code>, a <code>forward()</code>, a config lookup, a
+      try/except. Learn the set once and the codebase becomes readable in an afternoon.</p>
+    </div>
+    <div class="card">
+      <h4>2. You only need calculus intuition, not calculus</h4>
+      <p class="muted" style="margin:0">Autograd computes every derivative for you. You need to
+      <em>know what a gradient is and why averaging over a path beats one sample at a point</em>.
+      That's it. No proofs, no chain-rule grinding by hand.</p>
+    </div>
+    <div class="card">
+      <h4>3. BERT is a downloaded object, not something you build</h4>
+      <p class="muted" style="margin:0">You write <code>AutoModel.from_pretrained("bert-base-uncased")</code>
+      and get 111.5 M trained parameters. Everything you author sits <em>around</em> it.</p>
+    </div>
+  </div>
+
+  <h2 id="spine">The 4-layer spine — the mental model to build toward</h2>
+  <p>Everything in this roadmap exists to make these four layers obvious to you. If you can explain
+  this diagram out loud, you understand the project.</p>
+<pre class="ascii">  LAYER 1 · DATA          "what shape is a training example?"
+     UnifiedExample { current_text, context_text, hate/target/reason labels, rationale }
+     key idea: None means "we were not told". It does NOT mean "none".
+                                    │
+  LAYER 2 · MODEL         "how do texts become a prediction?"   (needs Phase 2 + 3)
+     shared BERT → E_c, E_p → |Ec-Ep|, Ec⊙Ep → [4×768] → Linear → 1024 → heads → logits
+     key idea: the SAME weights encode both texts, so their vectors are comparable.
+                                    │
+  LAYER 3 · TRAINING      "how does it get good?"               (needs Phase 4 + 5)
+     masked multi-task loss (-100 = skip) + InfoNCE; one missing label must never
+     become a fake label.
+                                    │
+  LAYER 4 · EXPLANATION   "why did it say that?"                (needs Phase 6 + 7)
+     Integrated Gradients → token scores → merged spans w/ char offsets
+     → deterministic templates → JSON. No LLM writes a single word.</pre>
+
+  <!-- ============================================ PHASE 0 -->
+  <h2 id="gap"><span class="n">0</span>Phase 0 — the Python gap (1–2 weeks)</h2>
+  <p class="lead">This is the phase people skip and then drown in Phase 2. Do not skip it.</p>
+  <div class="warn">
+    <strong>Diagnosis, from your machine:</strong> you have Python 3.14 with <code>torch 2.14.1+cpu</code>
+    installed globally, but <code>python</code> is not on your shell PATH, and the project's
+    <code>pytest</code> runs are fighting Windows temp-folder permissions. None of that is a
+    knowledge gap — it's an environment gap, and it will waste hours if you don't fix it first.
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>Step 0.1 — fix the environment (do this today)</h4>
+      <ul class="chk">
+        <li>Install Python 3.11 or 3.12 (not 3.14) — matching <code>backend/README.md</code>'s
+          "Python 3.11+". Newer isn't better here: wheel availability for torch/transformers is.</li>
+        <li>Put it on PATH (tick "Add python.exe to PATH" in the installer).</li>
+        <li>Learn <em>virtual environments</em> properly:
+          <code>python -m venv .venv</code> → activate → <code>pip install -r requirements.txt</code>.
+          One environment per project, always.</li>
+        <li>Run the suite with an explicit temp dir:
+          <code>python -m pytest -q --basetemp=.pytest-tmp</code>. You should see
+          <strong>149 passed, 2 skipped</strong>. That green run is your baseline sanity check for
+          the rest of this roadmap.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Step 0.2 — the Python that this codebase actually uses</h4>
+      <p class="muted" style="margin-top:0">Not "all of Python". This list, verified by grepping
+      the repo:</p>
+      <ul>
+        <li><strong>Type hints everywhere</strong> — <code>Optional[str]</code>, <code>List[Dict[str, Any]]</code>,
+          <code>-&gt;</code> returns. Read them as documentation; they're half the readability.</li>
+        <li><strong>Dataclasses</strong> — <code>@dataclass class UnifiedExample</code>. Auto-generated
+          <code>__init__</code>. Used in 9 files. Learn <code>field(default_factory=list)</code>.</li>
+        <li><strong>Pydantic v2 <code>BaseModel</code></strong> — runtime validation of API bodies.
+          Different thing from a dataclass: it <em>checks</em> at runtime.</li>
+        <li><strong>Decorators</strong> — <code>@property</code>, <code>@classmethod</code>,
+          <code>@staticmethod</code>, <code>@lru_cache</code>, <code>@contextmanager</code>,
+          <code>@field_validator</code>, <code>@torch.no_grad()</code>, <code>@dataclass</code>.
+          Five of these appear in this project; meet them early.</li>
+        <li><strong><code>Optional</code> / narrowing</strong> — you will constantly see
+          <code>if x is not None:</code>. Understand <em>why</em>: missing annotation ≠ absent value.</li>
+        <li><strong>Function-local imports</strong> — <code>import torch</code> inside a function,
+          not at the top. Used deliberately to keep imports cheap. Learn why.</li>
+        <li><strong>Context managers</strong> — <code>with open(...)</code>,
+          <code>with torch.no_grad():</code>, <code>with torch.autocast(...)</code>.</li>
+        <li><strong>Generators / <code>yield</code></strong> — appears once, in the FastAPI
+          <code>lifespan</code>. Recognise it, don't master it.</li>
+        <li><strong><code>*args</code> / <code>**kwargs</code></strong> — <code>model(**kwargs)</code>
+          is everywhere. Know the unpacking operator cold.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="done">
+    <b>You're done with Phase 0 when:</b> the test suite runs green from a clean venv, and you can
+    read <span class="file">backend/app/datasets/unified.py</span> top to bottom without looking
+    anything up.
+  </div>
+  <p class="muted"><strong>Resources:</strong> the official Python tutorial (sections 4–9), then
+  Real Python on dataclasses, type hints, and decorators. Skip anything about metaclasses, async
+  internals, or packaging. Not used here.</p>
+
+  <!-- ============================================ PHASE 1 -->
+  <h2 id="math"><span class="n">1</span>Phase 1 — the maths that matters (1–2 weeks, intuition only)</h2>
+  <p class="lead">You need to know what these objects <em>mean</em> and why they're shaped that
+  way. You do not need to compute any of them by hand.</p>
+
+  <h4>Vector and matrix basics <span class="tag acc">unlocks 60% of the code</span></h4>
+  <p>A vector is a list of numbers. 768 numbers = a "768-dimensional vector". The project's whole
+  representation story is: text → vector such that similar meanings are near each other.</p>
+  <p>Four operations are load-bearing. Learn these four and nothing else:</p>
+  <table>
+    <tr><th>Operation</th><th>Where it appears</th><th>Plain meaning</th></tr>
+    <tr><td><strong>Concatenation</strong> <code>[a; b]</code></td><td><code>[E_c; E_p; D; M]</code> → 3072</td><td>Stick two lists end to end. 768+768+768+768 = 3072.</td></tr>
+    <tr><td><strong>Dot product</strong> <code>a·b</code></td><td>every <code>nn.Linear</code>, cosine similarity</td><td>Multiply matching slots, add them up. One number: "how aligned are these two?"</td></tr>
+    <tr><td><strong>Matrix multiply</strong></td><td><code>Linear(3072→1024)</code></td><td>3072 numbers in, 1024 out, via a 1024×3072 grid of learned weights. This is <em>the</em> fundamental layer.</td></tr>
+    <tr><td><strong>Element-wise product / abs-diff</strong> <code>a⊙b</code>, <code>|a−b|</code></td><td><code>M</code> and <code>D</code> in the interaction block</td><td>Slot-by-slot comparison. "Where do these agree?" / "where do they differ?"</td></tr>
+  </table>
+
+  <h4>Probability, softmax and cross-entropy</h4>
+  <ul>
+    <li><strong>Softmax</strong> — turns arbitrary scores <code>[3.2, −1.1, 0.4]</code> into
+      probabilities that sum to 1: <code>[0.87, 0.02, 0.11]</code>. That's the entire content of
+      <span class="file">softmax_head.py</span>.</li>
+    <li><strong>Cross-entropy</strong> — a penalty for "how surprised were you by the truth?" If the
+      true class had probability 0.87, penalty is small. If it had 0.02, penalty is large.
+      This <em>is</em> the classification loss here.</li>
+    <li><strong>BCE (binary cross-entropy)</strong> — the same idea for a yes/no question; used by
+      the evidence head, one yes/no per token.</li>
+    <li><strong>Sigmoid</strong> — squashes one score into a 0–1 probability. Used when there's only
+      one output.</li>
+    <li><strong>Temperature</strong> — dividing scores before softmax. Low temperature (0.07 here)
+      makes the biggest score dominate hard. Learn what that does to the contrastive loss and why
+      it matters.</li>
+  </ul>
+
+  <h4>Gradients — the one idea that unlocks Phase 2, 4 and 6</h4>
+  <div class="card">
+    <p style="margin-top:0"><strong>Intuition only.</strong> A gradient answers: <em>"if I nudge
+    this one number slightly, which way does the error move, and how much?"</em> That's a
+    slope. Training walks downhill along slopes. Attribution (Phase 6) reads the slopes to ask
+    "which <em>input words</em> moved the answer?"</p>
+    <p style="margin-bottom:0"><strong>Chain rule, understood not computed:</strong> when you stack
+    layers, gradients flow backwards through each one, each multiplying by its local slope.
+    <code>loss.backward()</code> does this for 113 M parameters in one call. That's why nobody
+    computes derivatives by hand here.</p>
+  </div>
+
+  <h4>One number you must understand deeply: cosine similarity</h4>
+  <p>It measures the <em>angle</em> between two vectors, ignoring their lengths, giving a score from
+  −1 to 1. It is used by the contrastive loss. Crucially, it's why vectors are
+  <strong>L2-normalised</strong> first in <span class="file">contrastive.py</span> — dividing by
+  length so only direction matters. One line, one concept, load-bearing.</p>
+
+  <div class="done">
+    <b>You're done with Phase 1 when:</b> you can look at <code>nn.Linear(3072, 1024)</code> and
+    say out loud — "3072 numbers in, multiplied by a learned 1024×3072 grid of weights plus a bias
+    of 1024, giving 1024 numbers out, and that grid holds 3,146,752 learnable values."
+  </div>
+
+  <!-- ============================================ PHASE 2 -->
+  <h2 id="torch"><span class="n">2</span>Phase 2 — PyTorch mechanics (2–3 weeks: the big one)</h2>
+  <p class="lead">This is the single highest-leverage phase. Nine files in this repo define an
+  <code>nn.Module</code>, and every one of them follows the same three-step pattern.</p>
+
+  <h4>Step 2.1 — the <code>nn.Module</code> pattern (learn this once, recognise it 9 times)</h4>
+<pre><code>class ContextInteraction(nn.Module):
+    def __init__(self, ...):                    # 1. declare the learnable pieces
+        super().__init__()                      #    (must come first — sets up internals)
+        self.projection = nn.Linear(3072, 1024)
+        self.dropout = nn.Dropout(0.2)
+
+    def forward(self, e_c, e_p):                # 2. define the maths, tensors in → tensors out
+        raw = torch.cat([e_c, e_p, d, m], dim=-1)
+        return self.dropout(self.activation(self.projection(raw)))
+
+    # 3. nn.Module automatically gives you .parameters(), .to(device), .train(), .eval()</code></pre>
+  <p>That auto-magic third point is the payoff: you never write code to move the model to a GPU,
+  to iterate its weights, or to switch dropout off. The framework does it because you inherited
+  from <code>nn.Module</code> and stored layers as <code>self.something</code>.</p>
+
+  <h4>Step 2.2 — tensors and shapes <span class="tag hot">where beginners actually get stuck</span></h4>
+  <p>A tensor is a multi-dimensional array that can run on a GPU and track gradients. Three habits:</p>
+  <ul>
+    <li><strong>Always know your shapes.</strong> <code>[B, T, H]</code> = batch size, sequence
+      length, hidden size. <code>[B, K]</code> = batch, number of classes. Print
+      <code>x.shape</code> constantly. Every bug in this project is a shape bug or a mask bug.</li>
+    <li><strong>Batch dimension first, always.</strong> Even for one request — that's why
+      <span class="file">inference.py</span> builds tensors of batch size 1.</li>
+    <li><strong>Broadcasting:</strong> <code>e_p * mask.unsqueeze(-1)</code> in
+      <span class="file">full_model.py</span> takes a <code>[B]</code> mask and stretches it across
+      768 slots. <code>unsqueeze(-1)</code> adds a dimension; <code>view</code>, <code>reshape</code>,
+      <code>cat</code>, <code>permute</code> are the other four you'll meet.</li>
+  </ul>
+
+  <h4>Step 2.3 — autograd, the training loop, and the five things people miscount</h4>
+<pre><code>optimizer.zero_grad()          # 1. clear old slopes (they ACCUMULATE by default)
+outputs = model(**batch)       # 2. forward
+loss = criterion(outputs, y)   # 3. measure wrongness
+loss.backward()                # 4. autograd fills .grad on every parameter
+optimizer.step()               # 5. nudge every parameter downhill</code></pre>
+  <p>Now layer the real-world complications, which <span class="file">trainer.py</span> uses all of:</p>
+  <table>
+    <tr><th>Concept</th><th>One-line explanation</th><th>Where in the repo</th></tr>
+    <tr><td><strong>AdamW</strong></td><td>The optimizer. A smarter downhill walker that keeps per-parameter momentum. <code>lr=2e-5</code> is deliberately tiny so fine-tuning doesn't wreck pretrained knowledge.</td><td><code>trainer.py</code></td></tr>
+    <tr><td><strong>LR scheduler + warmup</strong></td><td>Start with a near-zero learning rate and ramp up, then decay. Prevents a violent first few steps.</td><td><code>_linear_warmup_decay()</code></td></tr>
+    <tr><td><strong>Gradient accumulation</strong></td><td>Run several small batches, only step after collecting all their slopes. Fakes a big batch within small memory.</td><td><code>grad_accum_steps</code></td></tr>
+    <tr><td><strong>Gradient clipping</strong></td><td>Cap slope size so one weird batch can't blow up the run.</td><td><code>clip_grad_norm_</code></td></tr>
+    <tr><td><strong>AMP / mixed precision</strong></td><td>Most arithmetic in 16-bit. ~2× faster on GPU. Needs a <code>GradScaler</code> to stop small numbers underflowing.</td><td><code>build_grad_scaler()</code></td></tr>
+    <tr><td><strong><code>train()</code> vs <code>eval()</code></strong></td><td>Switches dropout and batch-norm between training and inference behaviour. Forgetting it is the #1 silent-bug source.</td><td>both trainer and inference</td></tr>
+    <tr><td><strong><code>no_grad()</code> / <code>detach()</code></strong></td><td>Stop tracking gradients when you're only predicting. Saves memory and time.</td><td>all inference paths</td></tr>
+    <tr><td><strong><code>state_dict()</code></strong></td><td>A plain dict of every parameter tensor by name. <strong>This is what a checkpoint is.</strong></td><td><code>save_checkpoint()</code></td></tr>
+    <tr><td><strong>Reproducibility</strong></td><td>Seed <code>random</code>, <code>numpy</code>, <code>torch</code>, <code>torch.cuda</code> — all four, or your runs differ.</td><td><code>set_seed()</code></td></tr>
+    <tr><td><strong><code>DataLoader</code> + <code>collate_fn</code></strong></td><td>Batches your examples and converts them to tensors. <code>num_workers&gt;0</code> runs the collator in separate processes — this matters for a real bug in this repo (Phase 5).</td><td><code>trainer.py</code></td></tr>
+  </table>
+
+  <h4>Step 2.4 — the <code>-100</code> masking trick <span class="tag ok">read this file twice</span></h4>
+  <p>Read <span class="file">app/training/losses.py</span> once you understand cross-entropy. It's
+  short and it contains the project's honesty rule in code form: <code>-100</code> means
+  "this example has no label for this task", PyTorch skips those rows, and if the whole batch is
+  <code>-100</code> the loss is <code>None</code> and the component is dropped from the sum.</p>
+
+  <div class="done">
+    <b>You're done with Phase 2 when:</b> you can write a small <code>nn.Module</code> from scratch,
+    train it on toy data in a 20-line loop with AdamW, and explain why
+    <code>optimizer.zero_grad()</code> must be called. Then read
+    <span class="file">app/models/context_interaction.py</span> and follow every line.
+  </div>
+  <p class="muted"><strong>Resources:</strong> the official PyTorch "Learn the Basics" 60-minute
+  blitz, then the <em>entire</em> "Training a Classifier" tutorial typed out by hand (not copied).
+  That single exercise covers 80% of Phase 2.</p>
+
+  <!-- ============================================ PHASE 3 -->
+  <h2 id="nlp"><span class="n">3</span>Phase 3 — Transformers and how BERT works (2 weeks)</h2>
+  <p class="lead">Goal: read a sentence, and <em>picture</em> the tensors flowing through BERT. Not
+  memorise the paper.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>The concepts, in dependency order</h4>
+      <ol>
+        <li><strong>Word embeddings</strong> — each word-piece id maps to a learned 768-vector.</li>
+        <li><strong>Position embeddings</strong> — added so the model knows word order.
+          <span class="tag hot">note this one</span></li>
+        <li><strong>Token-type embeddings</strong> — for two-sequence inputs.
+          <span class="tag hot">note this one</span></li>
+        <li><strong>Self-attention</strong> — every token computes "how much should I look at
+          every other token?" This is what makes meaning context-dependent.</li>
+        <li><strong>Multi-head</strong> — 12 attention patterns in parallel, different ones
+          picking up different relationships.</li>
+        <li><strong>Feed-forward + residual + LayerNorm</strong> — the per-layer machinery.
+          Recognise the names; you won't modify them.</li>
+        <li><strong>Encoder vs decoder</strong> — BERT is encoder-only. No text generation. That's
+          why this project needs no LLM.</li>
+        <li><strong><code>[CLS]</code> and <code>[SEP]</code></strong> — the two special tokens.
+          <code>[CLS]</code>'s output vector summarises the sentence.</li>
+        <li><strong>Tokenization / word-pieces</strong> — the <code>##</code> prefix rule. Learn
+          <code>AutoTokenizer</code> and <code>return_offsets_mapping=True</code>.</li>
+        <li><strong>Pretraining vs fine-tuning</strong> — <code>from_pretrained()</code> loads
+          111.5 M already-trained parameters; you then nudge them for your task.</li>
+        <li><strong>Freezing</strong> — setting <code>requires_grad=False</code>. Three modes in
+          <span class="file">bert_encoder.py</span>: full / frozen / partial.</li>
+        <li><strong>Truncation &amp; padding + attention masks</strong> — <code>max_seq_length=128</code>
+          truncates; padding fills the batch; the mask tells attention to ignore the filler.
+          <span class="tag hot">mask bugs are everywhere</span></li>
+      </ol>
+    </div>
+    <div class="card">
+      <h4>What you must be able to do by the end</h4>
+<pre style="margin-top:0"><code>from transformers import AutoTokenizer, AutoModel
+import torch
+
+tok = AutoTokenizer.from_pretrained("bert-base-uncased")
+model = AutoModel.from_pretrained("bert-base-uncased")
+model.eval()
+
+enc = tok("They should all be kicked out.",
+          return_tensors="pt")
+out = model(**enc)
+
+print(enc["input_ids"].shape)     # [1, T]
+print(out.last_hidden_state.shape)  # [1, T, 768]  per-token
+print(out.last_hidden_state[:, 0].shape)  # [1, 768] the [CLS] vector
+
+# what the tokenizer actually did:
+print(tok.convert_ids_to_tokens(enc["input_ids"][0]))</code></pre>
+      <p class="muted" style="margin-bottom:0">Then inspect the model's own embedding module:
+      <code>model.embeddings</code> — find where word, position and token-type embeddings get
+      <strong>added</strong>. That single line is the crux of the biggest bug in this repo
+      (see <a href="#trap">trap #1</a>).</p>
+    </div>
+  </div>
+
+  <div class="done">
+    <b>You're done with Phase 3 when:</b> you can run the snippet above, explain every shape in the
+    output, and answer: "why do we use the <code>[CLS]</code> vector instead of averaging all token
+    vectors?" Then read <span class="file">app/models/bert_encoder.py</span> (169 lines) and follow
+    it completely.
+  </div>
+  <p class="muted"><strong>Resources:</strong> the Hugging Face "Transformers" course chapters 1–3.
+  Then Jay Alammar's "The Illustrated Transformer". Then read the project's own
+  <code>backend/README.md</code> "Why BERT" and "Why is the encoder shared?" sections — you'll
+  actually understand them now.</p>
+
+  <!-- ============================================ PHASE 4 -->
+  <h2 id="mt"><span class="n">4</span>Phase 4 — multi-task learning and the head pattern (3–4 days)</h2>
+  <p class="lead">Small phase, huge payoff: it explains <em>why the model has four heads</em> and
+  why the API is full of <code>*_available</code> flags.</p>
+  <ul>
+    <li><strong>One body, many mouths.</strong> A shared representation (the 1024-vector) feeds
+      several small task-specific classifiers. The body learns general understanding; each mouth
+      answers one question.</li>
+    <li><strong>Why share?</strong> Related tasks regularise each other — learning "who is
+      targeted" helps learn "is this hateful". And you compute the expensive BERT pass
+      <em>once</em>.</li>
+    <li><strong>Loss weighting.</strong> <code>λ_hate</code>, <code>λ_target</code>,
+      <code>λ_reason</code>: one loss per task, added with weights. Ask why contrastive is 0.5
+      while the others are 1.0.</li>
+    <li><strong>Missing labels</strong> — the central practical problem of multi-task learning.
+      Datasets annotate different things. If you Naively fill gaps with 0, you teach the model
+      that everything is class 0. Hence <code>-100</code>.</li>
+    <li><strong><code>trained_heads</code> as a derived fact.</strong> The trainer records which
+      losses actually fired. That set is written to the checkpoint and read back by the API — so
+      "available" is never hand-maintained and can never drift from reality.</li>
+  </ul>
+  <div class="done">
+    <b>You're done when:</b> you can explain why a Counter-Context training batch produces a
+    <code>hate_loss</code> and a <code>contrastive_loss</code> but <em>no</em>
+    <code>target_loss</code>, and why the served checkpoint contains no <code>target_head</code>
+    keys at all.
+  </div>
+
+  <!-- ============================================ PHASE 5 -->
+  <h2 id="contrast"><span class="n">5</span>Phase 5 — contrastive learning (1 week)</h2>
+  <p class="lead">The idea: teach by <em>comparison</em> rather than by labels alone.</p>
+  <div class="card">
+    <p style="margin-top:0"><strong>The plain-English version.</strong> Take a comment C and its
+    real preceding comment P1. The model's context-aware representation should look similar to the
+    comment-only anchor. Now staple C to a <em>wrong</em> comment P2 — the representation should
+    look different. Train until the true pairing beats the false one.</p>
+    <p style="margin-bottom:0"><strong>Why bother?</strong> Without this, the network can
+    cheerfully ignore the context input entirely and still score well, because the comment alone
+    often predicts the label. This loss is the pressure that forces it to actually <em>use</em>
+    context. It is the mechanism behind the project's entire "context matters" claim.</p>
+  </div>
+  <h4>What to actually learn</h4>
+  <ul>
+    <li><strong>Positive / negative / anchor</strong> — the three roles in every contrastive setup.</li>
+    <li><strong>Cosine similarity + L2 normalisation</strong> — from Phase 1, now used for real.</li>
+    <li><strong>InfoNCE</strong> — the specific loss formula. Read it as: "softmax over
+      similarities, and I want the positive to win." <code>F.cross_entropy</code> with the target
+      always being index 0 is a neat trick worth noticing.</li>
+    <li><strong>Temperature</strong> — 0.07 sharpens the distribution. Ask what happens at 1.0 vs
+      0.01.</li>
+    <li><strong><span class="tag hot">How many negatives?</span></strong> InfoNCE's power comes
+      from <em>many</em> negatives. This repo defaults to <strong>1</strong>, and there's a second
+      subtle problem: the negative sampler is a <code>random.Random</code> inside
+      <code>collate_fn</code>, which runs in parallel DataLoader worker processes.</li>
+    <li><strong>Train-only components</strong> — the projection layer exists but is never used at
+      inference. Learn to spot that pattern; it wastes ~328 K parameters in the shipped file.</li>
+  </ul>
+  <div class="done">
+    <b>You're done when:</b> you can explain why a batch with only 1 negative gives a weak learning
+    signal, and describe what you'd change to fix it. (You'll need this for Phase 10.)
+  </div>
+
+  <!-- ============================================ PHASE 6 -->
+  <h2 id="xai"><span class="n">6</span>Phase 6 — explainability and Integrated Gradients (1–2 weeks)</h2>
+  <p class="lead">This is the intellectual heart of the project. It's also the phase where the
+  biggest risk lives — so learn it properly, not superficially.</p>
+
+  <h4>Step 6.1 — the family of methods</h4>
+  <table>
+    <tr><th>Method</th><th>What it is</th><th>Why it's <em>not</em> used here</th></tr>
+    <tr><td><strong>Attention weights</strong></td><td>Look at where the model attended</td><td>Attention ≠ explanation. Widely regarded as misleading. The repo explicitly refuses to do this.</td></tr>
+    <tr><td><strong>Supervised rationale</strong></td><td>Train a head to predict human highlights</td><td>Implemented (<code>evidence_head.py</code>) but needs gold annotations and is a <em>different technique</em> — compared experimentally, not used for the UI.</td></tr>
+    <tr><td><strong>LLM writes an explanation</strong></td><td>Ask a generative model</td><td>Would hallucinate and couldn't be checked. Banned from this project entirely.</td></tr>
+    <tr><td><strong>Gradient × input</strong></td><td>One sample of sensitivity at the input</td><td>Available here as the cheap alternative. Noisy: a big gradient on a near-zero input means little.</td></tr>
+    <tr><td><strong>Integrated Gradients</strong> <span class="tag ok">used</span></td><td>Average sensitivity along a path from a baseline to the real input</td><td>—</td></tr>
+  </table>
+
+  <h4>Step 6.2 — Integrated Gradients, properly understood</h4>
+  <div class="card">
+    <p style="margin-top:0">Sundararajan, Taly &amp; Sundararajan (2017). The recipe:</p>
+    <ol>
+      <li>Pick a <strong>baseline</strong> — "no information". Here it's the PAD embedding.</li>
+      <li>Draw a straight line from baseline to the real input's number-vectors.</li>
+      <li>Sample points along that line (default <strong>32 steps</strong>).</li>
+      <li>At each point, ask "how sensitive is the output to each input slot?"</li>
+      <li>Average those sensitivities, then multiply by <code>(real_input − baseline)</code>.</li>
+    </ol>
+    <p style="margin-bottom:0">Result: one <strong>signed</strong> score per token. Positive = pushed
+    the prediction up. Negative = pushed it down. The "multiply by difference" step is why IG
+    satisfies the <em>completeness</em> axiom (the scores add up to the output change) — and why
+    it's more faithful than raw gradients.</p>
+  </div>
+
+  <h4>Step 6.3 — why this needs <code>inputs_embeds</code>, and the trap</h4>
+  <p>You cannot interpolate between integer token IDs — halfway between word 1045 and word 2033 is
+  meaningless. So IG must work in <em>continuous</em> space: the embedding vectors. That's why
+  <span class="file">attribution.py</span> builds embeddings itself and passes them via
+  <code>current_inputs_embeds</code>.</p>
+  <div class="bad">
+    <strong>The trap, stated plainly.</strong> BERT's embedding module does three things: look up
+    the word vector, <em>add</em> a position vector, and <em>add</em> a token-type vector. If you
+    hand BERT raw <code>inputs_embeds</code> and it does not re-add positions and token types, then
+    IG is explaining <strong>a slightly different function than the one that produced the
+    label</strong> — and the evidence section is subtly unsound.
+    <br><br>
+    This is the #1 thing to verify in the whole repository. The test is a numeric parity check:
+    same input, forward-twice-both-ways, assert the predictions match. <strong>Learn enough to
+    write that test.</strong>
+  </div>
+
+  <h4>Step 6.4 — evidence extraction and the honesty discipline</h4>
+  <ul>
+    <li>Scores → threshold (relative, 0.15 × strongest) → merge adjacent → decode subwords →
+      top-k. That's <span class="file">evidence_extractor.py</span>.</li>
+    <li><strong>Relative vs absolute thresholds:</strong> a low-confidence prediction still gets
+      <em>some</em> evidence. Ask whether that's honest or misleading — a good discussion to have
+      with yourself.</li>
+    <li><strong>Character offsets</strong> — <code>return_offsets_mapping=True</code> gives you
+      where each token sits in the original string. This is what the frontend highlights. It
+      removes an entire class of mis-highlighting bugs.</li>
+    <li><strong>Template composition vs generation.</strong> The explanations are built from fixed
+      templates grounded in real model outputs. Learn to see this as an engineering choice about
+      <em>trust</em>, not a limitation.</li>
+    <li><strong>Abstention as a feature.</strong> When the context layer can't establish a
+      relationship, it <em>says so</em>. A system that always produces confident reasoning is a
+      system you can't trust.</li>
+  </ul>
+  <div class="done">
+    <b>You're done when:</b> you can explain the completeness axiom in one sentence, explain why
+    gradients alone are misleading, and describe what a parity test would check.
+  </div>
+
+  <!-- ============================================ PHASE 7 -->
+  <h2 id="serve"><span class="n">7</span>Phase 7 — serving: FastAPI, config, lifecycle (1–2 weeks)</h2>
+  <p class="lead">The web layer is the easiest part, but it's where the two-programs idea becomes
+  concrete.</p>
+  <table>
+    <tr><th>Concept</th><th>Why it's here</th><th>File</th></tr>
+    <tr><td><strong>Pydantic <code>BaseModel</code></strong></td><td>Validates the JSON body at runtime, and generates the API docs for free.</td><td><code>api/schemas/</code></td></tr>
+    <tr><td><strong><code>AliasChoices</code></strong></td><td>Accept <code>{text, context}</code> <em>and</em> <code>{current_comment, previous_comment}</code> for the same fields — a clever, cheap way to avoid breaking a client.</td><td><code>prediction.py</code></td></tr>
+    <tr><td><strong><code>field_validator</code></strong></td><td>Reject whitespace-only text. Learn to prefer this over manual <code>if</code> checks.</td><td><code>prediction.py</code></td></tr>
+    <tr><td><strong>Routers &amp; dependency-free design</strong></td><td>Routes are ~15 lines: validate → call service → map errors. <strong>No business logic in a route.</strong></td><td><code>api/routes/</code></td></tr>
+    <tr><td><strong><code>lifespan</code> + <code>async with</code></strong></td><td>Load the 113 M-parameter model <em>once</em> at boot, not per request. The single most important performance decision in the backend.</td><td><code>main.py</code></td></tr>
+    <tr><td><strong><code>@lru_cache</code> singleton</strong></td><td>The process-wide service. Understand <em>why</em> it needs to be one instance, and what that costs you (shared mutable state).</td><td><code>inference.py</code></td></tr>
+    <tr><td><strong>Blocking vs <code>async def</code></strong></td><td>A PyTorch forward pass is blocking. Declaring the route <code>def</code> (not <code>async def</code>) makes FastAPI run it in a threadpool — correct here. Understand the tradeoff.</td><td><code>prediction.py</code></td></tr>
+    <tr><td><strong>HTTP status semantics</strong></td><td><code>503</code> = service temporarily unavailable = "model didn't load". Mapping internal errors to the right code is a real skill.</td><td><code>routes/</code></td></tr>
+    <tr><td><strong><code>pydantic-settings</code> + <code>.env</code></strong></td><td>Environment-driven config. The rule "nothing hardcodes a model name, dimension, threshold or path" is enforced by this one module.</td><td><code>core/config.py</code></td></tr>
+    <tr><td><strong>YAML + <code>deep_merge</code></strong></td><td>Two config systems: runtime (<code>.env</code>) vs training (<code>configs/*.yaml</code>). Merging <code>base.yaml</code> with an experiment file is why each experiment is 15 lines, not 200.</td><td><code>training/configs.py</code></td></tr>
+    <tr><td><strong>Checkpoint rebuild pattern</strong> <span class="tag v">key idea</span></td><td>The checkpoint carries a <code>model_kwargs</code> <em>blueprint</em>. Serving rebuilds the identical architecture from it before loading weights. This is the bridge between the two programs.</td><td><code>inference.py</code></td></tr>
+    <tr><td><strong>Function-local imports</strong></td><td>Keeps <code>import app.main</code> cheap so tests don't pay a 500 MB model load.</td><td>everywhere</td></tr>
+    <tr><td><strong>Docker basics</strong></td><td>Layer caching, CPU-only torch index, healthchecks, non-root users. Read the Dockerfile knowingly.</td><td><code>Dockerfile</code></td></tr>
+  </table>
+  <div class="done">
+    <b>You're done when:</b> you can trace a POST body from raw JSON, through Pydantic, into
+    <code>predict()</code>, and back out to a response model — and say exactly where a
+    <code>503</code> could come from.
+  </div>
+
+  <!-- ============================================ PHASE 8 -->
+  <h2 id="dataeng"><span class="n">8</span>Phase 8 — data engineering (1 week)</h2>
+  <p class="lead">Unglamorous, and the place where projects quietly fail. This repo handles it well
+  and there's a lot to copy.</p>
+  <ul>
+    <li><strong>The adapter pattern</strong> — one module per dataset, both emitting one shared
+      dataclass. Never merge raw data.</li>
+    <li><strong><code>None</code> is a first-class value.</strong> <code>target_label: null</code>
+      means "not annotated"; <code>"none"</code> means "annotated as no target". Conflating them
+      trains the model on false negatives. This distinction is the spine of the whole data layer.</li>
+    <li><strong>Preserve, don't guess.</strong> Unmapped label values go into <code>metadata</code>
+      rather than being force-fitted into a canonical bucket.</li>
+    <li><strong>Label mapping as its own layer</strong> — dataset quirks → canonical categories, so
+      the model never sees raw corpus weirdness.</li>
+    <li><strong>Word-level → subword alignment</strong> — human highlights are per-word, BERT works
+      in word-pieces. <code>align_rationales_to_subwords()</code> is the bridge. Think hard about
+      what happens to the <code>[CLS]</code>/<code>[SEP]</code> positions (they get <code>-100</code>).</li>
+    <li><strong>Honest splits</strong> — <span class="tag hot">this repo uses random splits</span>,
+      which leaks near-duplicate tweets between train and test. Learn <em>why</em> that inflates
+      metrics; it's one of the fixes in Phase 10.</li>
+    <li><strong>JSONL as the interchange format</strong> — one JSON object per line, streamable,
+      diffable, greppable. A good default for ML pipelines.</li>
+    <li><strong>Spot the naming quirk</strong> in Counter Context: the field called
+      <code>target</code> is the <em>current comment</em>, and <code>context</code> is the
+      <em>preceding</em> one. It has nothing to do with target groups. Always verify field
+      semantics against the paper — this is a real transferable lesson.</li>
+  </ul>
+
+  <!-- ============================================ PHASE 9 -->
+  <h2 id="eval"><span class="n">9</span>Phase 9 — evaluation and ablations (1 week)</h2>
+  <p class="lead">This is what separates a project from a demo. Without it, "we added context" is
+  just an assertion.</p>
+  <ul>
+    <li><strong>Accuracy lies on imbalanced data.</strong> If 90% of examples are "normal", a model
+      that always says "normal" scores 0.90. That's why <strong>macro-F1</strong> is the selection
+      metric here.</li>
+    <li><strong>Precision / recall / F1</strong> — know which one matters when. And <strong>macro
+      vs weighted</strong> averaging.</li>
+    <li><strong>Confusion matrix</strong> — where do errors go? Offensive↔hate confusion is the
+      expected failure mode of this task.</li>
+    <li><strong>ROC-AUC</strong> — threshold-independent quality, for the 2-class case.</li>
+    <li><strong>Train/val/test discipline</strong> — the test set is read <em>once</em>. Early
+      stopping and model selection use validation only. This repo does this correctly; notice it.</li>
+    <li><strong>Ablation methodology</strong> — the six experiments in
+      <span class="file">ablation.py</span>: baseline → +context → +interaction → +contrastive →
+      full multi-task → +evidence. Each step removes exactly one thing. Learn to design a study
+      where every claim has a controlled comparison behind it.</li>
+    <li><strong>Honest reporting.</strong> The current served checkpoint's best validation
+      macro-F1 is <strong>0.566</strong> over 3 classes (chance ≈ 0.33), selected at epoch 2 of 4
+      with validation loss rising afterwards. That's overfitting on a small dataset — not a working
+      detector. Learn to write that sentence about your own work without flinching.</li>
+  </ul>
+  <div class="done">
+    <b>You're done when:</b> you can explain why macro-F1 above accuracy, and why "epoch 2 of 4"
+    is a more interesting fact than the architecture diagram.
+  </div>
+
+  <!-- ============================================ PHASE 10 -->
+  <h2 id="build"><span class="n">10</span>Phase 10 — rebuild it yourself, smaller (3–4 weeks)</h2>
+  <p class="lead">You don't understand an architecture until you've rebuilt a working version of
+  it. Do it tiny and offline — no downloads, no GPU, minutes not hours.</p>
+  <div class="card">
+    <h4>The exercise: a miniature version of this exact project</h4>
+<pre style="margin-top:0"><code>Dataset:      200 tiny toy sentences you write yourself
+Encoder:      YOUR OWN 2-layer transformer, or a random-init tiny BERT
+              (hidden_size 64, 2 layers, 4 heads — fast enough to iterate in seconds)
+Interaction:  D = |E_c − E_p|, M = E_c ⊙ E_p, [E_c;E_p;D;M] → Linear → 64
+Heads:        hate (3 classes) + target (3 classes)
+Loss:         masked multi-task, with -100 for missing labels
+Evidence:     Integrated Gradients over YOUR model's embeddings
+Serving:      FastAPI, one endpoint, model loaded via lifespan
+Tests:        one unit test per component</code></pre>
+    <p style="margin-bottom:0">Build it in this order, and stop to run a test after each step. If
+    you can build this, you can read every file in this repository with confidence — because you'll
+    have made the same decisions in miniature and felt where the difficulty actually is.</p>
+  </div>
+  <h4>Then, the harder follow-ups (in order of payoff)</h4>
+  <ol>
+    <li><strong>Write the IG parity test</strong> for the real project (Phase 6, Step 6.3). Highest
+      value single action available to you.</li>
+    <li><strong>Run the real ablation study</strong> (<code>scripts/evaluate.py</code> /
+      <code>ablation.py</code>) and write up what actually changed between experiments.</li>
+    <li><strong>Fix one real gap end to end</strong> — e.g. raise <code>negatives_per_anchor</code>
+      to 4–8, construct hard negatives from the same label neighbourhood, and measure whether
+      macro-F1 moves. Report the result either way.</li>
+    <li><strong>Serve a passing-checkpoint model</strong> — train the full multi-task config, export
+      a serving checkpoint, point <code>default.json</code> at it, and see the UI light up sections
+      that were previously hidden.</li>
+  </ol>
+
+  <!-- ============================================ MAP -->
+  <h2 id="map">Which phase maps to which file</h2>
+  <table>
+    <tr><th>Phase</th><th>Read these, in this order</th><th>Lines</th></tr>
+    <tr><td>0 · Python</td><td><span class="file">app/datasets/unified.py</span> → <span class="file">app/core/logging.py</span></td><td>118 + 25</td></tr>
+    <tr><td>1 · Maths</td><td><span class="file">app/models/softmax_head.py</span> (softmax, argmax) → <span class="file">app/models/contrastive.py</span> (cosine, L2)</td><td>39 + 79</td></tr>
+    <tr><td>2 · PyTorch</td><td><span class="file">app/models/context_interaction.py</span> → <span class="file">app/training/losses.py</span> → <span class="file">app/training/trainer.py</span></td><td>83 + 133 + 537</td></tr>
+    <tr><td>3 · Transformers</td><td><span class="file">app/models/bert_encoder.py</span> → <span class="file">app/datasets/tokenizer.py</span> → <span class="file">app/datasets/collator.py</span></td><td>169 + 162 + 202</td></tr>
+    <tr><td>4 · Multi-task</td><td><span class="file">app/models/hate_head.py</span> → <span class="file">target_head.py</span> → <span class="file">reason_head.py</span> → <span class="file">full_model.py</span></td><td>83 + 15 + 16 + 234</td></tr>
+    <tr><td>5 · Contrastive</td><td><span class="file">app/training/contrastive_loss.py</span> → the <code>ContrastivePairCollator</code> in <span class="file">collator.py</span></td><td>63 + ~80</td></tr>
+    <tr><td>6 · Explainability</td><td><span class="file">app/reasoning/attribution.py</span> → <span class="file">evidence_extractor.py</span> → <span class="file">reason_explainer.py</span> → <span class="file">context_reasoner.py</span></td><td>225 + 174 + 239 + 602</td></tr>
+    <tr><td>7 · Serving</td><td><span class="file">app/core/config.py</span> → <span class="file">app/api/schemas/prediction.py</span> → <span class="file">app/api/routes/prediction.py</span> → <span class="file">app/services/inference.py</span> → <span class="file">app/main.py</span></td><td>181 + 140 + 20 + 593 + 67</td></tr>
+    <tr><td>8 · Data</td><td><span class="file">app/datasets/hatexplain.py</span> → <span class="file">counter_context.py</span> → <span class="file">label_mapping.py</span> → <span class="file">preprocessing.py</span></td><td>208 + 137 + 236 + 136</td></tr>
+    <tr><td>9 · Evaluation</td><td><span class="file">app/evaluation/classification.py</span> → <span class="file">rationale.py</span> → <span class="file">ablation.py</span></td><td>77 + 51 + 354</td></tr>
+    <tr><td>10 · Rebuild</td><td>You write it. Reference <span class="file">full_model.py</span> when stuck.</td><td>—</td></tr>
+  </table>
+  <div class="note">
+    <strong>Two files to leave for last:</strong> <span class="file">services/inference.py</span>
+    (593 lines — it's the <em>integration</em> of Phases 3–7, so it only makes sense once they're
+    all in your head) and <span class="file">reasoning/context_reasoner.py</span> (602 lines, of
+    which ~400 are hand-curated vocabulary lists — skim those, read
+    <code>find_reference_links()</code> and <code>_compose_summary()</code>).
+  </div>
+
+  <!-- ============================================ SCHEDULE -->
+  <h2 id="schedule">A realistic schedule</h2>
+  <table>
+    <tr><th>Phase</th><th>Time</th><th>If you already know...</th></tr>
+    <tr><td>0 · Python gap</td><td>1–2 weeks</td><td>solid Python → 2 days (just env + dataclasses + Pydantic)</td></tr>
+    <tr><td>1 · Maths intuition</td><td>1–2 weeks</td><td>any linear algebra → 3 days</td></tr>
+    <tr><td>2 · PyTorch</td><td><strong>2–3 weeks</strong></td><td>any torch → 1 week (focus on AMP, accumulation, checkpoints)</td></tr>
+    <tr><td>3 · Transformers</td><td>2 weeks</td><td>used HF before → 3 days</td></tr>
+    <tr><td>4 · Multi-task</td><td>3–4 days</td><td>1 day</td></tr>
+    <tr><td>5 · Contrastive</td><td>1 week</td><td>3 days</td></tr>
+    <tr><td>6 · Explainability</td><td>1–2 weeks</td><td>1 week — this one is <em>not</em> skippable</td></tr>
+    <tr><td>7 · Serving</td><td>1–2 weeks</td><td>FastAPI experience → 3 days</td></tr>
+    <tr><td>8 · Data</td><td>1 week</td><td>3 days</td></tr>
+    <tr><td>9 · Evaluation</td><td>1 week</td><td>3 days</td></tr>
+    <tr><td>10 · Rebuild</td><td>3–4 weeks</td><td>1–2 weeks</td></tr>
+    <tr><td colspan="2"><strong>Total from scratch: ~4–5 months part-time</strong></td><td><strong>~2 months if you already code in Python</strong></td></tr>
+  </table>
+  <div class="good">
+    <strong>Compression trick:</strong> do Phase 10 in parallel with Phases 3–7, not at the end.
+    Rebuild the tiny version incrementally as you learn each phase. You'll understand twice as fast
+    and you'll have something to show.
+  </div>
+
+  <!-- ============================================ SKIP -->
+  <h2 id="skip">What you can safely skip</h2>
+  <table>
+    <tr><th>Don't bother (for this project)</th><th>Why</th></tr>
+    <tr><td>Writing a transformer from scratch</td><td>You download BERT. Understanding <em>what</em> it does is enough.</td></tr>
+    <tr><td>Calculus by hand / backprop derivations</td><td>Autograd does it. You need intuition about gradients, nothing more.</td></tr>
+    <tr><td>Distributed training (DDP, FSDP, DeepSpeed)</td><td>This model fits on one GPU, or CPU.</td></tr>
+    <tr><td>LLMs, RAG, prompt engineering, agents</td><td>Explicitly <strong>not used</strong>. The project's whole identity is "no generative model".</td></tr>
+    <tr><td>Reinforcement learning</td><td>Not present.</td></tr>
+    <tr><td>Graph neural networks</td><td>Not present.</td></tr>
+    <tr><td>Async Python internals / asyncio deeply</td><td>You need to know <code>def</code> vs <code>async def</code> in FastAPI. That's it.</td></tr>
+    <tr><td>Kubernetes / cloud infra</td><td>Out of scope. Docker basics are enough.</td></tr>
+    <tr><td>Pandas beyond basics</td><td>It's a dependency; the pipeline uses plain JSONL and lists.</td></tr>
+    <tr><td>The frontend (React/TS/Tailwind)</td><td>A separate skill. This roadmap deliberately stops at the JSON contract.</td></tr>
+    <tr><td>The exact content of the vocabulary lists in <code>context_reasoner.py</code></td><td>400 lines of pronouns and stopwords. Skim and move on.</td></tr>
+  </table>
+
+  <!-- ============================================ TRAPS -->
+  <h2 id="trap">The 7 traps: things in this codebase that require extra care</h2>
+  <p>Each of these is a place where a plausible-looking implementation has a subtle problem. If you
+  learn to reason about these seven, you've learned to think like an ML engineer, not just a coder.</p>
+  <table>
+    <tr><th>#</th><th>Trap</th><th>What it teaches you</th><th>Phase</th></tr>
+    <tr><td>1</td><td><strong>IG embedding path may skip position/token-type embeddings</strong></td><td>The most important lesson in the repo: an explanation is only valid if it explains <em>the same function</em> that made the prediction. Verify with a numeric parity test.</td><td>6</td></tr>
+    <tr><td>2</td><td><strong>Missing label (<code>None</code>) vs negative label (<code>"none"</code>)</strong></td><td>Data semantics are the foundation. A single conflated <code>None</code> can corrupt an entire training run silently.</td><td>8</td></tr>
+    <tr><td>3</td><td><strong>InfoNCE with 1 negative, sampled in a parallel worker</strong></td><td>A loss can be present in the code, logged in the metrics, and still teach the model almost nothing. Always ask "how much signal is actually here?"</td><td>5</td></tr>
+    <tr><td>4</td><td><strong>Random splits on duplicate-heavy social data</strong></td><td>Leakage inflates metrics. The number can be technically correct and practically meaningless.</td><td>9</td></tr>
+    <tr><td>5</td><td><strong><code>encode_pair</code> with <code>input_ids=None</code> → uncaught <code>ValueError</code></strong></td><td>Catching <code>RuntimeError</code> but not <code>ValueError</code> at an API boundary means a 500 instead of a clean 503. Error mapping is part of the design.</td><td>7</td></tr>
+    <tr><td>6</td><td><strong><code>model_info()</code> assumes <code>model.hate_head</code> exists</strong></td><td>The baseline model names it <code>classifier</code>. Any place that reaches into an object by attribute name is a place that breaks when the object changes shape.</td><td>7</td></tr>
+    <tr><td>7</td><td><strong>A keyword list decides how the decision is described</strong></td><td>A deterministic explainer is far better than an LLM — but it's still a second, unevaluated decision-maker in front of your evaluated one. Know where your system's "voice" comes from.</td><td>6</td></tr>
+  </table>
+
+  <!-- ============================================ QUESTIONS -->
+  <h2 id="questions">The 20 questions you must be able to answer</h2>
+  <p>Use this as your exam. If you can answer all 20 out loud, without notes, you understand this
+  project. Each one maps to a phase.</p>
+  <ol>
+    <li>Why does the same encoder encode both the comment and the context? <span class="muted">(3)</span></li>
+    <li>What do <code>D</code> and <code>M</code> mean, and why are they concatenated rather than added? <span class="muted">(2)</span></li>
+    <li>What happens to <code>E_p</code> when there is no context, and where is that handled? <span class="muted">(3)</span></li>
+    <li>Why is <code>[CLS]</code> used as the sentence vector instead of an average of tokens? <span class="muted">(3)</span></li>
+    <li>What does <code>-100</code> mean, and what happens if an entire batch is <code>-100</code>? <span class="muted">(2)</span></li>
+    <li>How does <code>trained_heads</code> get populated, and why is that more reliable than a config flag? <span class="muted">(4)</span></li>
+    <li>Why can't Integrated Gradients interpolate raw token IDs? <span class="muted">(6)</span></li>
+    <li>Explain the completeness axiom in one sentence. <span class="muted">(6)</span></li>
+    <li>Why is a raw gradient a worse explanation than IG? <span class="muted">(6)</span></li>
+    <li>Why is the evidence threshold <em>relative</em>, and what's the risk? <span class="muted">(6)</span></li>
+    <li>Why does the evidence head exist if IG already gives evidence? <span class="muted">(4)</span></li>
+    <li>What does <code>context_used: true</code> actually claim? What does it <em>not</em> claim? <span class="muted">(7)</span></li>
+    <li>Why is contrastive learning never used at inference? <span class="muted">(5)</span></li>
+    <li>Why is the checkpoint's <code>model_kwargs</code> as important as its <code>model_state</code>? <span class="muted">(7)</span></li>
+    <li>Why are <code>optimizer_state</code> and <code>scheduler_state</code> dropped on export? <span class="muted">(7)</span></li>
+    <li>Why is macro-F1 used for early stopping instead of accuracy? <span class="muted">(9)</span></li>
+    <li>Why is the model loaded in <code>lifespan</code> rather than in the route handler? <span class="muted">(7)</span></li>
+    <li>Why is the route <code>def</code> and not <code>async def</code>? <span class="muted">(7)</span></li>
+    <li>Why does the API return <code>null</code> plus a <code>*_available: false</code> flag instead of just omitting the field? <span class="muted">(7)</span></li>
+    <li>What would you change to make the contrastive loss actually teach something? <span class="muted">(5, 10)</span></li>
+  </ol>
+
+  <!-- ============================================ TRACKER -->
+  <h2 id="tracker">Progress tracker</h2>
+  <pre class="toc-tree">PHASE 0 · Python gap
+  ☐ venv + requirements installed from a clean environment
+  ☐ <span class="c">python -m pytest -q --basetemp=.pytest-tmp</span> → 149 passed, 2 skipped
+  ☐ can read unified.py with no lookups
+
+PHASE 1 · Maths
+  ☐ can explain nn.Linear(3072, 1024) including the parameter count
+  ☐ can explain softmax → cross-entropy → why it measures surprise
+  ☐ can explain cosine similarity and why L2 normalisation comes first
+  ☐ can explain what a gradient IS, in one sentence
+
+PHASE 2 · PyTorch
+  ☐ wrote a tiny nn.Module from scratch
+  ☐ wrote a 20-line training loop with AdamW, zero_grad, backward, step
+  ☐ can explain why zero_grad() is needed
+  ☐ can explain gradient accumulation and clipping in my own words
+  ☐ can explain state_dict() and why it IS the checkpoint
+  ☐ read losses.py twice and understood the -100 trick
+
+PHASE 3 · Transformers
+  ☐ ran the AutoTokenizer/AutoModel snippet and explained every shape
+  ☐ found where model.embeddings ADDS position and token-type vectors
+  ☐ understand the ## subword prefix and offsets_mapping
+  ☐ can explain what an attention mask does
+  ☐ read bert_encoder.py completely
+
+PHASE 4 · Multi-task
+  ☐ can explain why there is no target_loss on a Counter Context batch
+  ☐ can explain why the served checkpoint has no target_head keys
+  ☐ can explain how trained_heads is derived
+
+PHASE 5 · Contrastive
+  ☐ can explain anchor / positive / negative
+  ☐ can explain what temperature does
+  ☐ can explain why 1 negative is a weak signal
+  ☐ can name the DataLoader-worker sampling problem
+
+PHASE 6 · Explainability
+  ☐ can explain baseline, path, steps, completeness
+  ☐ can explain why raw gradients mislead
+  ☐ can describe the inputs_embeds parity test
+  ☐ can explain relative vs absolute evidence thresholds
+  ☐ can explain why the context layer abstains instead of guessing
+
+PHASE 7 · Serving
+  ☐ traced a POST body from JSON to response
+  ☐ can name every source of a 503
+  ☐ can explain lifespan + the lru_cache singleton
+  ☐ can explain why the route is def, not async def
+  ☐ can explain the model_kwargs rebuild pattern
+
+PHASE 8 · Data
+  ☐ can explain None vs "none" and why it matters
+  ☐ can explain word→subword rationale alignment
+  ☐ can explain why random splits inflate metrics
+
+PHASE 9 · Evaluation
+  ☐ can explain macro vs weighted F1
+  ☐ can explain how the 6 ablation experiments differ
+  ☐ know the current honest number: macro-F1 0.566, chosen at epoch 2 of 4
+
+PHASE 10 · Rebuild
+  ☐ built a tiny end-to-end version (data → model → loss → IG → API → test)
+  ☐ wrote the IG parity test for the real project
+  ☐ ran the real ablation study
+  ☐ fixed one real gap and measured the effect
+  ☐ answered all 20 questions out loud</pre>
+
+  <footer>
+    <p><strong>Learning roadmap</strong> · companion to
+    <span class="file">BACKEND_ARCHITECTURE.html</span> (what the project <em>is</em>) and
+    <span class="file">BACKEND_ARCHITECTURE.md</span>.
+    This file is what to <em>learn</em>, in what order.</p>
+    <p>Sizing measured from the repository: 52 Python files / 5,987 lines in <code>backend/app</code>,
+    79 Python files including tests and scripts, 149 tests passing in 47.7 s.</p>
+  </footer>
+</main>
+</div>
+</body>
+</html>

@@ -49,6 +49,14 @@ export function formatScore(value: number): string {
   return value.toFixed(2);
 }
 
+/** `0.9412` → `"94.1%"` (evaluation metrics; one decimal place by default). */
+export function formatPercent(value: number, digits = 1): string {
+  if (!Number.isFinite(value)) {
+    return "—";
+  }
+  return `${(value * 100).toFixed(digits)}%`;
+}
+
 /** Relative time, e.g. `"2 minutes ago"`. */
 export function timeAgo(timestamp: number): string {
   const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));

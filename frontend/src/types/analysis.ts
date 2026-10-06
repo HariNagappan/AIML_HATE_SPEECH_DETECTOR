@@ -114,6 +114,26 @@ export interface HealthStatus {
   model_loaded: boolean;
 }
 
+/**
+ * Evaluation scores of the served checkpoint, produced offline by
+ * `scripts/evaluate.py` (stored next to the checkpoint as
+ * `<checkpoint>.metrics.json`). Precision/recall/F1 values are macro-averaged
+ * over classes; `weighted_*` variants are provided for completeness.
+ */
+export interface ModelMetrics {
+  split: string | null;
+  dataset: string | null;
+  num_examples: number | null;
+  evaluated_at: string | null;
+  accuracy: number | null;
+  macro_precision: number | null;
+  macro_recall: number | null;
+  macro_f1: number | null;
+  weighted_precision: number | null;
+  weighted_recall: number | null;
+  weighted_f1: number | null;
+}
+
 /** `GET /api/v1/model/info`. */
 export interface ModelInfo {
   model_name: string | null;
@@ -127,6 +147,8 @@ export interface ModelInfo {
   checkpoint: string | null;
   loaded: boolean;
   error: string | null;
+  /** Offline evaluation scores; null until an evaluation file exists. */
+  metrics: ModelMetrics | null;
 }
 
 /** `POST /api/v1/explain`. */

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+
+import pytest
 import torch
 
 from app.core.config import Settings
@@ -239,3 +242,110 @@ def test_trained_reasoning_links_current_to_previous_comment(
     assert isinstance(reasoning["summary"], str) and reasoning["summary"]
     sources = {item["source"] for item in reasoning["evidence"]}
     assert "previous_comment" in sources
+
+
+def test_model_info_includes_evaluation_metrics(tmp_path, small_encoder, tokenizer):
+    """The metrics file written by scripts/evaluate.py is surfaced by model_info."""
+    model = FullModel(
+        small_encoder,
+        ["hate", "offensive", "normal"],
+        ["race", "none"],
+        use_target=True,
+        use_reason=False,
+        use_evidence=False,
+        use_contrastive=False,
+        interaction_dim=32,
+    )
+    checkpoint_path = tmp_path / "best_metrics.pt"
+    torch.save(
+        {
+            "format_version": 1,
+            "model_state": model.state_dict(),
+            "optimizer_state": {},
+            "scheduler_state": {},
+            "epoch": 0,
+            "global_step": 0,
+            "config": {},
+            "label_maps": {"hate": {}, "target": {}, "reason": {}},
+            "metrics": {},
+            "model_kwargs": dict(EXPECTED_KWARGS),
+            "trained_heads": ["hate", "target"],
+        },
+        checkpoint_path,
+    )
+    metrics_payload = {
+        "checkpoint": str(checkpoint_path),
+        "config": "cc_context",
+        "dataset": "counter_context",
+        "split": "test",
+        "num_examples": 713,
+        "evaluated_at": "2026-10-06T12:00:00+00:00",
+        "hate": {
+            "accuracy": 0.5947,
+            "macro_precision": 0.5512,
+            "macro_recall": 0.5784,
+            "macro_f1": 0.5501,
+            "weighted_precision": 0.5901,
+            "weighted_recall": 0.5947,
+            "weighted_f1": 0.5923,
+        },
+        "target": None,
+        "evidence": None,
+    }
+    (tmp_path / "best_metrics.metrics.json").write_text(
+        json.dumps(metrics_payload), encoding="utf-8"
+    )
+
+    service = InferenceService(_tiny_settings(checkpoint_path=str(checkpoint_path)))
+    service._bundle = build_model_from_checkpoint(
+        str(checkpoint_path), _tiny_settings()
+    )
+
+    metrics = service.model_info()["metrics"]
+    assert metrics is not None
+    assert metrics["split"] == "test"
+    assert metrics["dataset"] == "counter_context"
+    assert metrics["num_examples"] == 713
+    assert metrics["accuracy"] == pytest.approx(0.5947)
+    assert metrics["macro_precision"] == pytest.approx(0.5512)
+    assert metrics["macro_recall"] == pytest.approx(0.5784)
+    assert metrics["macro_f1"] == pytest.approx(0.5501)
+    assert metrics["weighted_f1"] == pytest.approx(0.5923)
+
+
+def test_model_info_metrics_null_without_evaluation_file(
+    tmp_path, small_encoder, tokenizer
+):
+    """No metrics file -> explicit None (availability is never fabricated)."""
+    model = FullModel(
+        small_encoder,
+        ["hate", "offensive", "normal"],
+        ["race", "none"],
+        use_target=True,
+        use_reason=False,
+        use_evidence=False,
+        use_contrastive=False,
+        interaction_dim=32,
+    )
+    checkpoint_path = tmp_path / "best_no_metrics.pt"
+    torch.save(
+        {
+            "format_version": 1,
+            "model_state": model.state_dict(),
+            "optimizer_state": {},
+            "scheduler_state": {},
+            "epoch": 0,
+            "global_step": 0,
+            "config": {},
+            "label_maps": {"hate": {}, "target": {}, "reason": {}},
+            "metrics": {},
+            "model_kwargs": dict(EXPECTED_KWARGS),
+            "trained_heads": ["hate", "target"],
+        },
+        checkpoint_path,
+    )
+    service = InferenceService(_tiny_settings(checkpoint_path=str(checkpoint_path)))
+    service._bundle = build_model_from_checkpoint(
+        str(checkpoint_path), _tiny_settings()
+    )
+    assert service.model_info()["metrics"] is None

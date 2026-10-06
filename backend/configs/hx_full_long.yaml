@@ -1,0 +1,24 @@
+# Experiment: hx_full with a longer training budget.
+# Identical to hx_full.yaml except epochs (2 -> 6; early stopping still
+# selects the best epoch by validation macro-F1). Used to measure whether
+# longer training improves the weak offensive class before replacing the
+# served checkpoint. Output goes to checkpoints/hx_full_long so the live
+# hx_full checkpoint stays untouched.
+#
+# Merge target: base.yaml.
+# Train:  python scripts/train.py --config hx_full_long
+
+mode: full
+dataset: hatexplain
+
+model:
+  use_context: true
+  use_contrastive: false
+  use_target: true
+  use_reason: false
+  use_evidence: true
+
+training:
+  epochs: 6
+  output_dir: checkpoints/hx_full_long
+  log_every_n_steps: 50

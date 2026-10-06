@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.core.config import get_settings, resolve_device  # noqa: E402
+from app.core.config import describe_device, get_settings, resolve_device  # noqa: E402
 from app.core.logging import setup_logging  # noqa: E402
 from app.datasets.collator import build_label_maps  # noqa: E402
 from app.datasets.tokenizer import TokenizerWrapper  # noqa: E402
@@ -52,6 +52,7 @@ def main() -> int:
         f"Training '{config.config_name}': mode={config.mode} "
         f"dataset={config.dataset_name} device={device}"
     )
+    print(f"Compute device: {describe_device(settings.device)}")
 
     train_examples = config.load_examples("train")
     val_examples = config.load_examples("val")

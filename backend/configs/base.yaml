@@ -48,11 +48,11 @@ datasets:
     processed_file: data/processed/hatexplain.jsonl
   counter_context:
     processed_file: data/processed/counter_context.jsonl
-    # NOTE: label ids come from the corpus JSONL as strings "0"/"1"/"2".
-    # The paper (Yu, Blanco & Hong, NAACL 2022) defines the three classes as
-    # hate speech / counter speech / neither. VERIFY the numeric order against
-    # the paper before productive training and adjust here if needed.
+    # Label ids come from the corpus JSONL as strings "0"/"1"/"2".
+    # Verified against the paper (Yu, Blanco & Hong, NAACL 2022): the corpus
+    # class shares (Hate ~28%, Neutral ~49%, Counter-hate ~23%) match
+    # 0=hate speech, 1=neutral, 2=counter speech.
     label_map:
       "0": hate_speech
-      "1": counter_speech
-      "2": neither
+      "1": neither
+      "2": counter_speech

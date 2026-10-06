@@ -45,6 +45,14 @@ npm run dev                 # http://localhost:5173
 
 - **Analyze** (`/`, `/analyze`) — comment + optional context → structured
   result: prediction, confidence, target, reason, evidence spans, context flag.
+- **Target & Reason cards** — the predicted target group (WHO) and reason
+  category (WHY-TYPE) as their own cards; when the served checkpoint has no
+  trained head for them they render an explicit "Not available for this
+  model" state — never a fabricated value.
+- **Evaluation metrics** — the served checkpoint's offline evaluation scores
+  (accuracy, macro precision/recall/F1) in an "Evaluation metrics" card next
+  to Model status; sourced from `scripts/evaluate.py` via
+  `/api/v1/model/info` (shows "not evaluated" until an evaluation exists).
 - **Evidence** — inline highlighting of the original comment (offset-aware,
   repeated-phrase safe, list fallback when mapping is unreliable) + ranked
   evidence list with attribution scores.

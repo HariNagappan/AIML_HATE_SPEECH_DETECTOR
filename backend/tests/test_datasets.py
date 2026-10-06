@@ -87,8 +87,8 @@ def test_counter_context_maps_fields_correctly(tmp_path):
 
     assert examples[0].current_text == ">The UK world is fucked FTFY"
     assert examples[0].context_text == "The UK is fucked."
-    assert examples[0].hate_label == "counter_speech"  # default map: "1" → counter
-    assert examples[1].hate_label == "neither"
+    assert examples[0].hate_label == "neither"  # verified map: "1" → neutral
+    assert examples[1].hate_label == "counter_speech"  # verified map: "2" → counter
     assert examples[0].target_label is None
     assert examples[0].rationale_labels is None
 
@@ -150,6 +150,8 @@ def test_label_mapping_helpers():
     assert map_hatexplain_target("Buddhism") == ("religion", None)
     assert map_hatexplain_target("XYZ-Nonsense") == (None, "XYZ-Nonsense")
     assert map_counter_context_label("0") == ("hate_speech", None)
+    assert map_counter_context_label("1") == ("neither", None)
+    assert map_counter_context_label("2") == ("counter_speech", None)
 
 
 def test_unified_roundtrip(tmp_path):

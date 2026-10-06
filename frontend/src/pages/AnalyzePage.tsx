@@ -10,6 +10,7 @@ import ContextViewer from "../components/analysis/ContextViewer";
 import EvidenceList from "../components/analysis/EvidenceList";
 import EvidenceViewer from "../components/analysis/EvidenceViewer";
 import ModelArchitecture from "../components/analysis/ModelArchitecture";
+import ModelMetrics from "../components/analysis/ModelMetrics";
 import ModelStatus from "../components/analysis/ModelStatus";
 import PredictionCard from "../components/analysis/PredictionCard";
 import ReasonCard from "../components/analysis/ReasonCard";
@@ -221,8 +222,8 @@ export default function AnalyzePage() {
               <div className="lg:col-span-2">
                 <PredictionCard result={result} />
               </div>
-              {/* <TargetCard result={result} />
-              <ReasonCard result={result} /> */}
+              <TargetCard result={result} />
+              <ReasonCard result={result} />
               {reasoning ? (
                 <div className="lg:col-span-2">
                   <ReasoningCard
@@ -277,6 +278,7 @@ export default function AnalyzePage() {
               ) : null}
               <ContextViewer contextUsed={result.context_used} request={lastRequest} />
               <ModelStatus />
+              <ModelMetrics />
             </div>
 
             <ModelArchitecture />

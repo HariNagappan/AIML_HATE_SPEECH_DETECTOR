@@ -19,6 +19,12 @@ import yaml
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.datasets.label_mapping import (
+    CANONICAL_HATE,
+    CANONICAL_REASON,
+    CANONICAL_TARGET,
+)
+
 #: Project root (this file lives in ``backend/app/core/config.py``).
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 
@@ -60,15 +66,12 @@ class Settings(BaseSettings):
     interaction_dropout: float = 0.2
 
     # --- heads / label sets ---------------------------------------------------
-    hate_labels: str = "hate,offensive,normal"
-    target_labels: str = (
-        "race,ethnicity,nationality,religion,gender,sexual_orientation,"
-        "political_group,other,none"
-    )
-    reason_labels: str = (
-        "insult,dehumanization,negative_stereotyping,threat,exclusion,"
-        "discrimination,incitement_to_violence,other"
-    )
+    # Defaults derive from the canonical vocabularies in
+    # ``app.datasets.label_mapping`` (single source of truth); override per
+    # deployment via env / .env when a dataset uses a different label set.
+    hate_labels: str = ",".join(CANONICAL_HATE)
+    target_labels: str = ",".join(CANONICAL_TARGET)
+    reason_labels: str = ",".join(CANONICAL_REASON)
     hate_threshold: float = 0.5
 
     # --- multi-task loss weights ---------------------------------------------
@@ -179,3 +182,22 @@ def resolve_device(preference: str = "auto"):
     if preference == "cpu":
         return torch.device("cpu")
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def describe_device(preference: str = "auto") -> str:
+    """Human-readable compute-device description for startup logs.
+
+    Reports CPU vs GPU explicitly and, when CUDA is used, the GPU name —
+    e.g. ``"GPU (CUDA) — NVIDIA GeForce RTX 4060 Laptop GPU"`` or
+    ``"CPU (CUDA GPU not available)"``.
+    """
+    import torch
+
+    device = resolve_device(preference)
+    if device.type == "cuda":
+        try:
+            name = torch.cuda.get_device_name(device)
+        except Exception:  # noqa: BLE001 - name lookup is best-effort
+            name = "unknown CUDA device"
+        return f"GPU (CUDA) — {name}"
+    return "CPU (CUDA GPU not available)"

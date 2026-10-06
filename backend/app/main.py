@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api.routes import explanation, health, model, prediction
-from app.core.config import get_settings
+from app.core.config import describe_device, get_settings
 from app.core.logging import get_logger, setup_logging
 
 logger = get_logger("app.main")
@@ -25,6 +25,10 @@ async def lifespan(app: FastAPI):
     """Load the tokenizer + model once at startup; requests reuse them."""
     settings = get_settings()
     setup_logging(settings.log_level)
+
+    # Report the compute device this process will actually use (auto-resolved
+    # from the DEVICE setting — see app/core/config.py).
+    logger.info("Compute device: %s", describe_device(settings.device))
 
     from app.services.inference import warmup_inference_service
 

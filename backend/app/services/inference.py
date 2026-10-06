@@ -218,6 +218,49 @@ def _resolve_default_checkpoint(settings: Settings) -> Optional[str]:
     return None
 
 
+def load_checkpoint_metrics(checkpoint_path: Optional[str]) -> Optional[Dict[str, Any]]:
+    """Load the evaluation metrics stored next to a checkpoint.
+
+    ``scripts/evaluate.py`` writes ``<checkpoint-stem>.metrics.json`` beside
+    the evaluated checkpoint; the API exposes its hate-head summary as the
+    ``metrics`` field of ``/api/v1/model/info``. Returns ``None`` when the file
+    is missing (or unreadable) so unavailability is reported explicitly
+    instead of being guessed.
+    """
+    if not checkpoint_path:
+        return None
+    path = Path(checkpoint_path).with_name(
+        Path(checkpoint_path).stem + ".metrics.json"
+    )
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001 - a bad file must not break model info
+        logger.warning("Could not read metrics file %s: %s", path, exc)
+        return None
+
+    hate = payload.get("hate") or {}
+
+    def number(key: str) -> Optional[float]:
+        value = hate.get(key)
+        return float(value) if isinstance(value, (int, float)) else None
+
+    return {
+        "split": payload.get("split"),
+        "dataset": payload.get("dataset"),
+        "num_examples": payload.get("num_examples"),
+        "evaluated_at": payload.get("evaluated_at"),
+        "accuracy": number("accuracy"),
+        "macro_precision": number("macro_precision"),
+        "macro_recall": number("macro_recall"),
+        "macro_f1": number("macro_f1"),
+        "weighted_precision": number("weighted_precision"),
+        "weighted_recall": number("weighted_recall"),
+        "weighted_f1": number("weighted_f1"),
+    }
+
+
 # --- prediction decoding ----------------------------------------------------------------
 
 
@@ -546,6 +589,7 @@ class InferenceService:
                 "architecture": None,
                 "checkpoint": settings.checkpoint_path,
                 "loaded": False,
+                "metrics": None,
                 "error": self.load_error,
             }
         model = bundle.model
@@ -567,6 +611,7 @@ class InferenceService:
             "architecture": bundle.model_kwargs.get("architecture", "full"),
             "checkpoint": bundle.checkpoint_path,
             "loaded": True,
+            "metrics": load_checkpoint_metrics(bundle.checkpoint_path),
             "error": self.load_error,
         }
 

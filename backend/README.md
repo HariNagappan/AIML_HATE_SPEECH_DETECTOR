@@ -292,9 +292,10 @@ annotations are explicitly `None`.
   the preceding comment and `target` is the current comment** (naming quirk —
   `target` is *not* a target-group annotation). Provides `hate` / `counter` /
   `neither` style labels for context experiments and contrastive pairs.
-  ⚠️ The numeric label mapping (default `"0"→hate, "1"→counter, "2"→neither`)
-  should be **verified against the paper** before productive training; it is
-  configurable in `configs/base.yaml`.
+  The numeric label mapping is **verified against the paper** (Yu, Blanco &
+  Hong, NAACL 2022): `"0"`=hate speech, `"1"`=neutral, `"2"`=counter(-hate)
+  speech — matching the published class shares (~28% / ~49% / ~23% of the
+  6,846 pairs). Configurable in `configs/base.yaml` if a re-check is needed.
 
 ```bash
 python scripts/download_data.py --dataset all   # raw data → data/raw/
@@ -331,6 +332,34 @@ python scripts/train.py --config full                          # multi-task
 python scripts/train.py --config cc_context --resume checkpoints/cc_context/best.pt  # resume a run
 ```
 
+### Train the entire datasets (all configurations, GPU)
+
+Each config trains on the **full train split** of its dataset — HateXplain:
+15,383 / 1,922 / 1,924 posts (train/val/test); Counter Context: 3,325 / 713 /
+713 gold pairs (plus 1,675 / 419 silver pairs available as extra data).
+`DEVICE=auto` picks CUDA automatically. On Windows the CUDA environment for
+this machine is the `ml-gpu` conda env (CUDA torch 2.5.1; transformers pinned
+to the 4.x line because 5.x requires torch ≥ 2.6):
+
+```powershell
+$py = "C:\Users\Haris\anaconda3\envs\ml-gpu\python.exe"     # GPU env interpreter
+
+& $py -m pip install -r requirements.txt "transformers<5"   # one-time setup
+& $py scripts\download_data.py --dataset all                # data (skip if present)
+& $py scripts\preprocess.py
+
+& $py scripts\train.py --config baseline                    # hatexplain, comment-only
+& $py scripts\train.py --config context --dataset counter_context
+& $py scripts\train.py --config full                        # multi-task
+& $py scripts\train.py --config cc_context                  # context-aware
+& $py scripts\train.py --config hx_full                     # hate + target + evidence
+
+& $py scripts\evaluate.py --config cc_context               # → best.metrics.json
+& $py scripts\evaluate.py --config hx_full
+```
+
+(Alternatively run `conda activate ml-gpu` once and call plain `python`.)
+
 The trainer supports: train/val/test splits, warmup + linear decay, gradient
 accumulation, mixed precision (CUDA only, automatic), gradient clipping,
 checkpoints (`last.pt` / `best.pt` with optimizer/scheduler state, config,
@@ -350,6 +379,14 @@ python scripts/evaluate.py --checkpoint checkpoints/cc_context/best.pt
 * **Evidence**: token-level precision/recall/F1 against HateXplain rationales
   for both the supervised evidence head and the attribution extractor.
   Metrics that cannot be computed for a given dataset are not reported.
+
+`scripts/evaluate.py` also writes a machine-readable copy of the results next
+to the evaluated checkpoint (`<checkpoint-stem>.metrics.json`; override with
+`--output`). `GET /api/v1/model/info` exposes the hate-head summary (accuracy,
+macro precision/recall/F1) as a `metrics` field once such a file exists, and
+the frontend renders it in the "Evaluation metrics" card. Without an
+evaluation file the field is `null` and the UI reports the metrics as
+unavailable - numbers are never fabricated.
 
 ## Ablation experiments
 
@@ -372,7 +409,7 @@ uvicorn app.main:app --reload
 | Endpoint | Purpose |
 | --- | --- |
 | `GET /health` | liveness (+ model-loaded flag) |
-| `GET /api/v1/model/info` | model name, device, hidden size, label counts, trained status, version |
+| `GET /api/v1/model/info` | model name, device, hidden size, label counts, trained status, version, evaluation `metrics` (when available) |
 | `POST /api/v1/predict` | classification + evidence + structured explanation |
 | `POST /api/v1/explain` | detailed attribution (per-token scores + spans) for a chosen head |
 
@@ -492,7 +529,14 @@ docker run -p 8000:8000 -v /path/to/checkpoints:/srv/backend/checkpoints \
 * The reason head has no training data unless you plug in a reason-annotated
   file (see "Supervising the reason head"); it reports `reason_available: false`
   until then.
-* Counter Context numeric label order should be verified against the paper.
+* **Offensive-class confusion (known)** — the offensive ↔ normal boundary is the
+  model's weakest spot (offensive test F1 ≈ 0.51; macro F1 ≈ 0.68 overall), so
+  short conversational insults can be predicted as `normal`. A 6-epoch control
+  run (`configs/hx_full_long.yaml`, early-stopped) reproduced the same behavior
+  — this is a data/model-scale property, not a training-budget issue. The
+  training labels are context-dependent themselves (insult-bearing tweets
+  appear across all three classes), which bounds how cleanly any model at this
+  scale can separate them.
 * Target-category mapping for HateXplain communities is best-effort and
   configurable; unmapped raw values are always preserved in metadata.
 * Running the full training pipeline on CPU is slow — a CUDA GPU is recommended
@@ -521,10 +565,14 @@ python scripts/train.py --config cc_context
 python scripts/train.py --config hx_full
 python scripts/import_reason_annotations.py --annotations data/reason_annotations.jsonl
 python scripts/train.py --config cc_reason   # needs the merged reason files
-python scripts/evaluate.py --checkpoint checkpoints/cc_context/best.pt
+python scripts/evaluate.py --config cc_context   # writes checkpoints/cc_context/best.metrics.json
+python scripts/evaluate.py --config hx_full      # hate + target + evidence metrics
 python scripts/export_serving_checkpoint.py --checkpoint checkpoints/cc_context/best.pt
 python scripts/explain.py --text "They should all be kicked out." \
   --context "Those immigrants are ruining everything."
 uvicorn app.main:app --reload
 python -m pytest -q
 ```
+
+On Windows, prefix every `python` command with the GPU-env interpreter (`$py`)
+from "Training → Train the entire datasets" to run it on CUDA.

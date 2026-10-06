@@ -85,6 +85,9 @@ class TrainConfig:
         settings = get_settings()
         hate = self.hate_labels
         if hate is None:
+            # Counter Context head label set. Raw corpus ids map to these names
+            # via app/datasets/label_mapping.py (verified order: 0=hate speech,
+            # 1=neutral, 2=counter speech); list order = head index order.
             hate = (
                 ["hate_speech", "counter_speech", "neither"]
                 if "counter" in self.dataset_name
