@@ -50,6 +50,9 @@ export default function PredictionCard({ result }: PredictionCardProps) {
 
   const tone = labelTone(prediction.label);
   const Icon = TONE_ICONS[tone];
+  const probabilities = prediction.probabilities
+    ? Object.entries(prediction.probabilities).sort(([, a], [, b]) => b - a)
+    : [];
 
   return (
     <Card
@@ -75,6 +78,23 @@ export default function PredictionCard({ result }: PredictionCardProps) {
           label="Confidence"
         />
       </div>
+
+      {probabilities.length > 0 ? (
+        <div className="mt-5 max-w-md border-t border-edge pt-4">
+          <p className="kicker">All classes</p>
+          <div className="mt-3 space-y-3">
+            {probabilities.map(([label, value]) => (
+              <ConfidenceBar
+                key={label}
+                value={value}
+                tone={labelTone(label)}
+                size="sm"
+                label={formatLabel(label)}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
     </Card>
   );
 }
