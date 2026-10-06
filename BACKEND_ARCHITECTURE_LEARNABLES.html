@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Backend Architecture &amp; The Learnables — Explained From First Principles</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --surface2: #1c2128; --border: #30363d;
+    --accent: #58a6ff; --green: #3fb950; --orange: #f78166; --purple: #d2a8ff;
+    --yellow: #ffa657; --blue: #79c0ff; --text: #e6edf3; --muted: #8b949e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', -apple-system, Roboto, sans-serif; font-size: 15px; line-height: 1.75; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .layout { display: flex; min-height: 100vh; }
+  nav { width: 270px; min-width: 270px; background: var(--surface); border-right: 1px solid var(--border); position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 22px 0; }
+  nav .logo { padding: 0 20px 16px; font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: .07em; text-transform: uppercase; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  nav ul { list-style: none; }
+  nav li a { display: block; padding: 5px 20px; color: var(--muted); font-size: 13.5px; }
+  nav li a:hover { color: var(--text); background: var(--surface2); text-decoration: none; }
+  main { flex: 1; max-width: 980px; margin: 0 auto; padding: 44px 40px 120px; }
+  h1 { font-size: 30px; line-height: 1.25; margin-bottom: 8px; }
+  h2 { font-size: 23px; margin: 54px 0 6px; padding-top: 10px; border-top: 1px solid var(--border); }
+  h2 .num { color: var(--accent); margin-right: 8px; }
+  h3 { font-size: 17px; margin: 28px 0 8px; color: var(--blue); }
+  p { margin: 10px 0; }
+  .sub { color: var(--muted); font-size: 14.5px; margin-bottom: 22px; }
+  .plain { background: rgba(63,185,80,.08); border: 1px solid rgba(63,185,80,.35); border-left: 4px solid var(--green); border-radius: 8px; padding: 14px 18px; margin: 14px 0 20px; }
+  .plain b:first-child, .plain .tag { color: var(--green); }
+  .analogy { color: var(--yellow); font-weight: 600; }
+  pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; overflow-x: auto; font-size: 13px; line-height: 1.6; margin: 14px 0; font-family: 'Cascadia Code', Consolas, monospace; }
+  code { font-family: 'Cascadia Code', Consolas, monospace; font-size: 13px; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; }
+  pre code { background: none; border: none; padding: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 22px; font-size: 13.5px; }
+  th { background: var(--surface2); text-align: left; padding: 9px 12px; border: 1px solid var(--border); font-size: 12.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  td { padding: 9px 12px; border: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: rgba(255,255,255,.015); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin: 14px 0; }
+  .card h4 { font-size: 15.5px; margin-bottom: 6px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  @media (max-width: 1100px) { .grid2, .grid3 { grid-template-columns: 1fr; } nav { display: none; } }
+  .pill { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 2px 10px; margin: 2px 4px 2px 0; border: 1px solid var(--border); background: var(--surface2); }
+  .pill.g { color: var(--green); border-color: rgba(63,185,80,.5); }
+  .pill.o { color: var(--orange); border-color: rgba(247,129,102,.5); }
+  .pill.p { color: var(--purple); border-color: rgba(210,168,255,.5); }
+  .pill.b { color: var(--blue); border-color: rgba(121,192,255,.5); }
+  .pill.y { color: var(--yellow); border-color: rgba(255,166,87,.5); }
+  .muted { color: var(--muted); }
+  .hl { color: var(--yellow); }
+  .ok { color: var(--green); }
+  .no { color: var(--orange); }
+  svg { display: block; margin: 18px auto; max-width: 100%; height: auto; }
+  .formula { background: var(--surface); border: 1px dashed var(--border); border-radius: 8px; padding: 14px 18px; text-align: center; font-family: Consolas, monospace; font-size: 14.5px; margin: 14px 0; color: var(--purple); }
+  ul.tight { margin: 8px 0 14px 22px; }
+  ul.tight li { margin: 5px 0; }
+  .foot { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; }
+  .toc-hero { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 22px; margin: 22px 0; }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <div class="logo">Backend · First Principles</div>
+  <ul>
+    <li><a href="#tldr">0 · The whole thing in one page</a></li>
+    <li><a href="#principles">1 · Seven first principles</a></li>
+    <li><a href="#layers">2 · The layer map</a></li>
+    <li><a href="#tree">3 · The codebase, annotated</a></li>
+    <li><a href="#learnables">4 · The Learnables (star of the show)</a></li>
+    <li><a href="#gradientflow">5 · Who trains whom (gradient flow)</a></li>
+    <li><a href="#loss">6 · The loss system (the report card)</a></li>
+    <li><a href="#data">7 · The data pipeline (the kitchen)</a></li>
+    <li><a href="#training">8 · Inside the training loop</a></li>
+    <li><a href="#reasoning">9 · The reasoning layer (does not learn)</a></li>
+    <li><a href="#serving">10 · Serving (the restaurant front)</a></li>
+    <li><a href="#config">11 · Configuration</a></li>
+    <li><a href="#ablation">12 · The ablation ladder</a></li>
+    <li><a href="#tests">13 · Testing strategy</a></li>
+    <li><a href="#solid">14 · Making it bullet-proof</a></li>
+    <li><a href="#faq">15 · "But why?" — the FAQ</a></li>
+  </ul>
+</nav>
+<main>
+
+<h1>Solid Backend Architecture &amp; The Learnables</h1>
+<p class="sub">Context-Aware Hate Speech Detection with Structured Evidence-Based Reasoning —
+explained from first principles, in plain English. Backend only. Everything here is verified against
+the actual code in <code>backend/app/</code>.</p>
+
+<div class="toc-hero">
+<b>How to read this document.</b> Every section starts with a green <span class="tag">In plain English</span>
+box — read those and you'll understand the system. The detail underneath is there when you want to go deeper.
+Words in <span class="analogy">orange</span> are analogies; words in <code>code style</code> are real file or
+variable names. One recurring word to know up front: <b>"learnable"</b> simply means <i>a part of the model
+whose numbers (weights) change during training</i>. Parts that never change during training (calculators,
+templates, rules) are <i>not</i> learnable — and this project is unusually honest about that split.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="tldr"><span class="num">0</span>The whole thing in one page</h2>
+
+<div class="plain">
+<b>In plain English:</b> You send the API two sentences — a comment, and (optionally) the comment that came
+before it. The backend answers five questions and shows its work:
+<span class="hl">WHAT</span> was said (hateful? offensive? normal?),
+<span class="hl">WHO</span> it targets (a religion? a nationality? nobody?),
+<span class="hl">WHY</span> it's harmful (a threat? an insult? exclusion?),
+<span class="hl">WHICH WORDS</span> triggered the decision (highlighted phrases, copied verbatim from your input),
+and <span class="hl">DID CONTEXT MATTER</span> (was the previous comment actually used?).
+The crucial design rule: <b>the system never makes anything up.</b> If a part isn't trained, the API says
+"not available" instead of guessing. Explanations are assembled from real values like a form being filled
+in — no chatbot writes them.
+</div>
+
+<pre><code>  "They should all be kicked out."          ← current comment
+  "I saw a group of immigrants downtown."   ← previous comment (optional context)
+                          │
+                          ▼
+        ┌─────────────────────────────────────┐
+        │  ONE shared BERT "reader"           │   the learnable core
+        │  reads BOTH comments separately     │   (~110M tunable knobs)
+        └──────────────┬──────────────────────┘
+                       │  E_c = summary of current comment
+                       │  E_p = summary of previous comment
+                       ▼
+        ┌─────────────────────────────────────┐
+        │  Context Interaction                │   learnable
+        │  "how do these two relate?"         │   (~3.1M knobs)
+        └──────────────┬──────────────────────┘
+                       │  one combined "dossier"
+        ┌───────┬──────┴──────┬─────────────┐
+        ▼       ▼             ▼             ▼
+     hate     target       reason      evidence     ← four small learnable judges
+     head     head         head        head            (thousands of knobs each)
+        │       │             │             │
+        └───────┴──────┬──────┴─────────────┘
+                       ▼
+        ┌─────────────────────────────────────┐
+        │  REASONING LAYER  (NOT learnable)   │
+        │  Integrated Gradients → highlights  │
+        │  fixed templates → the "why" text   │
+        └──────────────┬──────────────────────┘
+                       ▼
+        structured JSON → the web UI</code></pre>
+
+<p>The learnable side is a <b>shared trunk with specialist branches</b>
+<span class="analogy">(one detective gathers the evidence; several specialists each give their verdict from
+the same case file)</span>. The non-learnable side is a <b>transparency layer</b> that explains the verdict
+using only real inputs and real scores.</p>
+
+<!-- ============================================================ -->
+<h2 id="principles"><span class="num">1</span>Seven first principles</h2>
+
+<p>Every design decision in this codebase traces back to one of these. If you understand these seven,
+the whole architecture becomes obvious rather than memorized.</p>
+
+<div class="card"><h4>1 · Meaning depends on context</h4>
+<p><b>Principle:</b> "They should all be kicked out" is only fully interpretable if you know what
+"They" refers to. So the model must genuinely <i>read</i> the previous comment — not as a display gimmick.</p>
+<p><b>Consequence:</b> two encoding passes, an interaction module that mathematically combines the two,
+and a training game (contrastive learning) that rewards using context correctly.</p></div>
+
+<div class="card"><h4>2 · One shared brain, not two</h4>
+<p><b>Principle:</b> the current comment and the previous comment are encoded by the <i>same</i> BERT
+weights (<code>full_model.py</code> calls the same <code>self.encoder</code> twice).</p>
+<p><b>Consequence:</b> both summaries (<code>E_c</code>, <code>E_p</code>) live in the same "language",
+so comparing them (<code>|E_c − E_p|</code>, <code>E_c ⊙ E_p</code>) is meaningful. Two separately
+trained encoders would produce two incomparable dialects. Bonus: half the memory, and both passes
+train the same weights.</p></div>
+
+<div class="card"><h4>3 · One dossier, many specialists (multi-task learning)</h4>
+<p><b>Principle:</b> hate / target / reason are related questions about the same comment, so they share
+one representation instead of three separate models.</p>
+<p><b>Consequence:</b> each extra task acts as free practice for the shared trunk
+<span class="analogy">(studying for three related exams makes you better at each one)</span> —
+and the whole thing is one deployment instead of three.</p></div>
+
+<div class="card"><h4>4 · Trust must be earned, verbatim</h4>
+<p><b>Principle:</b> evidence for a decision must be actual phrases from the input, with exact character
+positions — computed by a principled attribution method (Integrated Gradients), never by attention
+weights relabeled as "explanations", never generated text.</p>
+<p><b>Consequence:</b> the <code>reasoning/</code> package is a separate, non-learnable layer; every
+evidence span carries <code>start</code>/<code>end</code> offsets so the UI can highlight the exact
+words.</p></div>
+
+<div class="card"><h4>5 · No fake supervision, no fake answers</h4>
+<p><b>Principle:</b> a head trains only on data that genuinely has its label; a head that has no trained
+weights reports <code>available: false</code>.</p>
+<p><b>Consequence:</b> missing labels are encoded as <code>-100</code> and the loss skips them;
+untrained heads return <code>null</code>; the reason head stays dark until someone supplies real
+reason annotations. This is why the system can't hallucinate.</p></div>
+
+<div class="card"><h4>6 · Configuration over hard-coding</h4>
+<p><b>Principle:</b> no model name, dimension, threshold, label list or loss weight is baked into
+classes. Runtime comes from <code>.env</code> → <code>core/config.py</code>; training comes from
+<code>configs/*.yaml</code> → <code>training/configs.py</code>.</p>
+<p><b>Consequence:</b> every component is a switch (<code>use_context</code>, <code>use_contrastive</code>,
+<code>use_reason</code>…), which is exactly what makes the ablation experiments (§12) possible.</p></div>
+
+<div class="card"><h4>7 · Fail soft, degrade loudly</h4>
+<p><b>Principle:</b> a subsystem failing must never take the whole request down — but it must never
+fail <i>silently</i> either.</p>
+<p><b>Consequence:</b> if the model isn't loaded, <code>/health</code> stays up and prediction returns
+<b>503</b>; if the reasoning builder crashes, you still get the classification with
+<code>"summary": "Reasoning unavailable."</code> and the error is logged.</p></div>
+
+<!-- ============================================================ -->
+<h2 id="layers"><span class="num">2</span>The layer map</h2>
+
+<div class="plain"><b>In plain English:</b> the backend is organized like a restaurant.
+The <span class="analogy">pantry</span> (data layer) preps ingredients. The
+<span class="analogy">kitchen</span> (model + training) does the actual cooking. The
+<span class="analogy">food critic</span> (evaluation) scores dishes. The
+<span class="analogy">explainer at the table</span> (reasoning layer) describes what you're eating.
+The <span class="analogy">waiter</span> (API/serving) takes orders and plates the result.
+Each floor only talks to its neighbours — that's what makes it "solid".</p></div>
+
+<table>
+<tr><th>Layer</th><th>Job in one line</th><th>Key modules</th><th>Depends on</th></tr>
+<tr><td><b>0 · Core</b></td><td>Settings + logging for everyone else</td><td><code>core/config.py</code>, <code>core/logging.py</code></td><td>nothing</td></tr>
+<tr><td><b>1 · Data</b></td><td>Raw corpora → one common format → tensors</td><td><code>datasets/</code> (adapters, unified, tokenizer, collator)</td><td>Core</td></tr>
+<tr><td><b>2 · Model</b></td><td>The learnable machinery (pure math, no I/O)</td><td><code>models/</code> (encoder, interaction, heads, contrastive)</td><td>Core</td></tr>
+<tr><td><b>3 · Training</b></td><td>Teach the model; save/load the result</td><td><code>training/</code> (trainer, losses, configs)</td><td>Data + Model</td></tr>
+<tr><td><b>4 · Evaluation</b></td><td>Grade the model honestly</td><td><code>evaluation/</code> (classification, rationale, ablation)</td><td>Data + Model</td></tr>
+<tr><td><b>5 · Reasoning</b></td><td>Explain predictions without learning anything</td><td><code>reasoning/</code> (attribution, evidence, explainers)</td><td>Model (read-only)</td></tr>
+<tr><td><b>6 · Serving</b></td><td>One loaded model, many HTTP requests</td><td><code>services/inference.py</code>, <code>api/</code>, <code>main.py</code></td><td>Reasoning + Model</td></tr>
+<tr><td><b>7 · CLI scripts</b></td><td>Human entry points for each workflow</td><td><code>scripts/</code> (download, preprocess, train, evaluate…)</td><td>everything above</td></tr>
+</table>
+
+<div class="card"><h4>The dependency rule that keeps it solid</h4>
+<p>Arrows only point <b>downward</b>. The model layer doesn't know FastAPI exists. The training loop
+doesn't know about the API. The reasoning layer reads the model but changes nothing. That's why you
+can train on a laptop script, serve in Docker, and test offline — the layers never reach into each
+other's business.</p></div>
+
+<!-- ============================================================ -->
+<h2 id="tree"><span class="num">3</span>The codebase, annotated</h2>
+
+<pre><code>backend/
+├── app/
+│   ├── main.py                  # app factory; loads the model ONCE at startup (lifespan)
+│   ├── core/                    # Layer 0 — Settings from .env, logging
+│   ├── datasets/                # Layer 1 — the pantry
+│   │   ├── hatexplain.py        #   adapter: HateXplain corpus → UnifiedExample
+│   │   ├── counter_context.py   #   adapter: Counter-Context corpus (parent→comment pairs)
+│   │   ├── unified.py           #   the ONE internal data format (contract, §7)
+│   │   ├── tokenizer.py         #   text → tokens; word-labels → subword-labels alignment
+│   │   ├── collator.py          #   batches of examples → padded tensors (+ contrastive pairs)
+│   │   ├── label_mapping.py     #   dataset-specific category names → canonical set
+│   │   └── reason_import.py     #   imports YOUR reason annotations (never fabricates)
+│   ├── models/                  # Layer 2 — every learnable parameter lives here
+│   │   ├── bert_encoder.py      #   shared BERT wrapper + freeze modes
+│   │   ├── context_interaction.py #  D = |Ec−Ep|, M = Ec⊙Ep → MLP
+│   │   ├── hate_head.py         #   softmax judge: hate / offensive / normal
+│   │   ├── target_head.py       #   softmax judge: who is targeted
+│   │   ├── reason_head.py       #   softmax judge: what type of harm
+│   │   ├── evidence_head.py     #   token-level judge: is THIS word suspicious
+│   │   ├── contrastive.py       #   projection + InfoNCE (training only!)
+│   │   ├── softmax_head.py      #   generic head both target/reason reuse
+│   │   ├── baseline.py          #   BERT → hate head, no context (the control group)
+│   │   └── full_model.py        #   assembles everything; every part switchable
+│   ├── training/                # Layer 3 — the teacher
+│   │   ├── trainer.py           #   loop, optimizer, checkpoints, early stopping
+│   │   ├── losses.py            #   masked multi-task loss (the −100 rule)
+│   │   ├── contrastive_loss.py  #   wires InfoNCE to a batch
+│   │   └── configs.py           #   YAML → TrainConfig (nothing hardcoded)
+│   ├── evaluation/              # Layer 4 — classification metrics, rationale F1, ablations
+│   ├── reasoning/               # Layer 5 — explains, never learns
+│   │   ├── attribution.py       #   Integrated Gradients (per-token "blame" scores)
+│   │   ├── evidence_extractor.py#   scores → threshold → merge → readable spans
+│   │   ├── context_reasoner.py  #   "They" → "group of immigrants" link analysis
+│   │   ├── reason_explainer.py  #   fixed templates for the reason category
+│   │   └── structured_explanation.py # assembles the final JSON honestly
+│   ├── services/inference.py    # Layer 6 — singleton model holder + predict/explain
+│   └── api/                     #   routes (health, predict, explain, model) + pydantic schemas
+├── configs/                     # base.yaml + per-experiment YAMLs (baseline, cc_context, …)
+├── data/raw, data/processed     # corpora and the converted JSONL
+├── checkpoints/                 # saved brains: &lt;run&gt;/best.pt, last.pt + default.json pointer
+├── experiments/                 # ablation results (JSON + CSV)
+├── scripts/                     # CLI entry points
+└── tests/                       # offline-safe pytest suite (tiny random BERT)</code></pre>
+
+<!-- ============================================================ -->
+<h2 id="learnables"><span class="num">4</span>The Learnables — every knob the model can turn</h2>
+
+<div class="plain">
+<b>In plain English:</b> a neural network is a giant panel of numbered dials ("weights"). Training
+=nudging millions of dials, bit by bit, until the outputs look right. A <b>learnable</b> component is
+any part of the panel that gets nudged. Below is the complete panel of this project — every dial-group,
+its size, which "teacher" (loss) nudges it, and when it's allowed to learn.
+<span class="analogy">Think of it as the model's org chart: who works here, how big is their desk,
+and who signs their performance review.</span>
+</div>
+
+<h3>4.1 · The complete inventory</h3>
+
+<table>
+<tr><th>#</th><th>Component (file)</th><th>What it does, plainly</th><th>Shape of its dials</th><th>Knob count</th><th>Trained by</th><th>Active when</th></tr>
+<tr><td>1</td><td><b>BERT encoder</b><br><code>models/bert_encoder.py</code></td><td>Turns a sentence into 768 numbers that capture its meaning + per-word vectors</td><td>~110M (embeddings + 12 transformer layers)</td><td>≈ 109,482,240</td><td>every loss (shared trunk)</td><td>always (freeze modes: <code>full / frozen / partial</code>)</td></tr>
+<tr><td>2</td><td><b>Context Interaction</b><br><code>models/context_interaction.py</code></td><td>Combines the two sentence-summaries into one "how they relate" dossier</td><td><code>Linear(3072 → 1024)</code></td><td>3,146,752</td><td>all classification losses + InfoNCE</td><td><code>use_context: true</code></td></tr>
+<tr><td>3</td><td><b>Hate head</b><br><code>models/hate_head.py</code></td><td>The verdict: hate / offensive / normal</td><td><code>Linear(1024 → 3)</code></td><td>3,075</td><td>cross-entropy (λ=1.0)</td><td>hate labels exist</td></tr>
+<tr><td>4</td><td><b>Target head</b><br><code>models/target_head.py</code></td><td>Who is targeted: race, religion, nationality…</td><td><code>Linear(1024 → 9)</code></td><td>9,225</td><td>cross-entropy (λ=1.0)</td><td><code>use_target</code> + target annotations</td></tr>
+<tr><td>5</td><td><b>Reason head</b><br><code>models/reason_head.py</code></td><td>Type of harm: insult, threat, exclusion…</td><td><code>Linear(1024 → 8)</code></td><td>8,200</td><td>cross-entropy (λ=1.0)</td><td><code>use_reason</code> + REAL reason annotations (off by default)</td></tr>
+<tr><td>6</td><td><b>Evidence head</b><br><code>models/evidence_head.py</code></td><td>Per-word suspicion score (0–1 per token)</td><td><code>Linear(768 → 1)</code></td><td>769</td><td>binary cross-entropy (λ=1.0)</td><td><code>use_evidence</code> + token-level rationales (HateXplain has them)</td></tr>
+<tr><td>7</td><td><b>Contrastive projection</b><br><code>models/contrastive.py</code></td><td>Squeezes the dossier into a comparison space for the "spot the mismatch" game</td><td><code>Linear(1024→256) → GELU → Linear(256→256)</code></td><td>328,192</td><td>InfoNCE (λ=0.5)</td><td><code>use_contrastive</code> + context — <b>training only, never used to serve</b></td></tr>
+</table>
+
+<p><b>Totals</b> (freeze_mode=<code>full</code>): full model ≈ <b>113.0M</b> learnable knobs
+(109.48M + 3.15M + 0.33M + ~20.5K). Baseline model (no context): BERT + a
+<code>Linear(768 → 3)</code> hate head (2,307 knobs) ≈ <b>109.5M</b>.</p>
+
+<div class="card"><h4>Read the table like an investor</h4>
+<p>99.5% of the capacity is the pretrained BERT trunk — knowledge it already brought from reading
+billions of words. The project-specific additions are tiny: ~3.5M knobs ≈ <b>3%</b> of the total.
+That's the whole point of fine-tuning <span class="analogy">(hiring a seasoned detective and giving
+them a one-week briefing on this specific beat, instead of raising a detective from birth)</span>.</p></div>
+
+<h3>4.2 · Each learnable, from first principles</h3>
+
+<div class="card"><h4>1 · The BERT encoder — the shared reader <span class="pill b">~109.5M</span></h4>
+<p><b>Plain:</b> BERT is a pretrained text reader. Feed it a sentence and it outputs two useful things:
+a <b>summary vector</b> (the <code>[CLS]</code> slot — one row of 768 numbers that "stands for" the whole
+sentence) and a <b>per-word vector</b> for every token, where each word's vector already knows about
+its neighbours <span class="analogy">(in "kick the bucket", the vector for "bucket" is
+bucket-the-idiom, not bucket-the-object)</span>.</p>
+<p><b>The dials inside:</b></p>
+<ul class="tight">
+<li><b>Word-lookup table (embeddings):</b> 30,522 words × 768 numbers ≈ 23.4M — each word's "starting meaning"</li>
+<li><b>Position table:</b> 512 positions × 768 ≈ 0.39M — so "dog bites man" ≠ "man bites dog"</li>
+<li><b>12 transformer layers:</b> ≈ 7.09M each ≈ 85.1M — each layer lets every word look at every other
+word (attention) and refine its meaning (feed-forward network: 768→3072→768)</li>
+<li><b>Pooler:</b> ≈ 0.59M — polishes the summary vector</li>
+</ul>
+<p><b>The three freeze modes</b> (set in <code>configs/*.yaml</code>):</p>
+<ul class="tight">
+<li><code>full</code> — all 109M dials nudge during training (best quality, most compute)</li>
+<li><code>frozen</code> — BERT is a read-only oracle; only the small heads learn (fast experiments, cheap)</li>
+<li><code>partial</code> — freeze the word-lookup + bottom <code>frozen_layers</code> (default 4); let the
+upper, more abstract layers adapt <span class="analogy">(keep the intern's vocabulary, retrain their
+judgement)</span></li>
+</ul>
+<p><b>Why shared matters (again):</b> <code>full_model.py</code> encodes the current and previous comment
+with the <i>same</i> <code>self.encoder</code>. Same dials → same "dialect" → the comparison math in
+the next component is meaningful.</p></div>
+
+<div class="card"><h4>2 · Context Interaction — the "how do these relate?" module <span class="pill p">~3.1M</span></h4>
+<p><b>Plain:</b> you have two summary vectors, each 768 numbers. How do you combine them so a small
+classifier can use them? This module concatenates <b>four signals</b> and squeezes them through one
+learnable layer:</p>
+<div class="formula">E_int = [ E_c ; E_p ; |E_c − E_p| ; E_c ⊙ E_p ]  →  Linear(3072 → 1024) → GELU → Dropout</div>
+<ul class="tight">
+<li><b>E_c ; E_p</b> — "what each comment says" (the raw summaries)</li>
+<li><b>|E_c − E_p|</b> — "how different they are", dimension by dimension. Big values where the two
+comments disagree <span class="analogy">(like holding two transparencies up to the light and marking
+where they don't overlap)</span></li>
+<li><b>E_c ⊙ E_p</b> (element-wise product) — "where they agree / reinforce each other": two large
+same-sign numbers multiply to something big; anything else shrinks toward zero</li>
+</ul>
+<p><b>Why engineered features at all?</b> A plain concatenation (the <code>simple</code> mode) forces
+the linear layer to <i>discover</i> subtraction and multiplication from scratch. Handing it those two
+comparisons ready-made is a 3-line head start — and the ablation ladder (§12, exp2 vs exp3) exists
+precisely to test whether this head start helps.</p>
+<p><b>Fallback rule:</b> no previous comment → <code>E_p</code> becomes a zero vector
+(<code>D = |E_c|</code>, <code>M = 0</code>), and the API reports <code>context_used: false</code>.
+One code path, no special cases.</p></div>
+
+<div class="card"><h4>3–5 · The three verdict heads <span class="pill g">~3–9K each</span></h4>
+<p><b>Plain:</b> each head is one small layer that reads the shared dossier (1,024 numbers) and emits
+one score per answer option. Softmax turns scores into probabilities that sum to 1. These are the
+<b>smallest</b> learnables — and the ones the user actually sees.</p>
+<ul class="tight">
+<li><b>Hate head</b> → {hate, offensive, normal}. Also has an opt-in <code>binary</code> mode
+(one score + sigmoid + threshold) that must be configured explicitly — labels are never silently
+collapsed <span class="analogy">(principle 5: no quiet relabeling)</span>.</li>
+<li><b>Target head</b> → 9 categories (race, ethnicity, nationality, religion, gender,
+sexual_orientation, political_group, other, none). Trained only where the dataset annotates targets.</li>
+<li><b>Reason head</b> → 8 categories (insult, dehumanization, negative_stereotyping, threat,
+exclusion, discrimination, incitement_to_violence, other). It is a <b>learned</b> classifier — not a
+keyword lookup — and stays <b>dark</b> until someone supplies real reason annotations via
+<code>scripts/import_reason_annotations.py</code>. No annotations → no training →
+<code>reason_available: false</code> in the API. This is principle 5 in its purest form.</li>
+</ul>
+<p><b>First principle — why heads share one dossier:</b> every extra task forces the trunk to build
+more general features. The target question ("is a group mentioned?") genuinely helps the hate question
+("is that group attacked?"). Multi-task = free cross-training.</p></div>
+
+<div class="card"><h4>6 · The evidence head — the highlighter in training <span class="pill y">769</span></h4>
+<p><b>Plain:</b> a one-layer token classifier: for each word vector (768 numbers) it outputs a single
+0-to-1 "is this word part of the harmful part?" score. It learns from HateXplain's
+<b>annotator highlights</b> (humans marked which words are rationales) after those word-level marks
+are aligned onto subword tokens (<code>tokenizer.align_rationales_to_subwords</code> — every subword
+piece inherits its parent word's mark).</p>
+<p><b>Important family distinction:</b> this head is <i>supervised prediction</i> — a student that
+practices highlighting against an answer key. The Integrated-Gradients method in the reasoning layer
+(§9) is <i>post-hoc attribution</i> — an x-ray taken after the fact. Different techniques; the project
+ships both and compares them (ablation exp6). At serving time, the evidence you see in the UI comes
+from the x-ray (IG), not this head.</p>
+<p><b>Wiring detail worth noticing:</b> this head reads the encoder's <b>token states directly</b>
+(768-dim), <i>not</i> the 1,024-dim dossier. So its gradient flows into BERT but
+<b>never through the interaction module</b> — see the flow map in §5.</p></div>
+
+<div class="card"><h4>7 · The contrastive projection — training wheels <span class="pill o">~328K</span></h4>
+<p><b>Plain:</b> a two-layer network that squeezes the dossier into a 256-dim "comparison space" where
+cosine similarity is measured. It exists only for the training game below and is
+<b>never used at inference</b>.</p>
+<p><b>The game (InfoNCE):</b> take a comment + its <b>real</b> previous comment → that pair's
+representations should be <i>similar</i>. Take the same comment + a <b>random</b> previous comment
+(sampled from the dataset's context pool, re-shuffled every epoch with a seeded RNG) → should be
+<i>dissimilar</i>. The anchor is the comment <i>alone</i>; candidates are comment-with-context.</p>
+<div class="formula">L = −log [ exp(sim(a,p⁺)/τ) / ( exp(sim(a,p⁺)/τ) + Σᵢ exp(sim(a,nᵢ)/τ) ) ]   τ = 0.07</div>
+<p><b>What this buys, in plain terms:</b> it teaches the interaction module that <i>which</i> previous
+comment you attach matters — the representation for "They should all be kicked out" must change
+depending on whether the previous comment was about immigrants or about chess
+<span class="analogy">(same witness statement, two different lineups — the detective must notice
+which lineup it belongs to)</span>.</p>
+<p><b>Why a separate projection at all?</b> Standard practice (SimCLR etc.): let the comparison game
+reshape its own small space, and shield the main 1,024-dim dossier from being distorted by it. The
+task heads keep their workspace; the game gets its own room.</p></div>
+
+<h3>4.3 · What is explicitly NOT learnable</h3>
+<table>
+<tr><th>Component</th><th>Why it's fixed by design</th></tr>
+<tr><td>Integrated Gradients attribution (<code>reasoning/attribution.py</code>)</td><td>It's a calculus recipe run on the trained model — like x-raying a finished sculpture. Nothing about the x-ray machine learns.</td></tr>
+<tr><td>Evidence merging / thresholds (<code>evidence_extractor.py</code>)</td><td>Deterministic: keep tokens ≥ 15% of the strongest token's score, glue neighbours, decode subwords, take top-5. Same input → same output, always.</td></tr>
+<tr><td>Reference analysis (<code>context_reasoner.py</code>)</td><td>An auditable pronoun→antecedent heuristic ("They" → "group of immigrants"), labelled as a heuristic in the API response.</td></tr>
+<tr><td>Explanation templates (<code>reason_explainer.py</code>)</td><td>Fixed sentence molds filled with real predicted values — <span class="analogy">mad-libs, never a chatbot</span>. Auditable line by line.</td></tr>
+<tr><td>Tokenizer, label maps, thresholds</td><td>Configuration, not knowledge. Changing them is a config edit, not a training run.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="gradientflow"><span class="num">5</span>Who trains whom — the gradient flow map</h2>
+
+<div class="plain"><b>In plain English:</b> after every prediction, the teacher (loss) sends a
+"you got this wrong by this much" signal <i>backwards</i> through the network — and every dial the
+signal passes through gets nudged. So the real question is: <b>for each teacher, which components
+are standing in the signal's path?</b> That's this section.</div>
+
+<table>
+<tr><th>Teacher (loss)</th><td class="muted" style="border:none"></td><th>BERT encoder</th><th>Interaction</th><th>Hate head</th><th>Target head</th><th>Reason head</th><th>Evidence head</th><th>Contrastive proj.</th></tr>
+<tr><td><b>hate</b> (CE)</td><td></td><td class="ok">✔ flows through</td><td class="ok">✔</td><td class="ok">✔ learns</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td><b>target</b> (CE)</td><td></td><td class="ok">✔</td><td class="ok">✔</td><td>—</td><td class="ok">✔ learns</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td><b>reason</b> (CE)</td><td></td><td class="ok">✔</td><td class="ok">✔</td><td>—</td><td>—</td><td class="ok">✔ learns</td><td>—</td><td>—</td></tr>
+<tr><td><b>evidence</b> (BCE)</td><td></td><td class="ok">✔ (token states)</td><td class="no">✘ bypasses it</td><td>—</td><td>—</td><td>—</td><td class="ok">✔ learns</td><td>—</td></tr>
+<tr><td><b>contrastive</b> (InfoNCE)</td><td></td><td class="ok">✔</td><td class="ok">✔</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="ok">✔ learns</td></tr>
+</table>
+
+<p>Three consequences worth internalizing:</p>
+<ul class="tight">
+<li><b>The trunk learns a blend of everything.</b> BERT sits upstream of all six signals, so its dials
+are nudged by every active teacher. That's multi-task learning happening in the weights, not in a
+meta-algorithm.</li>
+<li><b>The evidence head is a parallel branch.</b> It tunes BERT's token-level representations without
+touching the interaction module or the verdict heads — supervision that can't interfere with the
+classification path.</li>
+<li><b>The contrastive game shapes the shared dossier but never the verdicts directly.</b> Its signal
+stops at the projection + interaction + encoder; the heads only feel it indirectly, through a
+better-traveled trunk.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="loss"><span class="num">6</span>The loss system — one report card, five graded subjects</h2>
+
+<div class="plain"><b>In plain English:</b> training is grading. Every batch of examples gets five
+possible grades — one per subject (task). Subjects with no answer sheet in that batch are marked
+<b>excused</b>, not zero. The final grade is a weighted average, and only the final grade adjusts the
+dials. Missing data never masquerades as a wrong answer.</div>
+
+<div class="formula">L_total = λ_hate·L_hate + λ_target·L_target + λ_reason·L_reason + λ_contrastive·L_contrastive + λ_evidence·L_evidence</div>
+
+<table>
+<tr><th>Rule (from <code>training/losses.py</code>)</th><th>Plain meaning</th></tr>
+<tr><td>Missing label = <code>-100</code> (<code>IGNORE_INDEX</code>)</td><td>The collator writes −100 wherever a dataset has no label; cross-entropy's <code>ignore_index</code> skips exactly those rows. <span class="analogy">An unanswered question is skipped, not marked wrong.</span></td></tr>
+<tr><td>A loss with zero valid rows returns <code>None</code></td><td>It's simply not added to the total for that batch. No gradient, no fake signal.</td></tr>
+<tr><td>Weights <code>λ</code> (default: hate 1.0, target 1.0, reason 1.0, contrastive 0.5, evidence 1.0)</td><td>Loudness dials for each teacher. Contrastive is deliberately quieter — it's a shaping signal, not the main objective.</td></tr>
+<tr><td>Every component logged per epoch</td><td>The training summary records each subject's average grade separately, so you can see <i>what</i> improved, not just the total.</td></tr>
+<tr><td>Classification = cross-entropy; evidence = binary cross-entropy</td><td>CE grades "pick one of K answers"; BCE grades thousands of tiny yes/no highlight decisions (one per token).</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="data"><span class="num">7</span>The data pipeline — from messy internet to clean tensors</h2>
+
+<div class="plain"><b>In plain English:</b> two different research datasets (two different "formats of
+homework") arrive at the kitchen. Each gets its own translator that converts it into <b>one common
+recipe card</b> (<code>UnifiedExample</code>). Anything a dataset doesn't provide is left
+<b>blank</b> — never guessed. Then the collator turns recipe cards into padded number-tables the model
+can actually eat.</div>
+
+<h3>7.1 · The contract: <code>UnifiedExample</code> (datasets/unified.py)</h3>
+<table>
+<tr><th>Field</th><th>Plain meaning</th><th>Blank when…</th></tr>
+<tr><td><code>current_text</code></td><td>the comment being judged</td><td>never (required)</td></tr>
+<tr><td><code>context_text</code></td><td>the previous comment</td><td>dataset has no parent comment</td></tr>
+<tr><td><code>hate_label</code></td><td>what / verdict</td><td>—</td></tr>
+<tr><td><code>target_label</code></td><td>who is targeted</td><td>dataset doesn't annotate targets</td></tr>
+<tr><td><code>reason_label</code></td><td>type of harm</td><td>no reason annotations exist (the usual case!)</td></tr>
+<tr><td><code>rationale_labels</code></td><td>0/1 per word: "annotators highlighted this word"</td><td>dataset has no token rationales</td></tr>
+<tr><td><code>metadata</code></td><td>provenance: original labels, split, raw target names</td><td>never lost, never discarded</td></tr>
+</table>
+<p><b>Why one contract matters:</b> the trainer, the ablation runner and the importer all speak
+<code>UnifiedExample</code>, so adding a third dataset later = writing one new adapter. Nothing
+downstream changes.</p>
+
+<h3>7.2 · The two sources</h3>
+<table>
+<tr><th></th><th>HateXplain (primary)</th><th>Counter Context (NAACL 2022)</th></tr>
+<tr><td><b>Gives us</b></td><td>hate/offensive/normal votes (majority-aggregated), target groups, and word-level highlight rationales</td><td>real parent→comment pairs with hate / counter-speech / neither labels — the raw material for context experiments and contrastive pairs</td></tr>
+<tr><td><b>Adapter</b></td><td><code>datasets/hatexplain.py</code></td><td><code>datasets/counter_context.py</code> (note: the corpus calls the previous comment <code>context</code> and the current one <code>target</code> — a naming trap the adapter translates)</td></tr>
+<tr><td><b>Never</b></td><td colspan="2">merged at the raw level. Two adapters, one contract. A known open item: the numeric label order for Counter Context ("0"→hate?) should be verified against the paper — it's configurable in <code>configs/base.yaml</code>.</td></tr>
+</table>
+
+<h3>7.3 · Batching: the collators (datasets/collator.py)</h3>
+<ul class="tight">
+<li><b><code>MultitaskCollator</code></b> — the prep cook. Tokenizes each batch's comments (current +
+context), pads them to equal length, and writes the label tensors with <code>-100</code> wherever a
+label is missing. For evidence training, it aligns word-level highlights onto subword tokens
+(<span class="analogy">if annotators highlighted "immigrants", the subword pieces
+"immi" + "##grants" inherit the highlight</span>).</li>
+<li><b><code>ContrastivePairCollator</code></b> — wraps the above and adds the contrastive game
+pieces: each example's real context (positive) plus a randomly drawn context from the dataset pool
+(negative), re-sampled per epoch with <code>seed + epoch</code> so experiments stay reproducible.
+Rows with no context are flagged <code>contrastive_active: false</code> and excused from the game.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="training"><span class="num">8</span>Inside the training loop (training/trainer.py)</h2>
+
+<div class="plain"><b>In plain English:</b> one epoch = show the model every training example once,
+grade it, nudge the dials. The trainer's craft is in the safety rails that keep those nudges useful
+and repeatable. After each epoch it saves its full state — brain <i>and</i> diary — so a crashed run
+resumes instead of restarting.</div>
+
+<table>
+<tr><th>Mechanism</th><th>Plain English</th><th>Default</th></tr>
+<tr><td>Optimizer: <b>AdamW</b></td><td>The nudging algorithm — gradient descent with per-dial momentum, plus "weight decay" that gently erases unused dials to prevent memorizing</td><td>lr 2e-5, wd 0.01</td></tr>
+<tr><td><b>Warmup + linear decay</b></td><td>Start nudging very gently (a fresh model overreacts), ramp up over the first 10% of steps, then taper off — <span class="analogy">like easing off the gas as you approach the parking spot</span></td><td>warmup_ratio 0.1</td></tr>
+<tr><td><b>Gradient accumulation</b></td><td>Pretend the batch is bigger than GPU memory allows: accumulate several small batches' corrections before one real nudge</td><td>grad_accum_steps 1</td></tr>
+<tr><td><b>Mixed precision (AMP)</b></td><td>Do math in half-precision where safe — roughly 2× faster on NVIDIA GPUs. Auto-on for CUDA only, never on CPU</td><td>amp: auto</td></tr>
+<tr><td><b>Gradient clipping</b></td><td>Cap how far a single wild example can shove the dials</td><td>max_grad_norm 1.0</td></tr>
+<tr><td><b>Model selection</b></td><td>After each epoch, grade on the <i>validation</i> split (macro-F1, a class-balanced average — important when "normal" comments vastly outnumber hateful ones). Keep the best as <code>best.pt</code>, always save <code>last.pt</code></td><td>patience 2 → early stop</td></tr>
+<tr><td><b>Checkpoint payload</b></td><td>Not just weights: <code>model_state</code>, <code>optimizer_state</code>, <code>scheduler_state</code>, <code>epoch</code>, <code>config</code>, <code>label_maps</code>, <code>metrics</code>, <code>model_kwargs</code>, and — the honesty flag — <code>trained_heads</code> (exactly which heads saw real labels)</td><td>resumable + self-describing</td></tr>
+<tr><td><b>Reproducibility</b></td><td>One <code>seed</code> feeds python + numpy + torch (CPU &amp; CUDA), and the negative-sampling RNG re-seeds per epoch</td><td>seed 42</td></tr>
+</table>
+
+<div class="card"><h4>Why <code>trained_heads</code> is the checkpoint's moral compass</h4>
+<p>The trainer records which heads actually received real labels during the run. The serving layer later
+refuses to answer for any head not on that list (<code>*_available: false</code>). So "we never trained
+this on fabricated data" isn't a policy promise — it's a bit-flag riding along with the weights.</p></div>
+
+<!-- ============================================================ -->
+<h2 id="reasoning"><span class="num">9</span>The reasoning layer — explains, never learns</h2>
+
+<div class="plain"><b>In plain English:</b> once the model has given a verdict, this layer answers
+"which words, and how do they connect?" — using two fixed tools: an <b>x-ray</b> (Integrated Gradients)
+and a <b>referencing rulebook</b> (the pronoun analysis). Neither tool contains a single learnable dial,
+and neither can invent text. If the tools can't find anything, the response says so.</div>
+
+<h3>9.1 · Integrated Gradients — the x-ray (reasoning/attribution.py)</h3>
+<p><b>The question:</b> how much did each word push the verdict toward, say, "hate"?</p>
+<p><b>The trick, plainly:</b> start from a blank input (the padding embedding), and slowly replay the
+real sentence in ~32 tiny steps. At each step, ask "if I wiggle this word's numbers a little, how much
+does the hate score move?" Average those sensitivities, multiply by how far each word travelled from
+blank — that's the word's contribution.</p>
+<div class="formula">IGᵢ = (xᵢ − baselineᵢ) × (1/steps) Σₖ ∂F(baseline + αₖ·(x − baseline))/∂xᵢ</div>
+<p>Gradients flow <b>only into the input embeddings</b> — the model itself is untouched. Each word gets
+a signed score: positive = pushed toward the verdict. <code>gradient_x_input</code> (1 step) is the
+cheap, noisier alternative, selectable via config.</p>
+
+<h3>9.2 · From scores to highlights (reasoning/evidence_extractor.py)</h3>
+<pre><code>per-token scores → drop zeros → keep tokens ≥ 15% of the strongest →
+glue adjacent tokens → decode subwords back into real words →
+top-5 spans, each with text + score + char offsets (start, end) + token indices</code></pre>
+<p>Every span is <b>copied verbatim from the input</b> with exact character offsets — that's what lets
+the frontend highlight the precise words, reliably, with no fuzzy matching.</p>
+
+<h3>9.3 · The reference analysis + templates (context_reasoner.py, reason_explainer.py)</h3>
+<ul class="tight">
+<li><b>Reference analysis:</b> finds referring words in the current comment ("they", "them", "he"…)
+and links each to the phrase it points back to in the previous comment, with offsets on both sides:
+<code>"They" (0–4) → "group of immigrants" (8–27)</code>. Explicitly labelled a heuristic
+(<code>method: "deterministic evidence + context-reference analysis"</code>).</li>
+<li><b>Templates:</b> fixed sentence molds like <i>"The current comment uses [X] to refer to [Y]
+… Strongest evidence: [Z]"</i> — filled only with real predicted values. The system can say
+"I found no explicit reference relationship" — an honest <b>abstention</b>, never an invented target.</li>
+<li><b>Graceful degradation:</b> any crash in this layer still returns the classification, with
+<code>"summary": "Reasoning unavailable."</code> — reasoning never takes the classifier down (§1, principle 7).</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="serving"><span class="num">10</span>Serving — one brain, many requests (services/inference.py, main.py)</h2>
+
+<div class="plain"><b>In plain English:</b> the web server loads the model <b>once</b> at startup and
+keeps it in memory like a resident expert. Every HTTP request consults the same expert. Loading BERT
+per request would be <span class="analogy">like hiring a new surgeon for every patient</span>.</div>
+
+<h3>10.1 · The lifecycle</h3>
+<pre><code>uvicorn app.main:app
+  └─ lifespan startup ──► InferenceService.load()
+        ├─ MODEL_CHECKPOINT env set?        → load that exact file
+        ├─ else checkpoints/default.json?   → load the file it points to
+        ├─ else conventional paths?         → cc_context/best.pt → hx_full/best.pt → full/best.pt
+        ├─ else                             → build an UNTRAINED model, report trained: false
+        └─ load failure?                    → /health stays up; /predict &amp; /explain return 503</code></pre>
+
+<h3>10.2 · One request, end to end (<code>POST /api/v1/predict</code>)</h3>
+<ol style="margin:8px 0 14px 22px">
+<li><b>Validate</b> — pydantic schema accepts both namings (<code>text</code>/<code>context</code> and
+<code>current_comment</code>/<code>previous_comment</code>), caps length at 5,000 chars, rejects blank text.</li>
+<li><b>Forward pass</b> — tokenize, run the model once under <code>torch.no_grad()</code> (no learning,
+no memory of this request).</li>
+<li><b>Decode each trained head</b> — softmax/sigmoid → label + confidence + full probability table.</li>
+<li><b>X-ray</b> — Integrated Gradients over the current comment (gradients enabled only on input embeddings).</li>
+<li><b>Evidence spans</b> — threshold, merge, decode, attach character offsets.</li>
+<li><b>Reasoning</b> — reference analysis + templates; wrapped in try/except with an explicit fallback.</li>
+<li><b>Assemble</b> — <code>structured_explanation.build_explanation</code> sets every
+<code>*_available</code> flag from reality, never from hope.</li>
+</ol>
+
+<h3>10.3 · The API surface</h3>
+<table>
+<tr><th>Endpoint</th><th>What you get</th></tr>
+<tr><td><code>GET /health</code></td><td>liveness + model-loaded flag</td></tr>
+<tr><td><code>GET /api/v1/model/info</code></td><td>which architecture, device, label counts, trained heads, checkpoint path, version</td></tr>
+<tr><td><code>POST /api/v1/predict</code></td><td>the full structured answer: prediction / target / reason / evidence / reasoning / flags</td></tr>
+<tr><td><code>POST /api/v1/explain</code></td><td>raw per-token attribution for a chosen head (hate/target/reason)</td></tr>
+</table>
+<p class="muted">Also: <code>scripts/export_serving_checkpoint.py</code> produces a ~35% smaller
+serve-only checkpoint (drops optimizer/scheduler state you don't need at inference) for Docker images.</p>
+
+<!-- ============================================================ -->
+<h2 id="config"><span class="num">11</span>Configuration — two floors, one rule</h2>
+
+<div class="plain"><b>In plain English:</b> there are exactly two places any number lives.
+<b>Runtime</b> numbers (which checkpoint to serve, which device, evidence settings) live in
+<code>.env</code> → <code>core/config.py</code>. <b>Training</b> numbers (learning rate, epochs,
+component switches) live in <code>configs/*.yaml</code>. If you find a magic number inside a model
+class, it's a bug by this project's own convention.</div>
+
+<table>
+<tr><th></th><th>Runtime (serving)</th><th>Training</th></tr>
+<tr><td><b>Source</b></td><td>environment / <code>.env</code> (pydantic Settings, cached singleton)</td><td><code>configs/base.yaml</code> + experiment YAML, <b>deep-merged</b> (override only what you change)</td></tr>
+<tr><td><b>Examples</b></td><td><code>MODEL_NAME</code>, <code>MODEL_CHECKPOINT</code>, <code>DEVICE</code>, evidence method/top-k/IG-steps, label sets, CORS</td><td><code>use_context</code>, <code>use_contrastive</code>, <code>use_reason</code>, lr, batch, epochs, freeze mode, loss weights, dataset files</td></tr>
+<tr><td><b>Label resolution order</b></td><td colspan="2">explicit config → dataset default (counter-context gets its own 3 labels) → runtime settings. You can always see where a label set came from.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="ablation"><span class="num">12</span>The ablation ladder — proof instead of vibes</h2>
+
+<div class="plain"><b>In plain English:</b> an ablation is <span class="analogy">taking one ingredient
+out of a recipe at a time and tasting the difference</span>. This project doesn't just claim "context
+helps" — it defines six rungs, each isolating exactly one addition, and reports the numbers. Any claim
+without a number is treated as false.</div>
+
+<table>
+<tr><th>Experiment</th><th>Adds / changes</th><th>The question it answers</th><th>Learnables involved</th></tr>
+<tr><td><code>exp1_baseline</code></td><td>plain BERT → hate head</td><td>How far does a plain reader get, ignoring context entirely?</td><td>BERT + hate head (768→3)</td></tr>
+<tr><td><code>exp2_bert_context</code></td><td>+ context, plain concatenation (<code>interaction_mode: simple</code>)</td><td>Does just <i>showing</i> the previous comment help?</td><td>+ interaction (1536→1024)</td></tr>
+<tr><td><code>exp3_interaction</code></td><td>+ D/M features (<code>interaction_mode: mlp</code>)</td><td>Do the engineered "difference" and "agreement" signals beat plain concatenation?</td><td>+ interaction (3072→1024)</td></tr>
+<tr><td><code>exp4_contrastive</code></td><td>+ InfoNCE game</td><td>Does training on real-vs-random context sharpen the representation?</td><td>+ contrastive projection</td></tr>
+<tr><td><code>exp5_full</code></td><td>+ target (+ reason when annotated)</td><td>Does multi-task cross-training help the hate verdict?</td><td>+ target / reason heads</td></tr>
+<tr><td><code>exp6_evidence</code></td><td>+ evidence evaluation vs. human rationales</td><td>Do the highlights (IG and/or the evidence head) match what humans marked?</td><td>+ evidence head; no new training</td></tr>
+</table>
+<p class="muted">Each run lands in <code>experiments/&lt;name&gt;.json</code> + a CSV summary. The runner
+reports numbers only — it never asserts an improvement without them.</p>
+
+<!-- ============================================================ -->
+<h2 id="tests"><span class="num">13</span>Testing strategy — fast, offline, honest</h2>
+
+<div class="plain"><b>In plain English:</b> the test suite never downloads anything and never needs a
+GPU — it swaps in a <b>tiny random 2-layer BERT</b> (<code>BertEncoder.random_init</code>) so every
+structural claim runs in seconds on any laptop. Real-model checks exist behind an explicit flag.</div>
+
+<table>
+<tr><th>Coverage</th><th>What it pins down</th></tr>
+<tr><td>Interaction math</td><td>D, M, and the 3072-dim concatenation are exactly what the spec says</td></tr>
+<tr><td>Encoder shapes</td><td>CLS = 768 dims; token states = [batch, tokens, 768]</td></tr>
+<tr><td>Losses &amp; collators</td><td>−100 labels are skipped; subword alignment matches word highlights</td></tr>
+<tr><td>Contrastive loss</td><td>InfoNCE math; context-less rows excused</td></tr>
+<tr><td>Evidence extraction</td><td>merging, ranking, special-token zeroing, dedupe, offsets</td></tr>
+<tr><td>Trainer smoke test</td><td>1 epoch runs, checkpoint saves, resume works</td></tr>
+<tr><td>Inference + API</td><td>untrained model → <code>*_available: false</code>; 503 when model missing; validation errors</td></tr>
+<tr><td>Integration (opt-in)</td><td><code>RUN_INTEGRATION_TESTS=1</code> → real bert-base-uncased, real end-to-end</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="solid"><span class="num">14</span>Making it bullet-proof — what's solid, what's next</h2>
+
+<h3>Already solid (rare for a research codebase — protect these)</h3>
+<ul class="tight">
+<li><span class="pill g">layered</span> strict downward-only dependencies; model layer knows nothing about HTTP</li>
+<li><span class="pill g">config-driven</span> zero hardcoded hyper-parameters; YAML merge + env Settings</li>
+<li><span class="pill g">honest</span> <code>trained_heads</code> flags, <code>-100</code> masking, abstention templates, <code>*_available</code> API contract</li>
+<li><span class="pill g">portable</span> self-describing checkpoints (weights + config + label maps); serve anywhere, resume anytime</li>
+<li><span class="pill g">provable</span> the ablation ladder is built in, not bolted on</li>
+<li><span class="pill g">tested offline</span> random-BERT swap makes CI cheap</li>
+</ul>
+
+<h3>Hardening roadmap (ranked by "solidness" gained per effort)</h3>
+<table>
+<tr><th>#</th><th>Upgrade</th><th>Why (plain English)</th></tr>
+<tr><td>1</td><td><b>Verify the Counter-Context label order</b> against the paper</td><td>The config itself flags this. A swapped 0/1 mapping would silently teach the model the wrong lesson from every context pair. One afternoon, protects every experiment.</td></tr>
+<tr><td>2</td><td><b>Confidence calibration</b> (temperature scaling on the validation set)</td><td>Right now "0.94 confident" just means "big logit gap", not "94% likely correct". Calibrated numbers make the UI's confidence honest, not just structured.</td></tr>
+<tr><td>3</td><td><b>CI pipeline</b> (GitHub Actions: <code>pip install</code> + <code>pytest -q</code>)</td><td>The suite is already offline-safe — it just needs to actually run on every push.</td></tr>
+<tr><td>4</td><td><b>API guards</b>: rate limiting, request size caps in production config, tighter CORS list</td><td>IG costs ~32 forward passes per request — one client can hog the model. Cheap protection, big stability win.</td></tr>
+<tr><td>5</td><td><b>Observability</b>: request-latency + per-head-confidence histograms</td><td>You can't improve what you can't see; confidence drift is the earliest warning that the served model misbehaves.</td></tr>
+<tr><td>6</td><td><b>Serve-time speed</b>: export to ONNX or TorchScript; batch concurrent requests</td><td>Removes Python overhead and lets one GPU serve several users at once.</td></tr>
+<tr><td>7</td><td><b>Data versioning</b> (DVC or similar for <code>data/processed</code>)</td><td>Ablations are only comparable if everyone trains on byte-identical data.</td></tr>
+<tr><td>8</td><td><b>Model registry</b>: promote checkpoints (<code>default.json</code> → environment-aware)</td><td>Already half-built via the pointer file — formalize it (staging/prod pointers) to stop "which model is live?" ambiguity.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="faq"><span class="num">15</span>"But why?" — the first-principles FAQ</h2>
+
+<div class="card"><h4>Why use the <code>[CLS]</code> vector as "the meaning"?</h4>
+<p>BERT reserves its first input slot as a scratchpad that the layers train to fill with a
+whole-sentence summary (that's literally what it was pre-trained to do). It's a free,
+already-trained sentence summary — no extra machinery needed.</p></div>
+
+<div class="card"><h4>Why <code>|E_c − E_p|</code> AND <code>E_c ⊙ E_p</code> instead of just concatenating?</h4>
+<p>Concatenation says "here are two things" — the classifier must learn <i>how to compare</i> them.
+Difference says "here is where they disagree"; product says "here is where they agree". Handing the
+comparison pre-computed turns a hard learning problem into an easy one. Whether the shortcut actually
+helps is exactly what exp2-vs-exp3 measures.</p></div>
+
+<div class="card"><h4>Why is temperature 0.07 in InfoNCE?</h4>
+<p>Cosine similarities live in a narrow band (−1…1); dividing by a small τ stretches that band apart
+before softmax, so the loss can strongly punish confusing the real context with a random one
+<span class="analogy">(a magnifying glass over the score gap)</span>. Too small → unstable; too big →
+the game is too easy and teaches nothing. 0.07 is a well-tested default (SimCLR lineage).</p></div>
+
+<div class="card"><h4>Why is the IG baseline the PAD embedding (not zeros)?</h4>
+<p>IG needs a "meaningless input" to rewind to. Padding is the closest thing to "no word" that the
+model has actually seen in training — a fairer neutral point than an arbitrary all-zero vector the
+model may treat as alien.</p></div>
+
+<div class="card"><h4>Why −100 and not 0 for missing labels?</h4>
+<p>0 is a real class index ("the first label"). Using it would grade blank answers as
+"wrong class 0". −100 is outside every legal index, so <code>ignore_index</code> can skip it
+unambiguously — an excused absence, not a wrong answer.</p></div>
+
+<div class="card"><h4>Why macro-F1 for picking the best epoch?</h4>
+<p>Hate datasets are imbalanced — most comments are normal. Plain accuracy lets a lazy model score
+well by always saying "normal". Macro-F1 averages per-class F1 equally, so being good at the rare,
+important classes counts just as much.</p></div>
+
+<div class="card"><h4>Why does evidence come from IG instead of the evidence head?</h4>
+<p>Two different tools for two different jobs. The evidence head needs token-level training labels
+(only HateXplain has them) and learns one notion of "suspicious word". IG works on <i>any</i> trained
+model — including target/reason heads and Counter-Context models with no rationale data — and always
+explains <i>this specific prediction</i>. The head still exists for the comparison study (exp6) and for
+future speed-ups (its scores come free in one forward pass).</p></div>
+
+<div class="card"><h4>Why deterministic templates instead of an LLM writing the explanation?</h4>
+<p>Because the explanation is <b>part of the evidence</b>. If a language model composed it, you'd need
+another system to verify the verifier. With templates, every sentence is auditable: it can only contain
+the predicted label, the linked phrases, and the extracted spans — nothing else exists for it to say.
+Explainability you have to trust is not explainability.</p></div>
+
+<div class="card"><h4>Why keep the contrastive projection in the checkpoint if serving ignores it?</h4>
+<p>So training can resume exactly where it stopped (optimizer state and all), and so experiments can
+re-run the contrastive evaluation. Serving simply never calls it — the flag <code>use_contrastive</code>
+plus <code>trained_heads</code> make that unambiguous.</p></div>
+
+<div class="foot">
+<b>Where to look next, per question:</b> how batching works → <code>datasets/collator.py</code> ·
+how a dial gets nudged → <code>training/trainer.py::_train_epoch</code> · where honesty is enforced →
+<code>losses.py</code> (−100), <code>inference.py</code> (trained_heads), <code>structured_explanation.py</code> (flags) ·
+how the x-ray works → <code>reasoning/attribution.py</code> · what each experiment changes →
+<code>evaluation/ablation.py</code>.<br/><br/>
+Companion docs: <code>backend/README.md</code> (full reference) · <code>REASONING.md</code> (reasoning
+pipeline) · <code>ARCHITECTURE.html</code> (system overview). This file: backend architecture + learnables, first principles.
+</div>
+
+</main>
+</div>
+</body>
+</html>

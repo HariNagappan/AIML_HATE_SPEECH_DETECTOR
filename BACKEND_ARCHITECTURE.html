@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Backend Architecture — Context-Aware Hate Speech Detection (first principles)</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #161922;
+    --panel-2: #1c2029;
+    --line: #2a2f3a;
+    --ink: #e7e9ee;
+    --ink-dim: #a8afbd;
+    --ink-faint: #7c8494;
+    --accent: #6ea8fe;
+    --accent-2: #7ee2b8;
+    --warn: #ffcc66;
+    --bad: #ff8080;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.68;
+  }
+  .wrap { display: grid; grid-template-columns: 268px minmax(0, 1fr); max-width: 1500px; margin: 0 auto; }
+  nav {
+    position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+    padding: 28px 18px 40px; border-right: 1px solid var(--line); background: #101319;
+    font-size: 13.5px;
+  }
+  nav h2 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 14px; }
+  nav a { display: block; color: var(--ink-dim); text-decoration: none; padding: 3.5px 8px; border-radius: 6px; border-left: 2px solid transparent; }
+  nav a:hover { color: var(--ink); background: var(--panel-2); border-left-color: var(--accent); }
+  nav a.sub { padding-left: 20px; font-size: 12.5px; color: var(--ink-faint); }
+  main { padding: 40px 48px 120px; min-width: 0; }
+  h1 { font-size: 32px; line-height: 1.25; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-dim); font-size: 16px; margin: 0 0 26px; }
+  h2 {
+    font-size: 23px; margin: 56px 0 14px; padding-top: 18px; border-top: 1px solid var(--line);
+    letter-spacing: -0.01em;
+  }
+  h2 .n { color: var(--accent); font-family: var(--mono); font-size: 18px; margin-right: 10px; }
+  h3 { font-size: 17.5px; margin: 30px 0 8px; color: #dfe4ee; }
+  h4 { font-size: 15px; margin: 22px 0 6px; color: var(--accent-2); font-weight: 600; letter-spacing: .01em; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 10px 4px; padding-left: 22px; }
+  li { margin: 5px 0; }
+  code { font-family: var(--mono); font-size: 13.5px; background: #232833; padding: 1.5px 5px; border-radius: 5px; color: #ffd9a0; }
+  pre {
+    background: #0b0e13; border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    padding: 16px 18px; border-radius: 10px; overflow-x: auto; font-size: 13px; line-height: 1.55;
+    font-family: var(--mono); color: #cdd6e6;
+  }
+  pre code { background: none; padding: 0; color: inherit; font-size: 13px; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14.3px; }
+  th, td { border: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--panel-2); font-weight: 600; color: #dbe1ec; font-size: 13.5px; }
+  td code { font-size: 12.8px; }
+  .lead { font-size: 17px; color: #d3d9e4; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; margin: 18px 0;
+  }
+  .card.tight { padding: 14px 18px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 1150px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+  .note { border-left: 3px solid var(--accent); background: #12161f; padding: 12px 16px; border-radius: 8px; margin: 16px 0; }
+  .warn { border-left: 3px solid var(--warn); background: #1a1710; padding: 12px 16px; border-radius: 8px; margin: 16px 0; }
+  .bad  { border-left: 3px solid var(--bad);  background: #1c1315; padding: 12px 16px; border-radius: 8px; margin: 16px 0; }
+  .good { border-left: 3px solid var(--accent-2); background: #101a16; padding: 12px 16px; border-radius: 8px; margin: 16px 0; }
+  .tag {
+    display: inline-block; font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em;
+    padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-dim);
+    background: var(--panel-2); margin-right: 6px; white-space: nowrap;
+  }
+  .tag.hot { color: #ffb4b4; border-color: #5a2a2a; background: #241518; }
+  .tag.ok  { color: #a9e9cf; border-color: #26543f; background: #12241c; }
+  .tag.acc { color: #bcd4ff; border-color: #2c4570; background: #141c2c; }
+  .muted { color: var(--ink-faint); font-size: 14px; }
+  .kv { font-family: var(--mono); font-size: 13px; }
+  .lead-num { font-family: var(--mono); color: var(--accent-2); font-weight: 600; }
+  hr { border: none; border-top: 1px dashed var(--line); margin: 30px 0; }
+  .ascii { font-size: 12.6px; line-height: 1.45; border-left-color: var(--accent-2); }
+  .equation {
+    font-family: var(--mono); font-size: 14px; background: var(--panel-2); border: 1px dashed var(--line);
+    padding: 12px 16px; border-radius: 8px; margin: 12px 0; color: #dbe6f5;
+  }
+  .file { font-family: var(--mono); font-size: 12.6px; color: var(--accent); }
+  .toc-tree { font-family: var(--mono); font-size: 12.6px; line-height: 1.7; color: #b9c2d2; }
+  .toc-tree .c { color: var(--ink-faint); }
+  details { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 16px; margin: 12px 0; }
+  summary { cursor: pointer; font-weight: 600; color: #d8deea; }
+  details[open] summary { margin-bottom: 8px; }
+  footer { color: var(--ink-faint); font-size: 13.5px; border-top: 1px solid var(--line); margin-top: 60px; padding-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <h2>Contents</h2>
+  <a href="#how">How to read this</a>
+  <a href="#map">The 60-second map</a>
+  <a href="#tree">Folder map</a>
+  <a href="#ask">1 · What the system is asked to do</a>
+  <a href="#bert">2 · First principle: what BERT gives you</a>
+  <a href="#shared">3 · Why one encoder for two texts</a>
+  <a href="#interaction">4 · The interaction block (D and M)</a>
+  <a href="#heads">5 · The four heads</a>
+  <a href="#losses">6 · The multi-task loss</a>
+  <a href="#contrastive">7 · Contrastive learning (training only)</a>
+  <a href="#data">8 · Data layer</a>
+  <a href="#pipeline">9 · The training pipeline</a>
+  <a href="#checkpoint">10 · Checkpoints and serving</a>
+  <a href="#evidence">11 · Evidence: Integrated Gradients</a>
+  <a href="#explain">12 · Deterministic explanation layers</a>
+  <a href="#api">13 · The API layer</a>
+  <a href="#runtime">14 · What actually happens per request</a>
+  <a href="#config">15 · Config and dependencies</a>
+  <a href="#tests">16 · Testing strategy</a>
+  <a href="#layers">17 · Architecture layer by layer</a>
+  <a href="#learn">18 · Learnables (only 1.4 M!)</a>
+  <a href="#read">19 · Read the code in this order</a>
+  <a href="#concepts">20 · Concepts you must know</a>
+  <a href="#gaps">21 · Where it breaks (honest list)</a>
+  <a href="#solid">22 · How to make it solid</a>
+  <a href="#gloss">23 · Plain-English glossary</a>
+</nav>
+
+<main>
+  <h1>Backend Architecture — explained from first principles</h1>
+  <p class="sub">
+    Context-Aware Hate Speech Detection with Structured Evidence-Based Reasoning ·
+    <span class="muted">Python · FastAPI · PyTorch · Hugging Face Transformers</span>
+  </p>
+
+  <div class="note">
+    <strong>Everything here is written in plain language first, then the exact detail.</strong>
+    Every number quoted below was measured from <em>your</em> code and <em>your</em>
+    checkpoints in this repo — not estimated. Where a claim sounds surprising, there is a
+    verification command right next to it.
+  </div>
+
+  <h2 id="how">How to read this</h2>
+  <p class="lead">
+    The single most useful mental model for this backend: <strong>it is two programs stapled
+    together</strong>.
+  </p>
+  <div class="grid2">
+    <div class="card">
+      <h4>Program A — the factory (offline)</h4>
+      <p class="muted" style="margin-top:0">In <code>scripts/</code>, <code>app/datasets/</code>,
+      <code>app/training/</code>, <code>app/models/</code>, <code>app/evaluation/</code>.</p>
+      <p>Downloads data → cleans it → teaches a neural network → writes a file of
+      learned numbers (<code>best.pt</code>). Runs on your laptop / a GPU box. Slow, heavy,
+      run once in a while.</p>
+    </div>
+    <div class="card">
+      <h4>Program B — the shop counter (online)</h4>
+      <p class="muted" style="margin-top:0">In <code>app/main.py</code>, <code>app/api/</code>,
+      <code>app/services/</code>, <code>app/reasoning/</code>.</p>
+      <p>A web server. It loads the numbers from Program A once at boot, then answers
+      <code>POST /api/v1/predict</code> in milliseconds. It never trains, never downloads
+      anything, and never writes files.</p>
+    </div>
+  </div>
+  <p><strong>The bridge between them is a checkpoint</strong> — one file that contains both
+  the learned numbers <em>and</em> a written description of how the network was built, so the
+  server can rebuild the exact same shape before loading the numbers.</p>
+  <p class="muted">If you understand that sentence, you already understand 70% of this codebase.</p>
+
+  <h2 id="map">The 60-second map</h2>
+<pre class="ascii">  PROGRAM A (offline, runs when you type a python command)
+  ─────────────────────────────────────────────────────────
+   raw data files            data/raw/hatexplain/dataset.json
+   (downloaded, untouched)   data/raw/counter_context/*.jsonl
+            │
+            │  scripts/download_data.py      → fetch
+            │  scripts/preprocess.py         → clean + unify
+            ▼
+   one common shape          UnifiedExample (dataclass in app/datasets/unified.py)
+            │                 { id, current_text, context_text,
+            │                   hate_label, target_label, reason_label,
+            │                   rationale_labels, metadata }
+            │
+            │  app/datasets/collator.py      → tokenise + pad + build label tensors
+            ▼
+   batches of tensors ─────► app/models/full_model.py       (the network)
+            │                     └── app/training/trainer.py (the loop that adjusts it)
+            │
+            ▼
+   checkpoints/cc_context/best.pt      ← ← ← THE BRIDGE (numbers + blueprint)
+
+  PROGRAM B (online, runs while uvicorn is alive)
+  ──────────────────────────────────────────────
+   HTTP request ─► app/api/routes/prediction.py     (thin: validate, call, wrap errors)
+                        │
+                        ▼
+                   app/services/inference.py         (the only place that owns the model)
+                        │  1. tokenise the text
+                        │  2. one forward pass  → class scores
+                        │  3. Integrated Gradients → which words mattered
+                        │  4. deterministic templates → English sentences
+                        ▼
+                   app/api/schemas/prediction.py     (Pydantic: the JSON contract)
+                        │
+                        ▼
+                   JSON back to the React frontend</pre>
+
+  <h2 id="tree">Folder map (what lives where)</h2>
+<pre class="toc-tree">backend/
+├── app/
+│   ├── main.py              <span class="c">FastAPI app factory + startup (loads model once)</span>
+│   ├── core/
+│   │   ├── config.py        <span class="c">Settings from .env — no magic numbers in code</span>
+│   │   └── logging.py       <span class="c">one-line logger setup</span>
+│   ├── api/
+│   │   ├── routes/          <span class="c">health · prediction · explanation · model  (4 endpoints)</span>
+│   │   └── schemas/         <span class="c">Pydantic request/response contracts</span>
+│   ├── models/              <span class="c">the neural network, in small pieces</span>
+│   │   ├── bert_encoder.py         <span class="c">wraps pretrained BERT (+ freezing options)</span>
+│   │   ├── context_interaction.py  <span class="c">D, M, [E_c;E_p;D;M] → MLP</span>
+│   │   ├── hate_head.py            <span class="c">softmax/BinaryClassification head</span>
+│   │   ├── target_head.py          <span class="c">softmax head (who is targeted)</span>
+│   │   ├── reason_head.py          <span class="c">softmax head (what kind of harm)</span>
+│   │   ├── evidence_head.py        <span class="c">per-token rationale classifier (optional)</span>
+│   │   ├── contrastive.py          <span class="c">projection + InfoNCE (training only)</span>
+│   │   ├── baseline.py             <span class="c">BERT + hate head, no context (control group)</span>
+│   │   └── full_model.py           <span class="c">assembles all of the above</span>
+│   ├── datasets/            <span class="c">one adapter per dataset, one shared example shape</span>
+│   ├── training/            <span class="c">trainer, losses, configs, checkpoint IO</span>
+│   ├── reasoning/           <span class="c">evidence + deterministic explanation (NOT the model)</span>
+│   ├── services/inference.py <span class="c">model lifecycle + the predict()/explain() pipeline</span>
+│   └── evaluation/          <span class="c">metrics + the 6 ablation experiments</span>
+├── configs/                 <span class="c">YAML: base.yaml + one file per experiment</span>
+├── scripts/                 <span class="c">CLI entry points: download, preprocess, train, evaluate, explain</span>
+├── tests/                   <span class="c">18 test files — 149 passing, 2 skipped (offline-safe)</span>
+├── checkpoints/             <span class="c">best.pt / last.pt + default.json pointer</span>
+└── data/                    <span class="c">raw/ (untouched) and processed/ (unified JSONL)</span></pre>
+
+  <h2 id="ask"><span class="n">1</span>What the system is asked to do</h2>
+  <p>The user types a comment and (optionally) the comment that came before it. The backend
+  must answer five questions with <em>one</em> request:</p>
+  <table>
+    <tr><th>Question in plain English</th><th>Field in the JSON</th><th>Who produces it</th></tr>
+    <tr><td>Is this comment hateful, offensive, or normal?</td><td><code>prediction</code></td><td>trained <strong>hate head</strong></td></tr>
+    <tr><td>Who or what group does it target?</td><td><code>target</code></td><td>trained <strong>target head</strong></td></tr>
+    <tr><td>What kind of harm is it? (insult, threat, exclusion…)</td><td><code>reason</code></td><td>trained <strong>reason head</strong></td></tr>
+    <tr><td>Which exact words drove that decision?</td><td><code>evidence[].text</code></td><td><strong>Integrated Gradients</strong> (maths on the model, not a second model)</td></tr>
+    <tr><td>Did the previous comment change anything, and how?</td><td><code>reasoning</code>, <code>context_used</code></td><td><strong>deterministic</strong> pronoun→antecedent heuristic + templates</td></tr>
+  </table>
+  <div class="good">
+    <strong>The design rule that shapes the whole backend:</strong> if a head was never trained,
+    the API returns <code>null</code> and <code>"reason_available": false</code>.
+    It does <em>not</em> guess, and it does not write a plausible-sounding explanation for a
+    prediction it never made. This "no fabrication" rule is why so many flags like
+    <code>*_available</code> exist in the code.
+  </div>
+
+  <h2 id="bert"><span class="n">2</span>First principle: what BERT actually gives you</h2>
+  <p>Forget the hype. BERT is a <strong>fixed-size box of learned arithmetic</strong>. You feed it
+  a sentence, you get numbers out. That is the entire contract.</p>
+<pre class="ascii">  "They should all be kicked out ."
+        │
+        │  (1) split into word-pieces      ["[CLS]", "they", "should", "all", "be",
+        │                                   "kicked", "out", ".", "[SEP]"]
+        │  (2) each piece → a 768-number vector (a "meaning fingerprint")
+        │  (3) let every piece look at every other piece, 12 times over (attention)
+        ▼
+  output, same length as input, each vector now CONTEXT-AWARE:
+        [CLS] → [0.12, -0.87, ... ]  ┐
+        they  → [0.04,  0.31, ... ]  │  each is 768 numbers
+        ...                          ├─ 768-dimensional hidden states
+        [SEP] → [0.00,  0.00, ... ]  ┘
+
+  TWO things we use out of that:
+    • [CLS] vector  = a single "fingerprint of the whole sentence"      (E_c, E_p)
+    • per-token vectors = "fingerprint of each word given the others"   (for evidence)</pre>
+  <p><strong>Why the <code>[CLS]</code> vector and not the average of all tokens?</strong> Because
+  BERT is pretrained so that <code>[CLS]</code> summarises the whole sentence for
+  sentence-level tasks. It is the purpose-built summary slot.</p>
+  <p><strong>The key insight that makes this project work:</strong> the word
+  <em>"kicked"</em> gets a <em>different</em> 768-number vector depending on the words around
+  it. That is the literal mechanism by which "did the previous comment change the meaning?"
+  becomes computable — the numbers move.</p>
+  <p class="muted">Where: <span class="file">app/models/bert_encoder.py</span> — a thin wrapper
+  around <code>transformers.AutoModel</code>. It adds exactly one thing of its own:
+  freezing control.</p>
+  <table>
+    <tr><th><code>freeze_mode</code></th><th>Plain English</th><th>Why you'd choose it</th></tr>
+    <tr><td><code>full</code></td><td>Repaint the whole network</td><td>Best accuracy, slowest, most memory. Default.</td></tr>
+    <tr><td><code>frozen</code></td><td>Never touch BERT; only train your small heads</td><td>Tiny GPU, quick experiments. BERT is already good at English.</td></tr>
+    <tr><td><code>partial</code></td><td>Freeze the bottom N layers, fine-tune the top</td><td>The classic middle ground. Bottom layers learn basic grammar, top layers learn task specifics.</td></tr>
+  </table>
+
+  <h2 id="shared"><span class="n">3</span>Why one encoder for two texts (weight sharing)</h2>
+  <p>Naive approach: two separate models, one for the comment, one for the context. This code
+  does <strong>not</strong> do that. It runs the <em>same</em> BERT twice.</p>
+<pre class="ascii">              ┌──────────────────────────────┐
+   comment ──►│                              │──► E_c   (768 numbers)
+              │   ONE set of BERT weights    │
+   context ──►│   (the exact same weights)   │──► E_p   (768 numbers)
+              └──────────────────────────────┘</pre>
+  <div class="note">
+    <strong>Analogy:</strong> imagine one translator who reads both the previous line of dialogue
+    and the current line, and reports what each means. If you used <em>two different</em>
+    translators with different vocabularies, comparing their answers would be meaningless — they
+    might use different numbers for the same idea.
+    <br><br>
+    Because <code>E_c</code> and <code>E_p</code> come out of the same box, they live in the
+    <strong>same coordinate system</strong>. So subtraction and multiplication between them are
+    meaningful operations. That is the entire justification for the next section.
+  </div>
+  <p>Notice also: the model still works <strong>without context</strong>. If no context is given,
+  <code>E_p</code> is left as <code>None</code> and the interaction layer substitutes a vector of
+  zeros (see <span class="file">context_interaction.py</span>, <code>forward()</code>). Simpler
+  than dragging a flag through the whole network, and it keeps the door open for
+  "N previous comments" later.</p>
+  <p class="muted">Implementation detail worth knowing: in training, whole batches are padded, so
+  rows without context would otherwise get a <em>real but meaningless</em> <code>E_p</code> from
+  an empty pad string. The collator therefore emits a <code>context_present</code> mask of 1.0/0.0
+  which multiplies <code>E_p</code> — zeroing exactly the rows with no context
+  (<span class="file">full_model.py</span>, <code>encode_pair</code>).</p>
+
+  <h2 id="interaction"><span class="n">4</span>The interaction block: how two fingerprints become one</h2>
+  <p>Now you have two 768-number fingerprints. You need one. Concatenating alone would be lazy —
+  the model would have to figure out the <em>relationship</em> itself. So the architecture hands
+  it two pre-computed relationship features.</p>
+  <div class="equation">
+    D = |E_c − E_p|     ← "how far apart are the two meanings?"   (absolute difference)
+    M = E_c ⊙ E_p       ← "where do they agree?"                  (element-wise product)
+
+    E_int = [ E_c ; E_p ; D ; M ]    →  4 × 768 = 3072 numbers
+    final = Dropout( GELU( Linear(3072 → 1024) ) )   →  1024 numbers
+  </div>
+  <table>
+    <tr><th>Piece</th><th>Layman meaning</th><th>Size</th></tr>
+    <tr><td><code>E_c</code></td><td>"What this comment means"</td><td>768</td></tr>
+    <tr><td><code>E_p</code></td><td>"What the previous comment means"</td><td>768</td></tr>
+    <tr><td><code>D</code></td><td>"Where the two meanings differ"</td><td>768</td></tr>
+    <tr><td><code>M</code></td><td>"Where the two meanings reinforce each other"</td><td>768</td></tr>
+    <tr><td colspan="2"><strong>one linear layer squashes 3072 → 1024</strong></td><td >= 1024</td></tr>
+  </table>
+  <p>Real numbers from your trained checkpoint: the projection matrix is
+  <code>1024 × 3072</code> and a bias of 1024 — that is <strong>3,146,752 parameters</strong>, the
+  single biggest trainable block in the model after BERT itself.</p>
+  <p>Two modes exist purely so the ablation study has something to compare against:</p>
+  <ul>
+    <li><code>mlp</code> — the full <code>[E_c; E_p; D; M]</code>. <em>The proposed model.</em></li>
+    <li><code>simple</code> — just <code>[E_c; E_p]</code>, no engineered D/M. This is the control that answers "did D and M actually help?"</li>
+  </ul>
+  <p class="muted">Where: <span class="file">app/models/context_interaction.py</span> — 83 lines,
+  and <code>compute_interaction_components()</code> is a pure function you can unit-test in
+  isolation (and they do — <code>tests/test_interaction.py</code>).</p>
+
+  <h2 id="heads"><span class="n">5</span>The four heads: one shared understanding, four questions</h2>
+  <p>A "head" here means <em>one small linear layer glued on top of the shared understanding</em>.
+  The heavy lifting is shared; only the last layer is task-specific.</p>
+<pre class="ascii">                    final representation  (1024 numbers)
+                              │
+     ┌──────────────┬─────────┴─────────┬──────────────────────┐
+     ▼              ▼                   ▼                      ▼
+  HATE HEAD     TARGET HEAD        REASON HEAD          EVIDENCE HEAD
+  1024→3        1024→9             1024→8               per-token
+  hate /        race / religion /  insult / threat /    is this word
+  offensive /   gender / ...       exclusion / ...      part of the
+  normal        + "none"           + "other"            justification?
+                                                     (uses token vectors,
+                                                      NOT the 1024 vector)</pre>
+
+  <h4>Hate head — <span class="file">hate_head.py</span></h4>
+  <p>Three-way softmax: <code>hate</code> / <code>offensive</code> / <code>normal</code> (HateXplain's
+  label set). There is a <code>binary</code> mode too, but it must be explicitly configured.
+  <strong>Multiclass labels are never silently collapsed into binary</strong> — that would be a
+  quiet lie about what the data says.</p>
+
+  <h4>Target head — <span class="file">target_head.py</span></h4>
+  <p>Nine-way softmax over protected-group categories, including an explicit <code>none</code>.
+  Trained only where the dataset actually annotates targets (HateXplain does). The conversion
+  from a dataset's own weird community names into these nine canonical buckets lives separately
+  in <span class="file">app/datasets/label_mapping.py</span>, so the model never sees raw
+  dataset quirks.</p>
+
+  <h4>Reason head — <span class="file">reason_head.py</span></h4>
+  <p>The head <strong>always exists in the architecture</strong>, but it is
+  <strong>trained only when real reason annotations exist</strong>. Never on guessed labels,
+  never as a keyword list. This is the honest way to leave room for a feature you have not been
+  given the data for yet — the frontend just hides the section until
+  <code>reason_available</code> turns true.</p>
+
+  <h4>Evidence head — <span class="file">evidence_head.py</span></h4>
+  <p>Completely different from the other three. It does <em>not</em> use the 1024-number sentence
+  vector. It takes the <strong>per-token</strong> vectors (768 each) and asks "is this word part
+  of the justification?" — a yes/no decision for every token. It is trained with binary
+  cross-entropy against HateXplain's human-highlighted rationales.</p>
+  <div class="warn">
+    <strong>Do not confuse these two techniques — the repo is careful to keep them apart.</strong>
+    <table style="margin-top:10px">
+      <tr><th></th><th>Evidence head</th><th>Integrated Gradients</th></tr>
+      <tr><td>How</td><td>learned from human highlights</td><td>maths, computed after the fact</td></tr>
+      <tr><td>Needs training?</td><td>Yes — and gold annotations</td><td>No</td></tr>
+      <tr><td>Used at inference?</td><td>Only in the ablation comparison</td><td><strong>Yes</strong> — this is what the UI shows</td></tr>
+      <tr><td>Gives a number per</td><td>token</td><td>token</td></tr>
+    </table>
+  </div>
+
+  <h2 id="losses"><span class="n">6</span>The multi-task loss, and why missing data does not lie</h2>
+  <p>Training is a game: the model predicts, you measure how wrong it was, you nudge the numbers.
+  "How wrong" is the <em>loss</em>. With four heads you get four losses, so you add them up with
+  weights:</p>
+  <div class="equation">
+    L_total = λ_hate·L_hate + λ_target·L_target + λ_reason·L_reason
+              + λ_contrastive·L_contrastive + λ_evidence·L_evidence
+
+    defaults:  1.0        1.0          1.0          0.5            1.0
+  </div>
+  <p>Now the problem: not every example has every label. HateXplain has no reason labels. Counter
+  Context has neither target nor reason labels. If you "helpfully" filled those in with zeros, you
+  would be <strong>teaching the model that everything is class 0</strong>.</p>
+  <div class="good">
+    <strong>The trick:</strong> missing labels are stored as the special number
+    <code>-100</code> (<code>IGNORE_INDEX</code>). PyTorch's cross-entropy understands
+    <code>-100</code> as "skip this row entirely". And if <em>every</em> row in a batch is
+    <code>-100</code>, the loss function returns <code>None</code> and the component is dropped
+    from the sum completely.
+    <br><br>
+    So on a Counter-Context batch, <code>target_loss</code> does not exist and is not added.
+    The model is never punished for a question it was not asked.
+  </div>
+  <p>A pleasant side effect: the trainer records <code>trained_heads</code> by observing which
+  loss components actually fired. That set is written into the checkpoint and read back by the
+  API — <strong>the API's <code>*_available</code> flags are literally derived from what got
+  trained during the run</strong>. Nothing is hand-maintained, so nothing can drift.</p>
+  <p class="muted">Where: <span class="file">app/training/losses.py</span> — <code>_masked_cross_entropy</code>,
+  <code>_masked_bce</code>, <code>compute_task_losses</code>, <code>combine_losses</code>.</p>
+
+  <h2 id="contrastive"><span class="n">7</span>Contrastive learning: teaching the model that context matters</h2>
+  <p>Here is the subtle problem with just concatenating context: the network can cheerfully
+  <strong>ignore</strong> <code>E_p</code> and still score well, because the current comment alone
+  often predicts the label fine. You need a training signal that punishment-follows-ignoring-context.</p>
+  <p>The idea, in plain English:</p>
+  <ul>
+    <li>Take a comment <strong>C</strong> and its <em>real</em> preceding comment <strong>P1</strong>.
+      Good model: <code>interaction(C, P1)</code> should look similar to <code>interaction(C, nothing)</code>
+      — same underlying meaning, enriched.</li>
+    <li>Now staple C to a <em>wrong</em>, randomly picked comment <strong>P2</strong> (a
+      "negative", sampled from a pool of all contexts). The representation should look
+      <em>different</em> from the anchor.</li>
+    <li>Score = cosine similarity. Train so the true pairing wins over the false pairing.</li>
+  </ul>
+  <div class="equation">
+    L = −log  exp(sim(anchor, positive)/τ)  /  ( exp(sim(anchor, positive)/τ)
+                                              + Σᵢ exp(sim(anchor, negativeᵢ)/τ) )
+
+    τ (temperature) = 0.07   ← low value = sharper, harsher penalty for losing
+  </div>
+  <div class="note">
+    <strong>Consequence of that low temperature:</strong> a comment is scored against only a
+    <em>few</em> wrong contexts (1 by default, and the pair collator only does so when contexts
+    exist). InfoNCE normally reaps its power from having <em>many</em> negatives. With one, the
+    signal is weak — see <a href="#gaps">gaps</a>.
+  </div>
+  <p><strong>Contrastive learning is training-only.</strong> At inference the code does not build
+  an anchor, a positive, or a negative. It just runs the context-aware path once. The projection
+  layer sits unused in the served checkpoint (still ~130 K wasted parameters — see gaps).</p>
+  <p class="muted">Where: <span class="file">app/models/contrastive.py</span> (projection + <code>InfoNCELoss</code>),
+  <span class="file">app/training/contrastive_loss.py</span> (glue to a batch),
+  <span class="file">app/datasets/collator.py</span> → <code>ContrastivePairCollator</code> (samples the negatives).</p>
+
+  <h2 id="data"><span class="n">8</span>Data layer: two datasets, one shape, zero silent guessing</h2>
+  <p>You have two corpora that were built for different purposes. Merging them at the raw level
+  would be a mess. Instead, each gets its own <strong>adapter</strong>, and both emit the same
+  dataclass.</p>
+
+  <table>
+    <tr><th>Dataset</th><th>What it teaches</th><th>Adapter</th></tr>
+    <tr>
+      <td><strong>HateXplain</strong><br><span class="muted">15,383 train rows processed</span></td>
+      <td>hate / offensive / normal, target group, and human-highlighted rationales</td>
+      <td><span class="file">app/datasets/hatexplain.py</span></td>
+    </tr>
+    <tr>
+      <td><strong>Counter Context</strong><br><span class="muted">3,325 gold + 1,675 silver train rows</span></td>
+      <td>comment <em>plus a real preceding comment</em> — the context-relationship task</td>
+      <td><span class="file">app/datasets/counter_context.py</span></td>
+    </tr>
+  </table>
+
+  <p>Both produce this — and note that <code>None</code> is a first-class value here:</p>
+<pre><code>{
+  "id": "cc-train-0",
+  "current_text": "&gt;The ~~UK~~ world is fucked  FTFY",
+  "context_text": "The UK is fucked.",
+  "hate_label": "neither",
+  "target_label": null,          ← this dataset does not annotate targets. null, not "none".
+  "reason_label": null,          ← ...and not "other".
+  "rationale_labels": null,
+  "metadata": { "dataset": "counter_context", "split": "train", "original_label": "2", ... }
+}</code></pre>
+
+  <div class="warn">
+    <strong>Three honesty traps the code deliberately avoids.</strong>
+    <ol>
+      <li><code>target_label: null</code> means <em>"we were not told"</em>. It does
+        <strong>not</strong> mean <code>"none"</code>, which means <em>"we were told: no target"</em>.
+        Conflating them would train the model on false negatives.</li>
+      <li>Unmapped community names are preserved in <code>metadata</code> rather than force-fitted
+        into a canonical bucket. Nothing is guessed.</li>
+      <li>The Counter Context corpus has an infuriating naming quirk:
+        <code>target</code> is the <em>current comment</em> and <code>context</code> is the
+        <em>preceding comment</em> — <code>target</code> has nothing to do with target groups.
+        Your adapter documents this inline and even writes the warning into every row's metadata.</li>
+    </ol>
+  </div>
+
+  <p class="muted">Supporting pieces: <span class="file">preprocessing.py</span> (normalisation),
+  <span class="file">label_mapping.py</span> (dataset labels → canonical), <span class="file">tokenizer.py</span>
+  (word-level rationales → subword alignment + character offsets), <span class="file">reason_import.py</span>
+  (your own annotation files → training rows), <span class="file">unified.py</span> (the dataclass).</p>
+
+  <h2 id="pipeline"><span class="n">9</span>The training pipeline, step by step</h2>
+<pre class="ascii">  python scripts/train.py --config cc_context
+       │
+       ├─ 1. read configs/base.yaml, then merge configs/cc_context.yaml on top
+       │     (that is why every experiment file is 15 lines instead of 200)
+       ├─ 2. pick a device: auto → CUDA if present, else CPU
+       ├─ 3. set_seed(42) → python, numpy, torch, CUDA all seeded. Reproducible.
+       ├─ 4. load the processed JSONL splits
+       ├─ 5. build_label_maps()  label name → class index, per head
+       ├─ 6. build_model():  BertEncoder.from_pretrained → FullModel(...)
+       │     and produce model_kwargs — the BLUEPRINT we will save later
+       ├─ 7. Trainer = optimizer(AdamW) + scheduler(warmup→decay)
+       │                + collator(+contrastive wrapper) + dataloaders
+       │                + AMP scaler (CUDA only) + early-stopping counter
+       │
+       └─ 8. for each epoch:
+              ▲── shuffle, build batches
+              │   forward pass
+              │   compute only the losses that have labels
+              │   backward, accumulate gradients (grad_accum_steps)
+              │   clip gradients to max_grad_norm   ← stops one wild batch wrecking the run
+              │   optimizer step, scheduler step
+              │
+              ├── evaluate on validation → macro-F1
+              ├── write last.pt ALWAYS
+              ├── write best.pt when macro-F1 improves
+              └── stop early if no improvement for `early_stopping_patience` epochs</pre>
+  <p>Every knob lives in YAML, never in the model classes: learning rate, batch size, warmup
+  ratio, gradient accumulation, mixed precision, early stopping patience, loss weights,
+  contrastive temperature. That separation is what makes the six-experiment ablation study
+  possible without touching a line of Python.</p>
+  <p class="muted">Where: <span class="file">app/training/trainer.py</span> (537 lines — the biggest
+  file, and deliberately so: the loop, checkpointing and metrics are one honest unit),
+  <span class="file">app/training/configs.py</span> (YAML → dataclass), <span class="file">scripts/train.py</span> (90 lines of CLI).</p>
+
+  <h2 id="checkpoint"><span class="n">10</span>Checkpoints: the bridge between the two programs</h2>
+  <p>A checkpoint is not just weights. Look at what <code>save_checkpoint()</code> writes:</p>
+  <table>
+    <tr><th>Key</th><th>What it is</th><th>Who needs it</th></tr>
+    <tr><td><code>model_kwargs</code></td><td>The <strong>blueprint</strong>: architecture, label lists, which components are on, hidden sizes</td><td>Serving — to rebuild the identical shell</td></tr>
+    <tr><td><code>model_state</code></td><td>207 tensors, ~113 M numbers of learned values</td><td>Serving</td></tr>
+    <tr><td><code>trained_heads</code></td><td>Which heads actually got trained, e.g. <code>["hate"]</code></td><td>Serving — drives the <code>*_available</code> flags</td></tr>
+    <tr><td><code>config</code>, <code>metrics</code>, <code>epoch</code></td><td>Hyperparameters and scores</td><td>Humans, reports</td></tr>
+    <tr><td><code>optimizer_state</code>, <code>scheduler_state</code></td><td>Momentum and learning-rate position</td><td><strong>Training only</strong> — to resume exactly</td></tr>
+  </table>
+  <div class="note">
+    <strong>Plain-English version:</strong> the optimizer state is like a car's current speed and
+    gear. To <em>continue driving</em> you need it. To just <em>park the car in a showroom</em>
+    (serve predictions) you do not. So serving exports drop it.
+    <br><br>
+    <code>scripts/export_serving_checkpoint.py</code> writes a lean copy without those two keys —
+    about <strong>65% smaller</strong> — plus a <code>serving_export</code> note recording where it
+    came from and when. That is what you ship to a container.
+  </div>
+  <p>Loading is the mirror image, and it is carefully lazy in two ways:</p>
+  <ul>
+    <li>All the heavy imports (<code>torch</code>, <code>transformers</code>, model classes) happen
+      <em>inside</em> functions, not at module top. So importing the app for a unit test does not
+      cost you a 500 MB model load.</li>
+    <li>The served bundle is a <code>@lru_cache</code> singleton built at FastAPI startup
+      (the <code>lifespan</code> hook in <span class="file">main.py</span>). BERT is loaded
+      <strong>once per process</strong>, never per request.</li>
+  </ul>
+<pre class="ascii">  checkpoints/
+  ├── default.json          {"checkpoint": "checkpoints/cc_context/best.pt"}
+  │                          ← a pointer file. Edit this one line to swap the served model.
+  ├── cc_context/
+  │   ├── best.pt           epoch 2, macro-F1 0.566   ← currently served
+  │   ├── last.pt           epoch 3
+  │   └── training_summary.json
+  └── hx_full/ ...</pre>
+  <p>Resolution order at startup: <code>MODEL_CHECKPOINT</code> env var → <code>default.json</code>
+  pointer → conventional paths (<code>cc_context/best.pt</code>, <code>hx_full/best.pt</code>,
+  <code>full/best.pt</code>) → if nothing is found, build an <strong>untrained</strong> model and
+  report every head as unavailable.</p>
+
+  <h2 id="evidence"><span class="n">11</span>Evidence: how the model shows its work (Integrated Gradients)</h2>
+  <p>This is the best idea in the project, and the one worth understanding most deeply.</p>
+  <p><strong>The question:</strong> the model said "hate". <em>Which words caused that?</em></p>
+  <p>The naive trick: run the model, look at which input numbers the output depends on most — the
+  gradient. But gradients are noisy: a word with a big gradient might have been sitting at a
+  nearly-zero value anyway, so its actual influence on the answer was tiny.</p>
+  <p><strong>Integrated Gradients (Sundararajan et al., 2017)</strong> fixes this by averaging over
+  a path instead of looking at one point:</p>
+  <div class="equation">
+    1. Take the input's number-vectors, and a "baseline" — here, the PAD embedding (i.e. nothing).
+
+    2. Walk a straight line from baseline to the real input, in small steps (default 32).
+
+    3. At each step, ask "how sensitive is the output to each word now?"
+
+    4. Average those sensitivities, then multiply by (real_input − baseline).
+
+    Result: one signed score per token. Big positive = this word pushed the answer UP.
+  </div>
+  <p>Then the scores are turned into something a human can read, in four passes
+  (<span class="file">app/reasoning/evidence_extractor.py</span>):</p>
+<pre class="ascii">  tokens + scores
+        │
+        ├─ 1. rank / threshold   → keep tokens scoring ≥ 0.15 × the strongest token
+        │                          (a RELATIVE threshold — so it always finds *something*
+        │                           even for a low-confidence prediction)
+        ├─ 2. merge adjacent      → "be" + "kicked" becomes one phrase, not two
+        ├─ 3. decode subwords     → "##ed" glued back onto the word it belongs to
+        └─ 4. take top-k (5)      → readable spans, each a VERBATIM slice of the input
+
+  every span carries:
+    text, score, token indices,
+    AND start/end character offsets into the original comment  ← this is what the
+                                                                 frontend highlights
+</pre>
+  <div class="good">
+    <strong>Why the character offsets matter so much:</strong> the frontend never has to re-tokenise
+    or guess where a phrase sits in the string. It receives <code>start</code>/<code>end</code> and
+    highlights exactly that range. That removes an entire class of mis-highlighting bugs — the ones
+    you get from BERT's weird word-pieces drifting out of alignment with the visible text.
+  </div>
+  <p>Two methods are available: <code>integrated_gradients</code> (default, 32 forward passes,
+  better quality) and <code>gradient_x_input</code> (1 pass, cheaper, noisier — the single-point
+  approximation IG is named after).</p>
+
+  <h2 id="explain"><span class="n">12</span>The explanation layers: sentences from numbers, deterministically</h2>
+  <p>You now have: a label, a target, a reason, and evidence spans. Someone still has to write
+  the English. This project does it with <strong>template composition</strong> — no LLM anywhere.</p>
+
+  <h3>Layer 1 — reason explanation <span class="file">reason_explainer.py</span></h3>
+<pre><code>reason + target + evidence  →  { summary, details, grounded_in }</code></pre>
+  <p>Three rules it follows, spelled out in the module docstring:</p>
+  <ul>
+    <li><strong>Deterministic</strong> — same inputs, same sentence, every time.</li>
+    <li><strong>Grounded</strong> — only the predicted reason, target and extracted spans. It never
+      adds outside knowledge.</li>
+    <li><strong>Honest</strong> — it never claims to know the author's <em>intent</em>, and never
+      claims the context <em>caused</em> the prediction. Context is only ever reported as
+      "included in the analysis".</li>
+  </ul>
+  <p>If the reason head is unavailable, <code>reason_explanation</code> is <code>null</code>.
+  No summary is invented. Templates can be overridden without editing code by dropping a
+  <code>configs/reason_templates.yaml</code> next to the others.</p>
+
+  <h3>Layer 2 — context reasoning <span class="file">context_reasoner.py</span></h3>
+  <p>This answers the question that makes the project interesting: <em>why did the previous
+  comment matter?</em></p>
+  <p>Its core is a deliberately small, auditable heuristic — <strong>not</strong> attention weights,
+  <strong>not</strong> a second model, <strong>not</strong> an LLM:</p>
+<pre class="ascii">  previous:  "I saw a group of immigrants downtown."
+  current:   "They should all be kicked out."
+
+  Step 1 — find the antecedent in the PREVIOUS comment:
+           scan right-to-left for a plural noun  → "immigrants"
+           widen leftwards over determiners / prepositions / quantity nouns
+           → "a group of immigrants"
+           then strip leading determiners         → "group of immigrants"
+
+  Step 2 — find referring words in the CURRENT comment:
+           "They" is in LINKABLE_PRONOUNS          → link it
+
+  Step 3 — emit a link with offsets on BOTH sides:
+           { from_text: "They", from_start: 0, from_end: 4,
+             to_text:   "group of immigrants", to_start: 8, to_end: 27,
+             pronoun:   "they", relation: "refers_to" }</pre>
+  <p>The vocabulary is hand-curated: pronouns, determiners, prepositions, quantity nouns, common
+  verbs (to avoid latching onto "says"), stopwords, and a list of words ending in "s" that are not
+  plurals (<code>bus</code>, <code>news</code>, <code>always</code>…). Everything is inspectable.</p>
+  <p>Then it composes the summary from fixed templates, keyed by the <em>tone</em> of the predicted
+  label (hate-like / offensive / counter / neutral). And — this is the part that shows real
+  engineering maturity — it has an <strong>abstention path</strong>:</p>
+  <div class="good">
+    When no reference relationship can be established, the summary <em>says so</em>:
+    <em>"The previous comment was included in the analysis, but no explicit reference
+    relationship between the two comments was identified."</em>
+    A model that always produces confident reasoning is a model you cannot trust.
+  </div>
+  <p>And robustness: the whole layer is wrapped in a <code>try/except</code> in
+  <code>inference.py</code>. If reasoning crashes, the classification still returns —
+  the reasoning block degrades to <code>"Reasoning unavailable."</code>
+  <strong>A presentation layer must never be able to fail the prediction.</strong></p>
+
+  <h2 id="api"><span class="n">13</span>The API layer: four endpoints, thin as paper</h2>
+  <table>
+    <tr><th>Endpoint</th><th>What it does</th><th>File</th></tr>
+    <tr><td><code>GET /health</code></td><td>Liveness + whether the model loaded</td><td><span class="file">routes/health.py</span></td></tr>
+    <tr><td><code>GET /api/v1/model/info</code></td><td>Model name, device, hidden size, label counts, trained heads, version</td><td><span class="file">routes/model.py</span></td></tr>
+    <tr><td><code>POST /api/v1/predict</code></td><td>The whole pipeline in one call: prediction + target + reason + evidence + reasoning</td><td><span class="file">routes/prediction.py</span></td></tr>
+    <tr><td><code>POST /api/v1/explain</code></td><td>Raw per-token attribution scores for a chosen head (the debug/research view)</td><td><span class="file">routes/explanation.py</span></td></tr>
+  </table>
+  <p>The route handlers are 15 lines each. They validate, call the service, and translate
+  <code>RuntimeError</code> into HTTP <code>503</code>. <strong>No business logic lives in a
+  route.</strong> That is the correct shape.</p>
+  <p>The request schema is friendly in a way that matters for real deployments — it accepts
+  historical and semantic field names for the same data:</p>
+<pre><code>{"text": "...", "context": "..."}            ← both work, and both mean the same thing
+{"current_comment": "...", "previous_comment": "..."}</code></pre>
+  <p>Implemented with Pydantic <code>AliasChoices</code>, plus a validator that rejects
+  whitespace-only text. The frontend was never forced to rename its fields.</p>
+  <p>The response schema is where the honesty rule becomes structural — read this shape carefully,
+  because it is the contract the whole UI is built on:</p>
+<pre><code>{
+  "prediction": { "label": "hate", "confidence": 0.94, "probabilities": {...} },
+  "prediction_available": true,           ← the flag
+  "target": null,
+  "target_available": false,              ← null + false, TOGETHER. Never one without the other.
+  "reason": null,
+  "reason_available": false,
+  "evidence": [ { "text": "kicked out", "score": 0.82,
+                  "start": 20, "end": 30, "token_start": 5, "token_end": 6 } ],
+  "reason_explanation": null,             ← null because the reason head is untrained
+  "reasoning": { "summary": "...", "links": [...], "evidence": [...] },
+  "context_used": true,
+  "evidence_available": true
+}</code></pre>
+  <p>Because every optional section carries its own <code>*_available</code> flag, the frontend can
+  render a section <em>only when it is real</em> — and show an explanation when it is not.
+  "Unavailable" and "absent" are never the same thing.</p>
+
+  <h2 id="runtime"><span class="n">14</span>What actually happens during one request</h2>
+<pre class="ascii">  POST /api/v1/predict  {"text": "...", "context": "..."}
+        │
+   1.   Pydantic validates the shape (length, aliases, non-blank)
+        │
+   2.   get_inference_service()  →  the cached singleton (model already in memory)
+        │
+   3.   tokenize the current comment (and the context if present)
+        │
+   4.   ONE forward pass (no_grad):
+        │      shared BERT(current)  → E_c
+        │      shared BERT(context)  → E_p        ← only if context was supplied
+        │      D, M, [E_c;E_p;D;M] → 1024-vector
+        │      hate / target / reason head → logits  →  softmax  →  label + confidence
+        │      (for each head that is in trained_heads; others are skipped entirely)
+        │
+   5.   Integrated Gradients over the same model, 32 steps
+        │      → per-token scores → threshold → merge → decode → top-5 spans
+        │      → character offsets for the frontend
+        │
+   6.   deterministic explanation templates
+        │      reason + target + evidence  →  summary/details
+        │      pronoun→antecedent heuristic → links → context summary
+        │
+   7.   build_explanation() assembles one dict, setting the *_available flags
+        │
+   8.   PredictResponse (Pydantic) serialises → JSON
+
+  Total: ms on GPU, tens-to-hundreds of ms on CPU (the IG loop dominates).</pre>
+  <div class="warn">
+    <strong>Two things worth knowing about this path.</strong>
+    <ol>
+      <li>The endpoint is declared <code>def predict(...)</code>, not <code>async def</code>. FastAPI
+        runs it in a threadpool, which is <em>good</em> here: a blocking PyTorch forward pass would
+        otherwise freeze the event loop.</li>
+      <li>But <code>get_inference_service()</code> is a process-wide singleton with a mutable
+        <code>_bundle</code>, and nothing serialises access. Two concurrent requests both call
+        <code>model.eval()</code> and share tensors. In practice fine for a research prototype;
+        it is a real design decision to be aware of, not an accident. See <a href="#gaps">gaps</a>.</li>
+    </ol>
+  </div>
+
+  <h2 id="config"><span class="n">15</span>Config and dependencies</h2>
+  <p>There are two config systems, and keeping them separate is deliberate:</p>
+  <div class="grid2">
+    <div class="card tight">
+      <h4>Runtime — <code>.env</code> → <code>Settings</code></h4>
+      <p class="muted" style="margin:0">Encoder name, checkpoint path, device, max sequence
+      length, label lists, loss weights, IG steps and threshold, CORS, log level.</p>
+      <p class="muted" style="margin-top:8px">Loaded by <code>pydantic-settings</code>, cached with
+      <code>@lru_cache</code> so it is parsed once per process. <em>"Nothing in the codebase should
+      hardcode model names, dimensions, thresholds or paths."</em></p>
+    </div>
+    <div class="card tight">
+      <h4>Training — <code>configs/*.yaml</code> → <code>TrainConfig</code></h4>
+      <p class="muted" style="margin:0">Epochs, LR, batch size, warmup, gradient accumulation, AMP,
+      early stopping, component on/off switches, dataset files, label maps.</p>
+      <p class="muted" style="margin-top:8px">Merged with <code>deep_merge(base, override)</code>.
+      That is why <code>cc_context.yaml</code> is 15 lines and not 200.</p>
+    </div>
+  </div>
+  <p>Runtime shape of the important knobs:</p>
+  <table>
+    <tr><th>Setting</th><th>Default</th><th>Plain English</th></tr>
+    <tr><td><code>encoder_name</code></td><td><code>bert-base-uncased</code></td><td>Which pretrained language model to start from</td></tr>
+    <tr><td><code>device</code></td><td><code>auto</code></td><td>CUDA if available, else CPU — never assumes a GPU</td></tr>
+    <tr><td><code>max_seq_length</code></td><td><code>128</code></td><td>Comments longer than this are truncated. Tokens cost quadratic attention time.</td></tr>
+    <tr><td><code>evidence_method</code></td><td><code>integrated_gradients</code></td><td>Which attribution maths to use</td></tr>
+    <tr><td><code>evidence_ig_steps</code></td><td><code>32</code></td><td>Path resolution for IG. Higher = smoother, slower.</td></tr>
+    <tr><td><code>evidence_min_score</code></td><td><code>0.15</code></td><td>Relative cutoff: keep tokens ≥ 15% of the strongest token's score</td></tr>
+    <tr><td><code>evidence_top_k</code></td><td><code>5</code></td><td>Max number of phrases returned</td></tr>
+    <tr><td><code>cors_origins</code></td><td><code>*</code></td><td>Who may call the API from a browser. <strong>Wide open — dev only.</strong></td></tr>
+    <tr><td><code>init_backbone</code></td><td><code>pretrained</code></td><td><code>random</code> gives an untrained tiny model for fast tests</td></tr>
+  </table>
+  <p>Dependency footprint is refreshingly small: <code>torch</code>, <code>transformers</code>,
+  <code>tokenizers</code>, <code>numpy</code>, <code>scikit-learn</code> (metrics),
+  <code>fastapi</code>, <code>uvicorn</code>, <code>pydantic</code>, <code>pyyaml</code>,
+  <code>httpx</code>, <code>pandas</code>, <code>pytest</code>. Python 3.11+, also runs on 3.13/3.14.
+  A CPU-only Dockerfile ships with it.</p>
+
+  <h2 id="tests"><span class="n">16</span>Testing strategy: fast by default, honest about what it skips</h2>
+  <p>Measured on your machine, just now:</p>
+<pre><code>$ python -m pytest -q
+149 passed, 2 skipped, 1 warning in 47.72s</code></pre>
+  <p>The design that makes a 47-second suite possible for a BERT project is in
+  <span class="file">tests/conftest.py</span>, and it is worth copying:</p>
+  <ul>
+    <li><strong>No pretrained downloads by default.</strong> Tests build BERT shells with
+      <code>BertEncoder.random_init(hidden_size=768, num_hidden_layers=2, num_attention_heads=12)</code>.
+      You get the <em>correct dimensions</em> (so the shapes are really tested) without downloading
+      440 MB. A <code>tiny_encoder_768</code> fixture and a <code>small_encoder</code> fixture cover
+      both spec-exact and fast cases.</li>
+    <li><strong>The real tokenizer is opt-in and skips cleanly offline.</strong> The
+      <code>tokenizer</code> fixture tries <code>bert-base-uncased</code> (only the small tokenizer
+      files) and calls <code>pytest.skip()</code> when there is no network. Those are the 2 skips.</li>
+    <li><strong>Integration tests are behind an env flag</strong> —
+      <code>RUN_INTEGRATION_TESTS=1</code> for the real-model path.</li>
+  </ul>
+  <p>Coverage is per-component, which is exactly what you want for an architecture like this —
+  every box in the diagram has its own test file:</p>
+<pre class="ascii">  test_encoder · test_interaction · test_heads · test_model · test_contrastive
+  test_tokenizer · test_preprocessing · test_datasets · test_reason_import
+  test_evidence · test_context_reasoner · test_reason_explainer
+  test_trainer · test_export_serving_checkpoint · test_inference_service · test_api
+  test_integration_real_model (opt-in)</pre>
+  <div class="warn">
+    <strong>One environment gotcha, unrelated to the code:</strong> if pytest's temp directory is
+    unusable, 30 tests error with <code>PermissionError: .../Temp/pytest-of-Haris</code>. That is a
+    Windows permission/lock on <code>%TEMP%</code>, not a test failure. Fix:
+    <code>python -m pytest --basetemp=.pytest-tmp</code>. Worth knowing before you conclude the
+    suite is broken.
+  </div>
+
+  <h2 id="layers"><span class="n">17</span>Architecture layer by layer: who is allowed to know what</h2>
+  <p>This is the part that decides whether a project stays maintainable. The rule here is a
+  <strong>one-directional dependency</strong>: outer layers may import inner ones; never the reverse.</p>
+<pre class="ascii">  ┌───────────────────────────────────────────────────────────────────┐
+  │ 4. API        routes/*.py  schemas/*.py                           │
+  │    Knows: HTTP, JSON, status codes. Knows NOTHING about tensors.  │
+  └────────────────────────────┬──────────────────────────────────────┘
+                               │ calls
+  ┌────────────────────────────▼──────────────────────────────────────┐
+  │ 3. Services   services/inference.py                               │
+  │    The ONLY owner of the model lifecycle. Rebuilds architecture   │
+  │    from checkpoint metadata. Orchestrates the pipeline.           │
+  └───────┬───────────────────────────────────┬───────────────────────┘
+          │ uses                              │ uses
+  ┌───────▼──────────────────┐   ┌────────────▼──────────────────────┐
+  │ 2a. ML core              │   │ 2b. Reasoning                     │
+  │ models/ training/        │   │ reasoning/                        │
+  │ datasets/                │   │ Pure functions over model OUTPUTS. │
+  │ Torch. Tensors. Losses.  │   │ No torch in the templates.         │
+  └───────┬──────────────────┘   └────────────┬──────────────────────┘
+          │                                   │
+  ┌───────▼───────────────────────────────────▼───────────────────────┐
+  │ 1. Core       core/config.py · core/logging.py                    │
+  │    Knows: settings, paths, device selection, logging.             │
+  │    Imports: yaml, pydantic-settings, torch (lazily).              │
+  └───────────────────────────────────────────────────────────────────┘</pre>
+  <table>
+    <tr><th>Rule</th><th>Why it earns its keep</th></tr>
+    <tr><td>Routes never touch a tensor</td><td>You can replace the model without touching the web layer</td></tr>
+    <tr><td>Model classes never read <code>.env</code></td><td>Smart defaults arrive as constructor args, so tests can build any shape</td></tr>
+    <tr><td>Reasoning never trains anything</td><td>The explanation layer cannot silently change the prediction — it can only describe it</td></tr>
+    <tr><td>Config is imported everywhere, imported-by nothing</td><td>No cycles, and one place to change a default</td></tr>
+    <tr><td>Heavy imports are function-local</td><td><code>import app.main</code> is cheap; tests do not pay for torch</td></tr>
+  </table>
+  <p>There is one deliberate exception to the "layering" purity worth noting:
+  <span class="file">inference.py</span> is 593 lines and does quite a lot — checkpoint discovery,
+  model rebuild, the predict pipeline, the explain pipeline, and status reporting. It is coherent,
+  but it is the file that would grow first if this project kept going.</p>
+
+  <h2 id="learn"><span class="n">18</span>Learnables: only 1.4 million of the 113 million are yours</h2>
+  <p>This is the headline number of the whole architecture, and it is easy to miss.</p>
+<pre><code>$ python -c "import torch; ck=torch.load('checkpoints/cc_context/best.pt',
+              map_location='cpu', weights_only=False, mmap=True); sd=ck['model_state'];
+              print(len(sd),'tensors,',sum(v.numel() for v in sd.values())/1e6,'M params')"
+207 tensors, 112.96 M params</code></pre>
+  <div class="grid3">
+    <div class="card tight">
+      <h4>~111.5 M — frozen knowledge</h4>
+      <p class="muted" style="margin:0">The pretrained BERT weights. In <code>freeze_mode: full</code>
+      these <em>are</em> trained, but the point stands: 98.5% of the parameter count is "the English
+      language model", not "your idea".</p>
+    </div>
+    <div class="card tight">
+      <h4>~3.15 M — the interaction layer</h4>
+      <p class="muted" style="margin:0">One <code>Linear(3072 → 1024)</code>. The largest trainable
+      block you actually designed.</p>
+    </div>
+    <div class="card tight">
+      <h4>~0.13 M — everything else</h4>
+      <p class="muted" style="margin:0">All four heads, plus the contrastive projection. In your
+      served checkpoint that is <code>hate_head</code> 3×1024 plus bias, and junk weights for the
+      heads that were switched off.</p>
+    </div>
+  </div>
+  <p>Full breakdown of what the served checkpoint actually contains:</p>
+  <table>
+    <tr><th>Component</th><th>Parameters</th><th>In your served model</th></tr>
+    <tr><td>Shared BERT encoder</td><td>~111.5 M</td><td><span class="tag ok">trained</span> all 12 layers</td></tr>
+    <tr><td><code>interaction.projection</code> — 3072→1024 + bias</td><td>3,146,752</td><td><span class="tag ok">trained</span></td></tr>
+    <tr><td><code>contrastive_projection</code> — 1024→256→256</td><td>~328 K</td><td><span class="tag hot">dead weight at inference</span> training-only</td></tr>
+    <tr><td><code>hate_head</code> — 1024→3 + bias</td><td>3,075</td><td><span class="tag ok">trained</span></td></tr>
+    <tr><td><code>target_head</code> — 1024→9</td><td>—</td><td><span class="tag hot">does not exist</span> <code>use_target: false</code></td></tr>
+    <tr><td><code>reason_head</code> — 1024→8</td><td>—</td><td><span class="tag hot">does not exist</span> <code>use_reason: false</code></td></tr>
+    <tr><td><code>evidence_head</code> — 768→1</td><td>—</td><td><span class="tag hot">does not exist</span> <code>use_evidence: false</code></td></tr>
+  </table>
+  <p>And here is the design consequence, stated plainly:</p>
+  <div class="good">
+    <strong>Verify it yourself — the heads that were switched off are not merely "untrained", they
+    are absent from the checkpoint.</strong>
+<pre style="margin:10px 0 0"><code>model_kwargs: architecture='full', use_context=True, use_contrastive=True,
+              use_target=False, use_reason=False, use_evidence=False
+trained_heads: ['hate']
+state keys matching target_head / reason_head / evidence_head: []   ← genuinely absent</code></pre>
+  </div>
+  <p><strong>Why this is a good architecture decision, in layman terms:</strong> turning off a
+  component leaves a visible hole rather than a random-weight stub. A random-weight head would
+  happily output a confident-looking label. Because the head does not exist, the code cannot even
+  <em>ask</em> it for one — so <code>target_available: false</code> is a structurally guaranteed
+  truth, not a promise someone has to remember to keep.</p>
+
+  <h2 id="read"><span class="n">19</span>Read the code in this order</h2>
+  <p>Do not start with <code>full_model.py</code>. Start where the data starts and follow it through.
+  Each step below is a real file you can open right now.</p>
+  <table>
+    <tr><th>#</th><th>File</th><th>What you will understand after reading it</th></tr>
+    <tr><td class="lead-num">1</td><td><span class="file">app/datasets/unified.py</span></td><td>The single data shape everything agrees on. Note that <code>None</code> is meaningful.</td></tr>
+    <tr><td class="lead-num">2</td><td><span class="file">app/core/config.py</span></td><td>Where every number comes from. Ends with the one line the whole "no hardcoded paths" rule rests on.</td></tr>
+    <tr><td class="lead-num">3</td><td><span class="file">app/models/context_interaction.py</span></td><td>The core idea, in 83 lines. <code>compute_interaction_components()</code> is 5 lines of arithmetic — read it twice.</td></tr>
+    <tr><td class="lead-num">4</td><td><span class="file">app/models/full_model.py</span></td><td>How the pieces are wired. Then <code>encode_pair()</code> and <code>forward()</code>.</td></tr>
+    <tr><td class="lead-num">5</td><td><span class="file">app/training/losses.py</span></td><td>The <code>-100</code> masking trick that stops missing labels becoming fake labels.</td></tr>
+    <tr><td class="lead-num">6</td><td><span class="file">app/training/trainer.py</span></td><td>The loop, checkpointing, and how <code>trained_heads</code> gets recorded.</td></tr>
+    <tr><td class="lead-num">7</td><td><span class="file">app/services/inference.py</span> — start at <code>predict()</code></td><td>The entire online pipeline in ~90 readable lines. Everything else in this file is plumbing.</td></tr>
+    <tr><td class="lead-num">8</td><td><span class="file">app/reasoning/attribution.py</span></td><td>Integrated Gradients, explained in the docstring before it is implemented.</td></tr>
+    <tr><td class="lead-num">9</td><td><span class="file">app/reasoning/evidence_extractor.py</span></td><td>Token scores → readable phrases with character offsets.</td></tr>
+    <tr><td class="lead-num">10</td><td><span class="file">app/api/schemas/prediction.py</span></td><td>The JSON contract, and why every section carries an <code>*_available</code> flag.</td></tr>
+    <tr><td class="lead-num">11</td><td><span class="file">app/reasoning/context_reasoner.py</span></td><td>602 lines, but skip to <code>find_reference_links()</code> and <code>_compose_summary()</code>. The rest is vocabulary.</td></tr>
+    <tr><td class="lead-num">12</td><td><span class="file">app/evaluation/ablation.py</span></td><td>The six experiments that justify the architecture — and prove you are not just claiming it works.</td></tr>
+  </table>
+
+  <h2 id="concepts"><span class="n">20</span>The concepts you need, in plain English</h2>
+  <table>
+    <tr><th>Term</th><th>One-paragraph explanation</th></tr>
+    <tr><td><strong>Pretrained / fine-tuning</strong></td>
+      <td>BERT already read a huge amount of English and learned general grammar and meaning. "Fine-tuning" means you start from that and nudge it on <em>your</em> task. It is the difference between teaching someone a new subject versus teaching them to read.</td></tr>
+    <tr><td><strong>Token / word-piece</strong></td>
+      <td>BERT does not read whole words. It splits text into chunks. "kicked" might be one piece; a rare word gets chopped into pieces like <code>immigr</code> + <code>##ants</code>. The <code>##</code> means "glue me onto the previous piece". That is why the evidence extractor has to decode pieces back into readable phrases.</td></tr>
+    <tr><td><strong>Embedding</strong></td>
+      <td>A sentence or word turned into a list of numbers (here, 768 of them) such that similar meanings land near each other. Everything the model "thinks" is a vector of these.</td></tr>
+    <tr><td><strong><code>[CLS]</code></strong></td>
+      <td>A fake token prepended to every input. BERT is trained so its output vector summarises the whole sentence. We use it as the sentence fingerprint.</td></tr>
+    <tr><td><strong>Head</strong></td>
+      <td>The small final layer that turns the shared understanding into one specific answer. "One body, four mouths."</td></tr>
+    <tr><td><strong>Logits / softmax</strong></td>
+      <td>Raw scores out of a head (could be <code>3.2, -1.1, 0.4</code>). Softmax squeezes them into probabilities that sum to 1 (<code>0.93, 0.02, 0.05</code>).</td></tr>
+    <tr><td><strong>Loss</strong></td>
+      <td>A single number measuring how wrong the prediction was. Training = repeatedly nudging parameters to make it smaller.</td></tr>
+    <tr><td><strong>Epoch / batch / step</strong></td>
+      <td>Batch = a handful of examples processed together. Epoch = one full pass over the training data. Step = one parameter update.</td></tr>
+    <tr><td><strong>Gradient</strong></td>
+      <td>"If I nudge this parameter, which way does the loss move, and how much?" Training is just following gradients downhill.</td></tr>
+    <tr><td><strong>Integrated Gradients</strong></td>
+      <td>An attribution method that measures how much each input word contributed to the output, by averaging gradients along a path from "no input" to the real input. More reliable than a single raw gradient.</td></tr>
+    <tr><td><strong>Contrastive / InfoNCE</strong></td>
+      <td>Training by comparison. Make the correct pairing score higher than wrong pairings. Used here to force the model to actually use context.</td></tr>
+    <tr><td><strong>Freezing</strong></td>
+      <td>Marking certain weights as not-trainable, so they stay exactly as pretrained. Saves time and memory, and prevents a small dataset from wrecking good pretrained knowledge.</td></tr>
+    <tr><td><strong>AMP (mixed precision)</strong></td>
+      <td>Doing most arithmetic in 16-bit instead of 32-bit floats. Roughly 2× faster and less memory-hungry on modern GPUs. Automatically CPU-disabled here.</td></tr>
+    <tr><td><strong>Gradient accumulation</strong></td>
+      <td>If you cannot fit a big batch in memory, process several small batches and only update after collecting all their gradients. Same effect as a big batch, less memory.</td></tr>
+    <tr><td><strong>Gradient clipping</strong></td>
+      <td>Capping the size of gradients so one weird batch cannot blow up the whole run.</td></tr>
+    <tr><td><strong>Ablation</strong></td>
+      <td>Systematically removing one part at a time to prove it actually helps. The difference between "we added contrastive learning" and "we can show contrastive learning contributed +X".</td></tr>
+    <tr><td><strong>Checkpoint</strong></td>
+      <td>A saved file with all learned numbers plus enough metadata to rebuild the exact same network. The handoff from training to serving.</td></tr>
+    <tr><td><strong>Post-hoc attribution</strong></td>
+      <td>Explaining a decision <em>after</em> it was made, by inspecting the model's maths — as opposed to a model that was built to explain itself. Honest, but it is a reconstruction, not a confession.</td></tr>
+  </table>
+
+  <h2 id="gaps"><span class="n">21</span>Where it breaks: the honest list</h2>
+  <p>You said you want this to be a solid project, so here is what is genuinely weak. These are
+  findings, not opinions — each one is checkable.</p>
+
+  <h4><span class="tag hot">real</span> The evidence claims are only as good as <code>hate</code></h4>
+  <p>Attribution is computed <strong>only</strong> for the hate head
+  (<code>inference.py</code>, <code>target="hate"</code> hard-coded in the call to
+  <code>compute_attributions</code>). The <code>/explain</code> endpoint supports target and reason;
+  <code>/predict</code> does not. So the highlighted words justify "hate/offensive/normal" and
+  nothing else — while the UI may present them next to a target and reason label.</p>
+
+  <h4><span class="tag hot">real</span> The contrastive loss is decoration</h4>
+  <ul>
+    <li>negatives_per_anchor defaults to <strong>1</strong>. InfoNCE's whole strength is having many
+      negatives; with one it is closer to a coin flip.</li>
+    <li>The negative pool is <em>every context string in the training set</em>, chosen at random.
+      A random preceding comment is usually trivially unrelated, so "tell these apart" is an easy
+      task that teaches little.</li>
+    <li>Worse: the collator iterates the negative pool with a seeded <code>random.Random</code>
+      while the <code>DataLoader</code> shuffles examples in parallel workers
+      (<code>collate_fn</code> runs in worker processes). The sampling may not be reproducible
+      in the way the code implies, and per-worker RNG state is not what you think it is.</li>
+  </ul>
+
+  <h4><span class="tag hot">real</span> The interactive embedding path bypasses BERT's embeddings</h4>
+  <p>Integrated Gradients needs to feed <em>embeddings</em> instead of token ids (you cannot
+  interpolate integer ids). <code>attribution.py</code> therefore builds <code>inputs_embeds</code>
+  itself and passes it through <code>current_inputs_embeds</code>.</p>
+  <p>But look at what that path skips: BERT's own embedding module also adds
+  <strong>position embeddings</strong> and <strong>token-type embeddings</strong>. Whether those are
+  re-applied on this path determines whether the attributions describe the same function the
+  predictions came from. If they are not, <strong>the evidence is measuring a slightly different
+  model than the one that produced the label</strong> — which would make the whole evidence
+  section subtly unsound. This is the single most important thing to verify with a numeric test:
+  run the same input both ways and check the predictions match.</p>
+
+  <h4><span class="tag hot">real</span> Dead computation in the hot path</h4>
+  <p>Because the served checkpoint was built with <code>use_target: false</code> and
+  <code>use_reason: false</code>, the model has <em>no</em> target or reason head — yet
+  <span class="file">full_model.py</span> computes a <code>contrastive_projection(final_representation)</code>
+  on <strong>every</strong> forward pass, including inference, even though contrastive output is
+  never used at serving time. That is wasted GPU work and ~328 K dead parameters in the shipped file.</p>
+
+  <h4><span class="tag hot">real</span> Real behavioural bugs in the serving layer</h4>
+  <ul>
+    <li><strong>Untrained checkpoint + no context = 500.</strong> If <code>context_input_ids</code>
+      is <code>None</code> but <code>context_attention_mask</code> was supplied, <code>encode_pair</code>
+      calls <code>self.encoder(input_ids=None, attention_mask=...)</code> inside a <code>try/except</code>
+      that only catches <code>RuntimeError</code> — so a <code>ValueError</code> escapes as a 500
+      instead of the intended 503.</li>
+    <li><strong><code>model_info()</code> is fragile.</strong> The error-reporting branch accesses
+      <code>bundle.model.hate_head</code> unguarded. On <code>BaselineModel</code> that attribute is
+      named <code>classifier</code> — so requesting status on a baseline-served deployment raises
+      <code>AttributeError</code> (500) instead of returning info.</li>
+    <li><strong>No timing in the API response.</strong> The frontend cannot show "analyzed in 340 ms"
+      without it.</li>
+  </ul>
+
+  <h4><span class="tag hot">real</span> The reason head has no validation signal</h4>
+  <p><code>cc_reason.yaml</code> keeps the standard validation split, and that split has no reason
+  labels. So the reason head is trained but <strong>never validated</strong>. You cannot know
+  whether it is learning anything. (The README admits this; it is still a gap.)</p>
+
+  <h4><span class="tag">worth fixing</span> Concurrency and deployment</h4>
+  <ul>
+    <li>Shared mutable singleton service, unsynchronised, with an <code>assert</code> in
+      <code>_require_bundle()</code> — which is stripped out entirely under <code>python -O</code>.</li>
+    <li><code>CORS_ORIGINS=*</code> by default. Fine for localhost, disqualifying for anything real.</li>
+    <li>No rate limiting, no request-size guard at the proxy layer, no auth. A public IG endpoint
+      is an easy denial-of-service target: 32 forward passes per request.</li>
+    <li><code>Dockerfile</code> installs torch with no CPU-only index — the image will be far larger
+      than it needs to be. No healthcheck, no non-root user, no pinned versions.</li>
+  </ul>
+
+  <h4><span class="tag">worth fixing</span> Data and reproducibility</h4>
+  <ul>
+    <li>The Counter Context numeric label order is explicitly flagged as <em>unverified against the
+      paper</em> in <code>base.yaml</code>. If <code>"0"</code> is not actually hate speech, your
+      headline model is trained on mislabelled data. <strong>Verify this before anything else.</strong></li>
+    <li>Both datasets use <code>random_split</code> (see <code>test_datasets.py</code>) — random
+      splits leak near-duplicate tweets between train and test, inflating metrics.</li>
+    <li>No dedup, no class-balance report, no input sanitisation beyond length and blank checks.</li>
+  </ul>
+
+  <h4><span class="tag">worth fixing</span> The explanation layer can contradict the model</h4>
+  <p><code>context_reasoner.py</code> classifies tone with a hard-coded keyword set, including a
+  small <code>_POSITIVE_MARKERS</code> list. The string these rules produce goes into the UI as the
+  reasoning summary. So a keyword list — not the model — has the final word on how a decision is
+  described. It is deterministic and documented, which is far better than an LLM, but it is still a
+  second, unevaluated decision-maker sitting in front of your evaluated one.</p>
+
+  <h4><span class="tag">worth fixing</span> Honest numbers</h4>
+  <p>Your served checkpoint's best validation macro-F1 is <strong>0.566</strong> over 3 classes
+  (chance ≈ 0.33) — and it was selected at epoch 2 of 4, with validation loss rising from epoch 1
+  onward. That is overfitting on a small dataset, not a working detector. Any write-up should lead
+  with this number, not the architecture diagram. The <code>ablation.py</code> module is exactly
+  the right tool to show whether context and contrastive learning help — <strong>run it</strong>.</p>
+
+  <h2 id="solid"><span class="n">22</span>How to make it solid (ordered by payoff)</h2>
+  <table>
+    <tr><th>#</th><th>Action</th><th>Why it matters</th><th>Effort</th></tr>
+    <tr>
+      <td class="lead-num">1</td>
+      <td><strong>Write a parity test for the IG path.</strong> Same input, forward with
+      <code>input_ids</code> vs forward with <code>inputs_embeds</code>; assert the argmax label and
+      probabilities match to within tolerance.</td>
+      <td>If this passes, your evidence section is sound. If it fails, you just found the bug that
+      invalidates your main claim. Either way you learn something essential in an afternoon.</td>
+      <td>Small</td>
+    </tr>
+    <tr>
+      <td class="lead-num">2</td>
+      <td><strong>Verify the Counter Context label map</strong> against the NAACL 2022 paper, and
+      write the verification (paper quote + date) into <code>base.yaml</code>.</td>
+      <td>Cheapest possible fix for the biggest possible problem: silently mislabelled training data.</td>
+      <td>Small</td>
+    </tr>
+    <tr>
+      <td class="lead-num">3</td>
+      <td><strong>Replace random splits with the datasets' official splits</strong> (HateXplain ships
+      <code>post_id_divisions.json</code> and your loader already reads it for the ids).</td>
+      <td>Stops leakage between train and test. Your reported metrics become meaningful.</td>
+      <td>Small</td>
+    </tr>
+    <tr>
+      <td class="lead-num">4</td>
+      <td><strong>Fix the three serving bugs:</strong> guard <code>encode_pair</code> when
+      <code>context_input_ids is None</code>; use <code>getattr(model, "hate_head", None) or model.classifier</code>
+      in <code>model_info()</code>; catch <code>Exception</code> (not just <code>RuntimeError</code>)
+      at the route boundary.</td>
+      <td>Removes two guaranteed 500s from a deployed server.</td>
+      <td>Small</td>
+    </tr>
+    <tr>
+      <td class="lead-num">5</td>
+      <td><strong>Make the contrastive signal real.</strong> Raise <code>negatives_per_anchor</code>
+      to 4–8, sample negatives from the same topic/label neighbourhood rather than globally at random,
+      and move negative sampling into <code>Dataset.__getitem__</code> with an explicit per-worker seed.</td>
+      <td>Turns a mostly-decorative loss into a real inductive bias — the thing your whole
+      "context matters" claim depends on.</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td class="lead-num">6</td>
+      <td><strong>Add latency + version to every response</strong> (<code>model_version</code>,
+      <code>inference_ms</code>, <code>evidence_method</code>).</td>
+      <td>Makes production debugging and A/B comparison possible without a separate metrics stack.</td>
+      <td>Small</td>
+    </tr>
+    <tr>
+      <td class="lead-num">7</td>
+      <td><strong>Skip the contrastive projection when serving</strong>, and strip unused heads on
+      export.</td>
+      <td>Smaller checkpoint, less wasted compute per request. Purely additive to the export script
+      you already have.</td>
+      <td>Small</td>
+    </tr>
+    <tr>
+      <td class="lead-num">8</td>
+      <td><strong>Annotate a validation split for reason labels</strong> (your annotation workspace
+      already produces the format).</td>
+      <td>Without it, the reason head is trained blind. With it, you can report macro-F1 and know
+      whether to ship it.</td>
+      <td>Medium (human time)</td>
+    </tr>
+    <tr>
+      <td class="lead-num">9</td>
+      <td><strong>Split <code>inference.py</code></strong> into <code>model_loader.py</code> +
+      <code>inference.py</code>, and add a second, optional CLI wrapper
+      (<code>scripts/serve.py</code>) that exercises the predict pipeline without HTTP.</td>
+      <td>The file is at the size where the next feature will make it unpleasant. A CLI path also
+      makes the pipeline testable without a web server.</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td class="lead-num">10</td>
+      <td><strong>Harden for deployment:</strong> pin versions, CPU-only torch in the Dockerfile,
+      non-root user, <code>/health</code> healthcheck, a real CORS origin list, and a token-bucket
+      limit on <code>/predict</code>.</td>
+      <td>Turns "runs on my laptop" into "can be exposed".</td>
+      <td>Medium</td>
+    </tr>
+  </table>
+  <div class="point good">
+    <strong>If you only do three things:</strong> #1 (the parity test), #2 (verify the label map),
+    and #3 (official splits). Those three decide whether the numbers in your report mean anything.
+    Everything else is polish on top of a project that is already unusually well-structured.
+  </div>
+
+  <h2 id="gloss"><span class="n">23</span>Plain-English glossary of the response fields</h2>
+  <table>
+    <tr><th>Field</th><th>Read it as</th></tr>
+    <tr><td><code>prediction.label</code></td><td>"The model's answer to <em>what is this?</em>"</td></tr>
+    <tr><td><code>prediction.confidence</code></td><td>"How sure it is, from 0 to 1." Not the same as accuracy.</td></tr>
+    <tr><td><code>prediction.probabilities</code></td><td>"The full scoreboard for every class."</td></tr>
+    <tr><td><code>*_available</code></td><td>"Was this actually computed, or is the section empty?" Always pair it with the <code>null</code> check.</td></tr>
+    <tr><td><code>evidence[].text</code></td><td>"A real slice of what you typed — copied, never generated."</td></tr>
+    <tr><td><code>evidence[].score</code></td><td>"How strongly this phrase pushed the answer, relative to the strongest phrase." Score 0.82 = 82% as influential as the top phrase.</td></tr>
+    <tr><td><code>evidence[].start</code> / <code>.end</code></td><td>"Character positions in your original comment, so the UI can highlight it exactly."</td></tr>
+    <tr><td><code>reasoning.summary</code></td><td>"A fixed-template sentence describing what the model found and whether context mattered." Not an LLM, not the author's intent.</td></tr>
+    <tr><td><code>reasoning.links</code></td><td>"This word in the current comment points back to that phrase in the previous one." A heuristic, stated as one.</td></tr>
+    <tr><td><code>reasoning.method</code></td><td>The honesty label: it spells out that this was deterministic analysis, not model introspection.</td></tr>
+    <tr><td><code>context_used</code></td><td>"Context was supplied and fed to the model." It does <strong>not</strong> mean "context changed the answer".</td></tr>
+    <tr><td><code>evidence_available</code></td><td>"Attribution actually ran." False when no head was trained.</td></tr>
+  </table>
+
+  <footer>
+    <p><strong>Architecture document</strong> · Backend of the Context-Aware Hate Speech Detection
+    project. Every measurement in this file was taken from the repository as it stands: 207
+    checkpoint tensors / 112.96 M parameters, <code>trained_heads: ["hate"]</code>,
+    best val macro-F1 0.566 at epoch 2, 149 tests passing in 47.7 s.</p>
+    <p>Companion files: <span class="file">README.md</span> (project overview),
+    <span class="file">REASONING.md</span> (how the explanation pipeline works),
+    <span class="file">backend/README.md</span> (backend reference).</p>
+  </footer>
+</main>
+</div>
+</body>
+</html>

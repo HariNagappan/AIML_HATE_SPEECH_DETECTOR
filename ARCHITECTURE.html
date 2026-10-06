@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Backend Architecture — Context-Aware Hate Speech Detection</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --accent3: #f78166;
+      --accent4: #d2a8ff;
+      --accent5: #ffa657;
+      --accent6: #79c0ff;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --code-bg: #0d1117;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Layout ─────────────────────────────── */
+    .layout { display: flex; min-height: 100vh; }
+    nav {
+      width: 260px;
+      min-width: 260px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 24px 0;
+    }
+    nav .logo {
+      padding: 0 20px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    nav ul { list-style: none; }
+    nav ul li a {
+      display: block;
+      padding: 6px 20px;
+      color: var(--muted);
+      font-size: 13px;
+      transition: color 0.15s, background 0.15s;
+      border-left: 3px solid transparent;
+    }
+    nav ul li a:hover,
+    nav ul li a.active {
+      color: var(--text);
+      background: var(--surface2);
+      border-left-color: var(--accent);
+      text-decoration: none;
+    }
+    nav .section-label {
+      padding: 14px 20px 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    main { flex: 1; max-width: 960px; padding: 48px 48px 96px; }
+
+    /* ── Typography ──────────────────────────── */
+    h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+    h2 { font-size: 22px; font-weight: 700; margin: 48px 0 16px; padding-bottom: 8px;
+         border-bottom: 1px solid var(--border); color: var(--accent); }
+    h3 { font-size: 17px; font-weight: 600; margin: 28px 0 10px; color: var(--accent4); }
+    h4 { font-size: 14px; font-weight: 600; margin: 18px 0 6px; color: var(--accent5); }
+    p { margin-bottom: 12px; color: var(--text); }
+    p.muted { color: var(--muted); font-size: 13px; }
+    ul, ol { padding-left: 22px; margin-bottom: 12px; }
+    li { margin-bottom: 4px; }
+
+    /* ── Hero ───────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 36px 40px;
+      margin-bottom: 40px;
+    }
+    .hero h1 { font-size: 28px; }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin: 4px 4px 4px 0;
+    }
+    .badge-blue { background: #1f4068; color: #58a6ff; }
+    .badge-green { background: #1a3a2a; color: #3fb950; }
+    .badge-purple { background: #2d1f4e; color: #d2a8ff; }
+    .badge-orange { background: #3d2a0f; color: #ffa657; }
+
+    /* ── Code ───────────────────────────────── */
+    code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      color: #e6edf3;
+    }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      overflow-x: auto;
+      margin: 14px 0 20px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    pre code { background: none; border: none; padding: 0; }
+    .comment { color: #8b949e; }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .num { color: #79c0ff; }
+    .cls { color: #ffa657; }
+
+    /* ── Cards ──────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 8px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .card p { font-size: 14px; margin-bottom: 6px; }
+
+    /* ── Architecture diagram ────────────────── */
+    .arch-diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 32px 24px;
+      margin: 20px 0 28px;
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 2;
+      overflow-x: auto;
+    }
+    .arch-diagram .box {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin: 2px;
+    }
+    .box-blue { background: #1f4068; color: #79c0ff; border: 1px solid #264f7a; }
+    .box-green { background: #1a3a2a; color: #56d364; border: 1px solid #1f5c32; }
+    .box-purple { background: #2d1f4e; color: #d2a8ff; border: 1px solid #4a317a; }
+    .box-orange { background: #3d2a0f; color: #ffa657; border: 1px solid #6a4822; }
+    .box-red { background: #3d1f1f; color: #f78166; border: 1px solid #7a3030; }
+    .box-cyan { background: #0d2d3a; color: #39c5cf; border: 1px solid #0f4a5c; }
+    .arrow { color: var(--muted); }
+
+    /* ── Tables ─────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; margin: 14px 0 24px; font-size: 14px; }
+    th {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    td {
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: var(--surface); }
+    td code { font-size: 12px; }
+
+    /* ── Callouts ───────────────────────────── */
+    .callout {
+      border-left: 4px solid;
+      border-radius: 0 8px 8px 0;
+      padding: 14px 18px;
+      margin: 16px 0 24px;
+      font-size: 14px;
+    }
+    .callout-blue { border-color: var(--accent); background: #1a2742; }
+    .callout-green { border-color: var(--accent2); background: #1a2d1c; }
+    .callout-orange { border-color: var(--accent5); background: #2d2010; }
+    .callout-purple { border-color: var(--accent4); background: #231a3a; }
+    .callout-title { font-weight: 700; margin-bottom: 6px; }
+
+    /* ── Grid ───────────────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 16px 0; }
+    @media (max-width: 780px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      nav { display: none; }
+      main { padding: 24px; }
+    }
+
+    /* ── Loss equation ──────────────────────── */
+    .equation {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 24px;
+      margin: 14px 0;
+      font-family: monospace;
+      font-size: 15px;
+      text-align: center;
+      color: var(--accent4);
+    }
+
+    /* ── Step list ──────────────────────────── */
+    .step-list { list-style: none; padding: 0; }
+    .step-list li {
+      display: flex;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .step-list li:last-child { border-bottom: none; }
+    .step-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step-content { flex: 1; }
+    .step-content strong { display: block; margin-bottom: 2px; }
+    .step-content span { font-size: 13px; color: var(--muted); }
+
+    /* ── Tag cloud ──────────────────────────── */
+    .learnable-tag {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      margin: 3px;
+      color: var(--text);
+    }
+    .learnable-tag:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ════════════════════ SIDEBAR ════════════════════ -->
+<nav>
+  <div class="logo">🧠 AIML Architecture</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#folder-structure">Folder Structure</a></li>
+  </ul>
+  <div class="section-label">Core ML Pipeline</div>
+  <ul>
+    <li><a href="#bert-encoder">1. BERT Encoder</a></li>
+    <li><a href="#context-interaction">2. Context Interaction</a></li>
+    <li><a href="#prediction-heads">3. Prediction Heads</a></li>
+    <li><a href="#contrastive">4. Contrastive Learning</a></li>
+    <li><a href="#evidence">5. Evidence / Attribution</a></li>
+  </ul>
+  <div class="section-label">Training System</div>
+  <ul>
+    <li><a href="#losses">Multi-task Losses</a></li>
+    <li><a href="#trainer">Trainer</a></li>
+    <li><a href="#ablation">Ablation Experiments</a></li>
+  </ul>
+  <div class="section-label">API Layer</div>
+  <ul>
+    <li><a href="#fastapi">FastAPI App</a></li>
+    <li><a href="#inference-service">Inference Service</a></li>
+    <li><a href="#routes">API Routes</a></li>
+  </ul>
+  <div class="section-label">Deep Dives</div>
+  <ul>
+    <li><a href="#forward-pass">Forward Pass Walkthrough</a></li>
+    <li><a href="#config-system">Config System</a></li>
+    <li><a href="#learnables">All Learnables</a></li>
+    <li><a href="#data-flow">Request Data Flow</a></li>
+    <li><a href="#design-decisions">Design Decisions</a></li>
+  </ul>
+</nav>
+
+<!-- ════════════════════ MAIN ════════════════════ -->
+<main>
+
+  <!-- ── Hero ──────────────────────────────── -->
+  <div class="hero">
+    <p class="muted" style="margin-bottom:8px;">AIML Project · Backend Architecture Document</p>
+    <h1>Context-Aware Hate Speech Detection</h1>
+    <p style="color:var(--muted);margin:12px 0 20px;">
+      A multi-task NLP backend that classifies hate speech, identifies its target group
+      and reason category, and generates attribution-based evidence spans — all from a
+      single shared BERT encoder augmented with context interaction and contrastive learning.
+    </p>
+    <span class="badge badge-blue">FastAPI</span>
+    <span class="badge badge-blue">PyTorch</span>
+    <span class="badge badge-blue">HuggingFace Transformers</span>
+    <span class="badge badge-green">Multi-task Learning</span>
+    <span class="badge badge-green">Contrastive Learning</span>
+    <span class="badge badge-purple">Integrated Gradients</span>
+    <span class="badge badge-orange">HateXplain Dataset</span>
+  </div>
+
+  <!-- ── Overview ────────────────────────────── -->
+  <h2 id="overview">Overview</h2>
+  <p>
+    The project is a production-ready FastAPI backend that wraps a custom PyTorch model.
+    The model takes a <strong>current comment</strong> (and optionally a
+    <strong>previous context comment</strong>) and produces four outputs simultaneously:
+  </p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">🎯 Hate Classification</div>
+      <p>Multiclass: <code>hate</code> / <code>offensive</code> / <code>normal</code></p>
+      <p>Outputs a label, confidence score, and full probability distribution.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">👤 Target Group</div>
+      <p>Who the speech is targeting — 9 categories including race, religion, gender, etc.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">💬 Reason Category</div>
+      <p>Why it's hateful — 8 categories like insult, dehumanization, threat, etc.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">🔍 Evidence Spans</div>
+      <p>Token-level attribution scores (Integrated Gradients) highlighting which words drove the prediction.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-blue">
+    <div class="callout-title">📌 Core Insight</div>
+    The same BERT encoder is used (with shared weights) to encode both the current comment and the previous context. 
+    This is a deliberate design choice — weight sharing forces the model to learn a universal comment representation 
+    rather than two separate representations, and it reduces parameter count.
+  </div>
+
+  <!-- ── Folder Structure ──────────────────── -->
+  <h2 id="folder-structure">Folder Structure</h2>
+  <pre><code>backend/
+├── app/
+│   ├── main.py                  <span class="comment"># FastAPI app factory + lifespan</span>
+│   ├── core/
+│   │   ├── config.py            <span class="comment"># Settings (pydantic-settings, .env)</span>
+│   │   └── logging.py           <span class="comment"># Structured logging setup</span>
+│   ├── models/                  <span class="comment"># PyTorch nn.Module pieces</span>
+│   │   ├── full_model.py        <span class="comment"># FullModel — the complete architecture</span>
+│   │   ├── baseline.py          <span class="comment"># BaselineModel — BERT only (ablation exp1)</span>
+│   │   ├── bert_encoder.py      <span class="comment"># Shared BERT encoder wrapper</span>
+│   │   ├── context_interaction.py  <span class="comment"># [E_c; E_p; D; M] → MLP</span>
+│   │   ├── hate_head.py         <span class="comment"># Hate/offensive/normal classifier</span>
+│   │   ├── target_head.py       <span class="comment"># Target group classifier</span>
+│   │   ├── reason_head.py       <span class="comment"># Reason category classifier</span>
+│   │   ├── evidence_head.py     <span class="comment"># Supervised token-level rationale head</span>
+│   │   ├── contrastive.py       <span class="comment"># InfoNCE projection + loss</span>
+│   │   └── softmax_head.py      <span class="comment"># Base class for softmax heads</span>
+│   ├── training/
+│   │   ├── trainer.py           <span class="comment"># Full training loop (AMP, grad accum, checkpointing)</span>
+│   │   ├── losses.py            <span class="comment"># Multi-task loss computation + weighting</span>
+│   │   ├── contrastive_loss.py  <span class="comment"># InfoNCE loss helper</span>
+│   │   ├── configs.py           <span class="comment"># TrainConfig (YAML → dataclass)</span>
+│   │   └── checkpoint_io.py     <span class="comment"># Checkpoint save/load utilities</span>
+│   ├── reasoning/               <span class="comment"># Post-hoc analysis + explanation assembly</span>
+│   │   ├── attribution.py       <span class="comment"># Integrated Gradients + gradient×input</span>
+│   │   ├── evidence_extractor.py   <span class="comment"># Top-K span extraction from attributions</span>
+│   │   ├── context_reasoner.py  <span class="comment"># Deterministic context relationship analysis</span>
+│   │   ├── reason_explainer.py  <span class="comment"># Human-readable reason descriptions</span>
+│   │   └── structured_explanation.py  <span class="comment"># Assembles final API response object</span>
+│   ├── datasets/
+│   │   ├── hatexplain.py        <span class="comment"># HateXplain dataset loader</span>
+│   │   ├── unified.py           <span class="comment"># UnifiedExample dataclass</span>
+│   │   ├── collator.py          <span class="comment"># MultitaskCollator + ContrastivePairCollator</span>
+│   │   ├── tokenizer.py         <span class="comment"># TokenizerWrapper + helpers</span>
+│   │   ├── label_mapping.py     <span class="comment"># Label string ↔ int mappings</span>
+│   │   ├── preprocessing.py     <span class="comment"># Text cleaning</span>
+│   │   └── counter_context.py   <span class="comment"># Counter-speech dataset support</span>
+│   ├── evaluation/
+│   │   ├── ablation.py          <span class="comment"># 6-experiment ablation suite</span>
+│   │   ├── classification.py    <span class="comment"># Accuracy / F1 / AUC metrics</span>
+│   │   └── rationale.py         <span class="comment"># Token-level P/R/F1 for evidence</span>
+│   ├── services/
+│   │   └── inference.py         <span class="comment"># InferenceService singleton + model lifecycle</span>
+│   └── api/
+│       ├── routes/              <span class="comment"># FastAPI routers</span>
+│       │   ├── health.py
+│       │   ├── prediction.py
+│       │   ├── explanation.py
+│       │   └── model.py
+│       └── schemas/             <span class="comment"># Pydantic request/response models</span>
+│           ├── prediction.py
+│           └── explanation.py
+└── .env                         <span class="comment"># Runtime config (encoder name, checkpoint path, etc.)</span></code></pre>
+
+  <!-- ═══════════════ SECTION 1: BERT ══════════════════ -->
+  <h2 id="bert-encoder">1. Shared BERT Encoder</h2>
+  <p><strong>File:</strong> <code>app/models/bert_encoder.py</code> — <code>BertEncoder(nn.Module)</code></p>
+
+  <p>
+    This is the backbone of the entire system. It wraps a HuggingFace <code>AutoModel</code> 
+    (defaulting to <code>bert-base-uncased</code>) and exposes two things from its forward pass:
+  </p>
+  <ul>
+    <li><strong><code>last_hidden_state</code></strong> — shape <code>[B, T, 768]</code> — contextual token representations</li>
+    <li><strong><code>cls</code></strong> — shape <code>[B, 768]</code> — the <code>[CLS]</code> token embedding, used as the sentence representation</li>
+  </ul>
+
+  <h3>Why Shared Weights?</h3>
+  <p>
+    The same <code>BertEncoder</code> instance encodes <em>both</em> the current comment and the previous context.
+    This means there's only one BERT, not two. This is important:
+  </p>
+  <ul>
+    <li>Halves the parameter count compared to a dual-encoder approach</li>
+    <li>Forces a unified semantic space — both comment and context live in the same embedding geometry</li>
+    <li>Makes the contrastive objective work correctly (anchor, positive, negative must be in the same space)</li>
+  </ul>
+
+  <h3>Freeze Modes</h3>
+  <table>
+    <tr><th>Mode</th><th>What freezes</th><th>When to use</th></tr>
+    <tr><td><code>full</code></td><td>Nothing — all BERT weights fine-tune</td><td>Default; best accuracy if you have enough data</td></tr>
+    <tr><td><code>frozen</code></td><td>All BERT weights — only task heads train</td><td>Very small datasets; fast experiments</td></tr>
+    <tr><td><code>partial</code></td><td>Embeddings + bottom N layers</td><td>Medium data; preserve low-level representations, fine-tune higher layers</td></tr>
+  </table>
+
+  <div class="callout callout-orange">
+    <div class="callout-title">📚 What to Learn Here</div>
+    <strong>Transfer Learning:</strong> BERT was pre-trained on masked language modeling and next-sentence prediction on 
+    Wikipedia + BookCorpus. Fine-tuning means you start from these general language representations and 
+    adapt them to hate speech classification. The <code>[CLS]</code> token is specifically designed to carry 
+    a sentence-level summary — that's why it's used as the input to the classification heads.
+  </div>
+
+  <pre><code><span class="comment"># How the encoder is called in full_model.py</span>
+<span class="kw">def</span> <span class="fn">_encode_current</span>(self, input_ids, attention_mask, ...):
+    encoded = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+    <span class="kw">return</span> encoded[<span class="str">"cls"</span>], encoded[<span class="str">"last_hidden_state"</span>]
+    <span class="comment">#          ↑ [B,768]      ↑ [B, seq_len, 768]</span>
+
+<span class="kw">def</span> <span class="fn">_encode_context</span>(self, context_input_ids, context_attention_mask):
+    <span class="comment"># SAME encoder — shared weights!</span>
+    <span class="kw">return</span> self.encoder(input_ids=context_input_ids, ...)[<span class="str">"cls"</span>]</code></pre>
+
+  <!-- ═══════════════ SECTION 2: INTERACTION ══════════════════ -->
+  <h2 id="context-interaction">2. Context Interaction Layer</h2>
+  <p><strong>File:</strong> <code>app/models/context_interaction.py</code> — <code>ContextInteraction(nn.Module)</code></p>
+
+  <p>
+    After encoding both comments, the interaction layer combines them into a single
+    context-aware representation. This is where the real NLP insight lives.
+  </p>
+
+  <h3>The Math</h3>
+  <div class="equation">
+    E<sub>int</sub> = [E<sub>c</sub> ; E<sub>p</sub> ; |E<sub>c</sub> − E<sub>p</sub>| ; E<sub>c</sub> ⊙ E<sub>p</sub>] → Linear(3072 → 1024) → GELU → Dropout
+  </div>
+
+  <table>
+    <tr><th>Symbol</th><th>Meaning</th><th>Shape</th><th>Why it's there</th></tr>
+    <tr><td><code>E_c</code></td><td>Current comment CLS embedding</td><td>[B, 768]</td><td>What is being said right now</td></tr>
+    <tr><td><code>E_p</code></td><td>Previous context CLS embedding</td><td>[B, 768]</td><td>What was said before</td></tr>
+    <tr><td><code>D = |E_c − E_p|</code></td><td>Absolute difference</td><td>[B, 768]</td><td>How much the two comments <em>differ</em> — captures contrast/shift in topic</td></tr>
+    <tr><td><code>M = E_c ⊙ E_p</code></td><td>Element-wise product</td><td>[B, 768]</td><td>Where the two comments <em>agree</em> — captures shared semantic features</td></tr>
+  </table>
+
+  <p>
+    Concatenating all four gives a <code>[B, 3072]</code> vector which is then projected down to 
+    <code>[B, 1024]</code> via a linear layer + GELU activation.
+  </p>
+
+  <h3>Two Modes (for ablation)</h3>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">mlp (proposed)</div>
+      <p>Uses all four components: <code>[E_c; E_p; D; M]</code></p>
+      <p>Input dim: <code>4 × 768 = 3072</code></p>
+      <p>Captures both difference and similarity signals explicitly.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">simple (ablation)</div>
+      <p>Only <code>[E_c; E_p]</code> — no engineered features</p>
+      <p>Input dim: <code>2 × 768 = 1536</code></p>
+      <p>Used in exp2 to test if D and M actually help.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-purple">
+    <div class="callout-title">📚 What to Learn Here</div>
+    This is a classic <strong>Natural Language Inference (NLI) interaction</strong> pattern — the same 
+    [difference + product] feature engineering was used in InferSent and decomposable attention models 
+    before transformers dominated. The intuition: subtraction captures what's unique to each sentence, 
+    multiplication captures shared features. Applied here to hate-speech context: if the previous comment 
+    is sarcastic or inviting a specific slur, D and M will encode that relationship differently than mere concatenation.
+  </div>
+
+  <pre><code><span class="kw">def</span> <span class="fn">compute_interaction_components</span>(e_c, e_p):
+    d = torch.abs(e_c - e_p)          <span class="comment"># difference</span>
+    m = e_c * e_p                      <span class="comment"># element-wise product</span>
+    <span class="kw">return</span> torch.cat([e_c, e_p, d, m], dim=-1)   <span class="comment"># [B, 3072]</span>
+
+<span class="kw">class</span> <span class="cls">ContextInteraction</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">forward</span>(self, e_c, e_p=None):
+        <span class="kw">if</span> e_p <span class="kw">is</span> None:
+            e_p = torch.zeros_like(e_c)   <span class="comment"># graceful: no context = zero vector</span>
+        raw = compute_interaction_components(e_c, e_p)[<span class="str">"concat"</span>]
+        <span class="kw">return</span> self.dropout(self.activation(self.projection(raw)))</code></pre>
+
+  <!-- ═══════════════ SECTION 3: HEADS ══════════════════ -->
+  <h2 id="prediction-heads">3. Prediction Heads</h2>
+  <p>
+    All heads receive the same <code>final_representation</code> — the <code>[B, 1024]</code> 
+    vector output by the interaction layer — and independently classify it.
+    This is the <strong>multi-task learning</strong> setup: one shared representation, multiple objectives.
+  </p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">HateHead</div>
+      <p><strong>Task:</strong> Multiclass classification — hate / offensive / normal</p>
+      <p><strong>Architecture:</strong> <code>Linear(1024 → 3)</code> + Softmax</p>
+      <p><strong>Loss:</strong> Cross-entropy</p>
+      <p>Also supports binary mode (single logit + sigmoid) via config.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">TargetHead</div>
+      <p><strong>Task:</strong> Who is being targeted — 9 categories</p>
+      <p><strong>Architecture:</strong> <code>Linear(1024 → 9)</code> + Softmax</p>
+      <p><strong>Loss:</strong> Cross-entropy (only where annotations exist)</p>
+      <p>Trained only on datasets that provide target labels (HateXplain does).</p>
+    </div>
+    <div class="card">
+      <div class="card-title">ReasonHead</div>
+      <p><strong>Task:</strong> Why it's hateful — 8 reason categories</p>
+      <p><strong>Architecture:</strong> <code>Linear(1024 → 8)</code> + Softmax</p>
+      <p><strong>Loss:</strong> Cross-entropy (only when reason annotations available)</p>
+      <p>Never trained on fabricated/keyword-inferred labels. Off by default.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">EvidenceHead</div>
+      <p><strong>Task:</strong> Per-token rationale binary classification</p>
+      <p><strong>Architecture:</strong> <code>Linear(768 → 1)</code> over each token state</p>
+      <p><strong>Loss:</strong> Binary cross-entropy (only on tokens with gold rationale labels)</p>
+      <p>Takes the <em>token states</em> <code>[B, T, 768]</code>, not the CLS vector.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-green">
+    <div class="callout-title">📚 What to Learn Here — Multi-Task Learning</div>
+    Multi-task learning works by sharing a representation (the interaction output) across tasks. 
+    The intuition is that tasks like "is this hate speech?" and "who is targeted?" are related — 
+    learning them together should improve the shared representation because gradients from all tasks 
+    flow through the same BERT encoder. In practice, you need to balance the loss weights 
+    (λ values in the config) carefully so one task doesn't dominate.
+  </div>
+
+  <!-- ═══════════════ SECTION 4: CONTRASTIVE ══════════════════ -->
+  <h2 id="contrastive">4. Contrastive Learning (Training Only)</h2>
+  <p><strong>Files:</strong> <code>app/models/contrastive.py</code>, <code>app/training/contrastive_loss.py</code></p>
+
+  <p>
+    Contrastive learning is an auxiliary training objective that runs <em>only during training</em>
+    (never at inference). It teaches the model that the context matters:
+    the same comment paired with its <em>correct</em> preceding context should produce 
+    a representation that is close to the comment-only anchor, while pairing it with a 
+    <em>wrong</em> (contrasting) context should produce a distant representation.
+  </p>
+
+  <h3>InfoNCE Loss</h3>
+  <div class="equation">
+    L<sub>InfoNCE</sub> = −log [ exp(sim(a,p)/τ) / (exp(sim(a,p)/τ) + Σ<sub>i</sub> exp(sim(a,n<sub>i</sub>)/τ)) ]
+  </div>
+
+  <ul class="step-list">
+    <li>
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>z_anchor</strong>
+        <span>Encode just the current comment, project through ContrastiveProjection → L2-normalized [B, 256]</span>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>z_positive</strong>
+        <span>Encode current comment + its CORRECT preceding context, project → [B, 256]</span>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>z_negative</strong>
+        <span>Encode current comment + a RANDOM contrasting context (different comment's context), project → [B, N, 256]</span>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <strong>Loss</strong>
+        <span>Push z_positive close to z_anchor, push all z_negative away. Temperature τ=0.07 controls sharpness.</span>
+      </div>
+    </li>
+  </ul>
+
+  <div class="callout callout-blue">
+    <div class="callout-title">📚 What to Learn Here — InfoNCE / SimCLR-style Contrastive Loss</div>
+    InfoNCE (from CPC, 2018) is the same family of losses used in CLIP and SimCLR. It's a 
+    cross-entropy over similarities — treat the positive pair as the "correct class" and all negatives 
+    as wrong classes. Temperature τ controls how peaked the distribution is: low τ = very sharp = 
+    harder training signal. The projection head (a small MLP that maps to a lower-dim space) is a key 
+    trick from SimCLR — the projection head is discarded after training; it prevents the contrastive 
+    objective from distorting the main representation space.
+  </div>
+
+  <pre><code><span class="comment"># ContrastiveProjection: final_representation → contrastive space</span>
+<span class="kw">class</span> <span class="cls">ContrastiveProjection</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, input_dim, projection_dim=<span class="num">256</span>):
+        self.projection = nn.Sequential(
+            nn.Linear(input_dim, projection_dim),
+            nn.GELU(),
+            nn.Linear(projection_dim, projection_dim),
+        )
+    <span class="kw">def</span> <span class="fn">forward</span>(self, features):
+        <span class="kw">return</span> F.normalize(self.projection(features), dim=-<span class="num">1</span>)  <span class="comment"># L2-normalize!</span></code></pre>
+
+  <!-- ═══════════════ SECTION 5: EVIDENCE ══════════════════ -->
+  <h2 id="evidence">5. Evidence Extraction & Attribution</h2>
+  <p><strong>Files:</strong> <code>app/reasoning/attribution.py</code>, <code>app/reasoning/evidence_extractor.py</code></p>
+
+  <p>
+    The project uses two distinct but related mechanisms for token-level explanations.
+    It's critical to understand the difference:
+  </p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">🏋️ Supervised Rationale (Training)</div>
+      <p><strong>EvidenceHead</strong> — a learned classifier over token states.</p>
+      <p>Trained against gold rationale annotations from HateXplain (which words human annotators marked).</p>
+      <p>This is a <em>predictive</em> head — it learns to predict where the hate signal is.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">🔬 Post-Hoc Attribution (Inference)</div>
+      <p><strong>Integrated Gradients</strong> — computed from model gradients, no extra training needed.</p>
+      <p>Asks: "how much does each input token contribute to the predicted class logit?"</p>
+      <p>This is an <em>explanation</em> method — it doesn't require annotations.</p>
+    </div>
+  </div>
+
+  <h3>Integrated Gradients — How it Works</h3>
+  <ul class="step-list">
+    <li>
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Define a baseline</strong>
+        <span>PAD token embeddings — the "absence of information" reference point</span>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Interpolate</strong>
+        <span>Create N=32 steps from baseline embeddings to actual input embeddings: x(α) = baseline + α·(input − baseline), α ∈ {1/32, 2/32, …, 1}</span>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>Compute gradients</strong>
+        <span>At each step, run a forward pass and compute ∂(logit of target class)/∂(embedding) using autograd</span>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <strong>Integrate</strong>
+        <span>Average the gradients across all 32 steps, then multiply by (input − baseline). Sum over the embedding dimension to get a scalar per token.</span>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <strong>Extract spans</strong>
+        <span>Take the top-K tokens by attribution score, merge adjacent tokens into spans, filter by min_score threshold</span>
+      </div>
+    </li>
+  </ul>
+
+  <div class="callout callout-purple">
+    <div class="callout-title">📚 What to Learn Here — Integrated Gradients (Sundararajan et al., 2017)</div>
+    IG satisfies the <em>completeness axiom</em>: the sum of all attribution scores equals 
+    F(input) − F(baseline). This means attributions are not arbitrary — they exactly account for 
+    the difference in model output between having the input vs. not. It's one of the gold-standard 
+    XAI methods for NLP. The cheaper alternative, gradient×input, is just the first step of IG 
+    (α=1 only) — faster but noisier.
+  </div>
+
+  <!-- ═══════════════ LOSSES ══════════════════ -->
+  <h2 id="losses">Multi-Task Loss System</h2>
+  <p><strong>File:</strong> <code>app/training/losses.py</code></p>
+
+  <div class="equation">
+    L<sub>total</sub> = λ<sub>hate</sub>·L<sub>hate</sub> + λ<sub>target</sub>·L<sub>target</sub> + λ<sub>reason</sub>·L<sub>reason</sub> + λ<sub>contrastive</sub>·L<sub>contrastive</sub> + λ<sub>evidence</sub>·L<sub>evidence</sub>
+  </div>
+
+  <table>
+    <tr><th>Loss Component</th><th>Default λ</th><th>Type</th><th>Condition</th></tr>
+    <tr><td><code>L_hate</code></td><td>1.0</td><td>Cross-entropy</td><td>Always (when hate labels present)</td></tr>
+    <tr><td><code>L_target</code></td><td>1.0</td><td>Cross-entropy</td><td>Only when target annotations present in batch</td></tr>
+    <tr><td><code>L_reason</code></td><td>1.0</td><td>Cross-entropy</td><td>Only when reason annotations present</td></tr>
+    <tr><td><code>L_contrastive</code></td><td>0.5</td><td>InfoNCE</td><td>Only when context pairs available in batch</td></tr>
+    <tr><td><code>L_evidence</code></td><td>1.0</td><td>Binary cross-entropy</td><td>Only when token-level rationale labels present</td></tr>
+  </table>
+
+  <div class="callout callout-orange">
+    <div class="callout-title">📌 Important Design Choice</div>
+    A loss component is silently skipped (not zeroed out, but fully absent) when the batch has no 
+    ground truth for it. This means training on mixed datasets works correctly — you never have 
+    spurious gradients from labels that don't apply to a given example. The <code>-100</code> 
+    ignore index is the standard PyTorch pattern for masked cross-entropy.
+  </div>
+
+  <!-- ═══════════════ TRAINER ══════════════════ -->
+  <h2 id="trainer">Trainer</h2>
+  <p><strong>File:</strong> <code>app/training/trainer.py</code></p>
+
+  <h3>Key Features</h3>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">AMP (Automatic Mixed Precision)</div>
+      <p>Uses <code>torch.autocast</code> + <code>GradScaler</code> on CUDA.</p>
+      <p>Forward pass runs in float16; weights stay in float32. Roughly 2× speedup + halved GPU memory.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Gradient Accumulation</div>
+      <p>Simulates larger batch sizes by accumulating gradients over N steps before updating.</p>
+      <p>Useful when GPU memory limits real batch size to e.g. 8, but you want effective batch of 32.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Linear Warmup + Decay LR</div>
+      <p>LR ramps up linearly for <code>warmup_ratio × total_steps</code> steps, then decays linearly to 0.</p>
+      <p>Standard for fine-tuning BERT — prevents large gradient updates in early steps.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Early Stopping</div>
+      <p>Monitors <code>macro_f1</code> on validation set. If no improvement for <code>patience</code> epochs, training stops.</p>
+      <p>Saves <code>best.pt</code> + <code>last.pt</code> checkpoints independently.</p>
+    </div>
+  </div>
+
+  <h3>Checkpoint Format</h3>
+  <pre><code>{
+  <span class="str">"format_version"</span>: <span class="num">1</span>,
+  <span class="str">"model_state"</span>: { ... },          <span class="comment"># state_dict — all weights</span>
+  <span class="str">"optimizer_state"</span>: { ... },       <span class="comment"># AdamW moments — for resume</span>
+  <span class="str">"scheduler_state"</span>: { ... },       <span class="comment"># LR schedule position — for resume</span>
+  <span class="str">"epoch"</span>: <span class="num">5</span>,
+  <span class="str">"model_kwargs"</span>: { ... },          <span class="comment"># CRITICAL: architecture config to rebuild the model</span>
+  <span class="str">"trained_heads"</span>: [<span class="str">"hate"</span>, <span class="str">"target"</span>], <span class="comment"># which heads were actually trained</span>
+  <span class="str">"label_maps"</span>: { ... },
+  <span class="str">"metrics"</span>: { ... }
+}</code></pre>
+
+  <div class="callout callout-blue">
+    <div class="callout-title">📌 Key Design</div>
+    The <code>model_kwargs</code> dict in the checkpoint stores the exact architecture configuration 
+    (labels, interaction_dim, which heads are active, etc.) so inference can rebuild the <em>exact same</em> 
+    model structure without needing the original config file. This is how <code>build_model_from_checkpoint</code> 
+    works — it's fully self-contained.
+  </div>
+
+  <!-- ═══════════════ ABLATION ══════════════════ -->
+  <h2 id="ablation">Ablation Experiments</h2>
+  <p><strong>File:</strong> <code>app/evaluation/ablation.py</code></p>
+
+  <p>
+    Six experiments designed to isolate the contribution of each architectural component.
+    Each one trains a model with a specific subset of features disabled:
+  </p>
+
+  <table>
+    <tr><th>Experiment</th><th>What's enabled</th><th>Purpose</th></tr>
+    <tr><td><code>exp1_baseline</code></td><td>BERT only, no context</td><td>Lower bound — pure BERT fine-tune</td></tr>
+    <tr><td><code>exp2_bert_context</code></td><td>BERT + simple concat context</td><td>Does context help? (before D/M engineering)</td></tr>
+    <tr><td><code>exp3_interaction</code></td><td>BERT + full [E_c;E_p;D;M] MLP</td><td>Does interaction engineering (D+M) help over concat?</td></tr>
+    <tr><td><code>exp4_contrastive</code></td><td>exp3 + InfoNCE contrastive loss</td><td>Does contrastive objective improve representations?</td></tr>
+    <tr><td><code>exp5_full</code></td><td>Full multi-task (hate + target)</td><td>Does multi-task learning help hate classification?</td></tr>
+    <tr><td><code>exp6_evidence</code></td><td>Full + attribution evaluation</td><td>Are attribution-based spans aligned with gold rationales?</td></tr>
+  </table>
+
+  <!-- ═══════════════ FASTAPI ══════════════════ -->
+  <h2 id="fastapi">FastAPI Application</h2>
+  <p><strong>File:</strong> <code>app/main.py</code></p>
+
+  <h3>App Factory Pattern</h3>
+  <p>
+    <code>create_app()</code> builds and configures the FastAPI application.
+    The <code>lifespan</code> context manager handles startup (model loading) and shutdown.
+  </p>
+  <pre><code><span class="comment"># Startup: load model ONCE → reused for every request</span>
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">lifespan</span>(app):
+    setup_logging(settings.log_level)
+    warmup_inference_service()   <span class="comment"># loads checkpoint into memory</span>
+    <span class="kw">yield</span>                        <span class="comment"># app is now serving requests</span>
+    <span class="comment"># shutdown: nothing to clean up (GC handles torch memory)</span></code></pre>
+
+  <h3>API Routes</h3>
+  <table>
+    <tr><th>Route</th><th>Method</th><th>Purpose</th></tr>
+    <tr><td><code>/api/v1/health</code></td><td>GET</td><td>Liveness + model load status</td></tr>
+    <tr><td><code>/api/v1/predict</code></td><td>POST</td><td>Full classification pipeline — returns hate + target + reason + evidence spans</td></tr>
+    <tr><td><code>/api/v1/explain</code></td><td>POST</td><td>Detailed attribution — token scores + spans for a chosen head</td></tr>
+    <tr><td><code>/api/v1/model/info</code></td><td>GET</td><td>Architecture info, loaded state, trained heads</td></tr>
+  </table>
+
+  <!-- ═══════════════ INFERENCE SERVICE ══════════════════ -->
+  <h2 id="inference-service">Inference Service</h2>
+  <p><strong>File:</strong> <code>app/services/inference.py</code></p>
+
+  <p>
+    The <code>InferenceService</code> class is the bridge between FastAPI routes and the ML model.
+    It's a process-wide singleton (via <code>@lru_cache</code>) — the model loads once and stays in memory.
+  </p>
+
+  <h3>Prediction Pipeline (what happens on POST /predict)</h3>
+  <ul class="step-list">
+    <li>
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Tokenize</strong>
+        <span>Current text + optional context → input_ids, attention_mask tensors (max 128 tokens each)</span>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Forward pass (no_grad)</strong>
+        <span>Model produces hate_logits, target_logits, reason_logits, rationale_logits</span>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>Decode heads</strong>
+        <span>Softmax + argmax on each head's logits → label + confidence + full probability dict</span>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <strong>Attribution (with grad)</strong>
+        <span>Run Integrated Gradients on the hate head → per-token scores → top-K evidence spans</span>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <strong>Context reasoning</strong>
+        <span>Deterministic analysis of the relationship between current comment and context (no LLM generation)</span>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">6</div>
+      <div class="step-content">
+        <strong>Assemble response</strong>
+        <span>build_explanation() combines all outputs into the structured API response object</span>
+      </div>
+    </li>
+  </ul>
+
+  <!-- ═══════════════ CONFIG ══════════════════ -->
+  <h2 id="config-system">Configuration System</h2>
+  <p><strong>File:</strong> <code>app/core/config.py</code></p>
+
+  <p>
+    Two separate config layers:
+  </p>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Runtime Config (pydantic-settings)</div>
+      <p>Loaded from <code>.env</code> or environment variables.</p>
+      <p>Controls: encoder name, checkpoint path, device, label sets, loss weights, evidence settings.</p>
+      <p>Singleton via <code>@lru_cache</code> — one instance per process.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Training Config (YAML)</div>
+      <p>Loaded from <code>configs/*.yaml</code>.</p>
+      <p>Controls: epochs, batch size, LR, warmup, grad accum, which heads to enable, interaction mode.</p>
+      <p>Deep-mergeable — base config + per-experiment overrides.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════ FORWARD PASS ══════════════════ -->
+  <h2 id="forward-pass">Complete Forward Pass Walkthrough</h2>
+
+  <div class="arch-diagram">
+    <div style="text-align:center; margin-bottom:20px;">
+      <strong style="color:var(--accent);">Input</strong>
+    </div>
+
+    <div style="text-align:center;">
+      <span class="box box-blue">"He should not exist"</span>
+      <span style="color:var(--muted);margin:0 8px;">+</span>
+      <span class="box box-blue">"People like him ruin society"</span>
+    </div>
+    <div style="text-align:center;margin:8px 0;color:var(--muted);">↓ tokenize (max 128 tokens each)</div>
+    <div style="text-align:center;">
+      <span class="box box-cyan">input_ids [1,T]</span>
+      <span style="margin:0 8px;">+</span>
+      <span class="box box-cyan">context_input_ids [1,T]</span>
+    </div>
+    <div style="text-align:center;margin:8px 0;color:var(--muted);">↓ shared BertEncoder (same weights)</div>
+    <div style="text-align:center;">
+      <span class="box box-orange">E_c [1,768] CLS</span>
+      <span style="margin:0 8px;">+</span>
+      <span class="box box-orange">token_states [1,T,768]</span>
+      <span style="margin:0 8px;">+</span>
+      <span class="box box-orange">E_p [1,768] CLS</span>
+    </div>
+    <div style="text-align:center;margin:8px 0;color:var(--muted);">↓ ContextInteraction [E_c;E_p;D;M] → Linear → GELU → Dropout</div>
+    <div style="text-align:center;">
+      <span class="box box-purple">final_representation [1, 1024]</span>
+    </div>
+    <div style="text-align:center;margin:12px 0;color:var(--muted);">↓ fan out to 4 heads in parallel</div>
+    <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+      <div style="text-align:center;">
+        <span class="box box-red">HateHead<br><small>Linear(1024→3)</small></span>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">hate/offensive/normal</div>
+      </div>
+      <div style="text-align:center;">
+        <span class="box box-green">TargetHead<br><small>Linear(1024→9)</small></span>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">race/religion/…</div>
+      </div>
+      <div style="text-align:center;">
+        <span class="box box-orange">ReasonHead<br><small>Linear(1024→8)</small></span>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">insult/threat/…</div>
+      </div>
+      <div style="text-align:center;">
+        <span class="box box-cyan">EvidenceHead<br><small>Linear(768→1) per token</small></span>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">[1, T] rationale logits</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin:12px 0;color:var(--muted);font-size:12px;">
+      + ContrastiveProjection [1,1024] → [1,256] (training only)
+    </div>
+  </div>
+
+  <!-- ═══════════════ LEARNABLES ══════════════════ -->
+  <h2 id="learnables">All Learnable Parameters</h2>
+  <p>
+    Everything that has <code>requires_grad=True</code> during training
+    (assuming freeze_mode=<code>full</code>):
+  </p>
+
+  <table>
+    <tr><th>Component</th><th>Parameters (approx)</th><th>What it learns</th></tr>
+    <tr>
+      <td><strong>BERT Encoder</strong> (bert-base-uncased)</td>
+      <td>~110M</td>
+      <td>Token representations, attention patterns, contextual semantics for hate speech domain</td>
+    </tr>
+    <tr>
+      <td><strong>ContextInteraction.projection</strong></td>
+      <td>3072×1024 + 1024 ≈ 3.1M</td>
+      <td>How to combine current comment + context difference + similarity into one vector</td>
+    </tr>
+    <tr>
+      <td><strong>HateHead.classifier</strong></td>
+      <td>1024×3 + 3 ≈ 3K</td>
+      <td>Decision boundary between hate / offensive / normal in the interaction space</td>
+    </tr>
+    <tr>
+      <td><strong>TargetHead.classifier</strong></td>
+      <td>1024×9 + 9 ≈ 9K</td>
+      <td>Which target group the speech addresses</td>
+    </tr>
+    <tr>
+      <td><strong>ReasonHead.classifier</strong></td>
+      <td>1024×8 + 8 ≈ 8K</td>
+      <td>The rhetorical mechanism of the hate speech</td>
+    </tr>
+    <tr>
+      <td><strong>EvidenceHead.classifier</strong></td>
+      <td>768×1 + 1 ≈ 769</td>
+      <td>Which tokens are part of the rationale (trained vs. gold spans)</td>
+    </tr>
+    <tr>
+      <td><strong>ContrastiveProjection</strong></td>
+      <td>1024×256 + 256 + 256×256 + 256 ≈ 328K</td>
+      <td>Projection into contrastive space (discarded at inference — training signal only)</td>
+    </tr>
+  </table>
+
+  <div class="callout callout-green">
+    <div class="callout-title">Total: ~113M parameters (full fine-tune)</div>
+    BERT dominates. The classification heads are tiny — less than 0.004% of total params. 
+    This is typical for BERT fine-tuning setups. With <code>freeze_mode=frozen</code>, 
+    only ~3.5M params train.
+  </div>
+
+  <!-- ═══════════════ DATA FLOW ══════════════════ -->
+  <h2 id="data-flow">API Request Data Flow</h2>
+
+  <pre><code>POST /api/v1/predict
+  Body: { "text": "...", "context": "..." }
+
+  FastAPI route (prediction.py)
+    └── validates request via Pydantic schema
+        └── calls InferenceService.predict(text, context)
+            ├── tokenize both texts
+            ├── model.forward() → hate_logits, target_logits, rationale_logits
+            ├── decode_head_prediction() → {label, confidence, probabilities} × 3
+            ├── compute_attributions() [Integrated Gradients, 32 steps]
+            │     └── 32× forward+backward through model
+            ├── extract_evidence() → top-5 token spans with scores
+            ├── build_context_reasoning() → deterministic relationship analysis
+            └── build_explanation() → structured response dict
+
+Response:
+  {
+    "prediction": {"label": "hate", "confidence": 0.91, "probabilities": {...}},
+    "prediction_available": true,
+    "target": {"label": "race", "confidence": 0.83, ...},
+    "reason": {"label": "dehumanization", "confidence": 0.76, ...},
+    "evidence": [{"text": "not exist", "score": 0.42}, ...],
+    "context_used": true,
+    "reasoning": {...},
+    "reason_explanation": {...}
+  }</code></pre>
+
+  <!-- ═══════════════ DESIGN DECISIONS ══════════════════ -->
+  <h2 id="design-decisions">Key Design Decisions</h2>
+
+  <div class="card">
+    <div class="card-title">Why not use a [SEP] separator and pass both comments as one sequence?</div>
+    <p>
+      The standard BERT approach would concatenate current + context with a [SEP] token and let BERT attend across both.
+      This project uses separate encodings instead because:
+    </p>
+    <ul>
+      <li>It enables the explicit D (difference) and M (product) features — impossible with joint encoding</li>
+      <li>It enables the contrastive objective, which needs separate representations</li>
+      <li>Longer sequences (>128 tokens for both comments combined) hit BERT's positional encoding limit</li>
+      <li>Ablations can isolate the contribution of context cleanly</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Why not use attention weights for explanation instead of Integrated Gradients?</div>
+    <p>
+      Attention weights are not faithful explanations — a head can attend to a token but have zero impact 
+      on the output (if the value vector gets cancelled or the next layer ignores it). IG is gradient-based 
+      and directly measures the actual impact on the predicted logit, satisfying formal axioms 
+      (completeness, sensitivity, implementation invariance).
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Why is the contrastive projection head discarded at inference?</div>
+    <p>
+      The projection head's job is to provide a "safe" space for the contrastive loss to operate in, 
+      so the loss doesn't directly distort the main representation space. At inference, you want the 
+      representation without the projection transform — the interaction output is a richer, higher-dimensional 
+      space than the 256-dim contrastive space. This pattern comes from SimCLR (Chen et al., 2020).
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Why store model_kwargs in the checkpoint?</div>
+    <p>
+      The architecture is fully configurable — heads can be enabled/disabled, interaction_dim varies, 
+      label sets change per dataset. Storing the exact config that built the model means you can reload 
+      any checkpoint on any machine without needing the original YAML config. 
+      The checkpoint is fully self-describing.
+    </p>
+  </div>
+
+  <!-- ═══════════════ QUICK REFERENCE ══════════════════ -->
+  <h2>Concept Quick Reference</h2>
+
+  <div style="margin:12px 0 32px;">
+    <span class="learnable-tag">BERT fine-tuning</span>
+    <span class="learnable-tag">Transfer learning</span>
+    <span class="learnable-tag">[CLS] token as sentence rep</span>
+    <span class="learnable-tag">Shared encoder weights</span>
+    <span class="learnable-tag">Multi-task learning</span>
+    <span class="learnable-tag">Cross-entropy loss</span>
+    <span class="learnable-tag">Binary cross-entropy</span>
+    <span class="learnable-tag">Softmax classification</span>
+    <span class="learnable-tag">Gradient accumulation</span>
+    <span class="learnable-tag">Automatic Mixed Precision</span>
+    <span class="learnable-tag">Linear warmup LR schedule</span>
+    <span class="learnable-tag">Early stopping</span>
+    <span class="learnable-tag">AdamW optimizer</span>
+    <span class="learnable-tag">Gradient clipping</span>
+    <span class="learnable-tag">InfoNCE / SimCLR loss</span>
+    <span class="learnable-tag">Contrastive learning</span>
+    <span class="learnable-tag">L2 normalization</span>
+    <span class="learnable-tag">Temperature scaling</span>
+    <span class="learnable-tag">Integrated Gradients</span>
+    <span class="learnable-tag">Gradient × input</span>
+    <span class="learnable-tag">XAI / Explainability</span>
+    <span class="learnable-tag">Token attribution</span>
+    <span class="learnable-tag">Rationale extraction</span>
+    <span class="learnable-tag">Ablation study</span>
+    <span class="learnable-tag">HateXplain dataset</span>
+    <span class="learnable-tag">FastAPI lifespan</span>
+    <span class="learnable-tag">Singleton service pattern</span>
+    <span class="learnable-tag">Pydantic settings</span>
+    <span class="learnable-tag">YAML config + overrides</span>
+    <span class="learnable-tag">Checkpoint format design</span>
+    <span class="learnable-tag">NLI interaction features (D, M)</span>
+    <span class="learnable-tag">GELU activation</span>
+    <span class="learnable-tag">Dropout regularization</span>
+    <span class="learnable-tag">Partial layer freezing</span>
+  </div>
+
+  <hr>
+  <p class="muted" style="text-align:center;font-size:12px;">
+    Context-Aware Hate Speech Detection · Backend Architecture · Auto-generated from source
+  </p>
+
+</main>
+</div>
+
+<script>
+  // Highlight active nav link on scroll
+  const sections = document.querySelectorAll('h2[id], h3[id]');
+  const navLinks = document.querySelectorAll('nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 80) current = s.id;
+    });
+    navLinks.forEach(link => {
+      link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+    });
+  });
+</script>
+</body>
+</html>
