@@ -436,6 +436,7 @@ class InferenceService:
                     top_k=self.settings.evidence_top_k,
                     min_score_frac=self.settings.evidence_min_score,
                     offsets=offsets or None,
+                    original_text=text,
                 )
 
         reason_explanation = None
@@ -531,6 +532,7 @@ class InferenceService:
             top_k=top_k or self.settings.evidence_top_k,
             min_score_frac=self.settings.evidence_min_score,
             offsets=offsets or None,
+            original_text=text,
         )
 
         reason_explanation = None

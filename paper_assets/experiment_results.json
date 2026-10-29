@@ -1,0 +1,823 @@
+{
+  "eval_existing": {
+    "baseline": {
+      "test_accuracy": 0.6611226611226612,
+      "test_macro_f1": 0.6537821702870609,
+      "test_weighted_f1": 0.6617586344291945,
+      "test_per_class_f1": {
+        "hate": 0.7464114832535885,
+        "offensive": 0.5137777777777778,
+        "normal": 0.7011572498298162
+      },
+      "test_macro_precision": 0.6531978530661676,
+      "test_macro_recall": 0.6579396085295239,
+      "support": {
+        "hate": 594,
+        "offensive": 548,
+        "normal": 782
+      },
+      "confusion": [
+        [
+          468,
+          91,
+          35
+        ],
+        [
+          122,
+          289,
+          137
+        ],
+        [
+          70,
+          197,
+          515
+        ]
+      ]
+    },
+    "context": {
+      "test_accuracy": 0.5582047685834503,
+      "test_macro_f1": 0.5336002054457376,
+      "test_weighted_f1": 0.5624839608811657,
+      "test_per_class_f1": {
+        "hate_speech": 0.49411764705882355,
+        "counter_speech": 0.4631043256997455,
+        "neither": 0.6435786435786436
+      },
+      "test_macro_precision": 0.5381975766313115,
+      "test_macro_recall": 0.5386389792176857,
+      "support": {
+        "hate_speech": 184,
+        "counter_speech": 168,
+        "neither": 361
+      },
+      "confusion": [
+        [
+          84,
+          50,
+          50
+        ],
+        [
+          18,
+          91,
+          59
+        ],
+        [
+          54,
+          84,
+          223
+        ]
+      ]
+    },
+    "full": {
+      "test_accuracy": 0.685031185031185,
+      "test_macro_f1": 0.6771619859795251,
+      "test_weighted_f1": 0.6853893845869697,
+      "test_per_class_f1": {
+        "hate": 0.7688603531300161,
+        "offensive": 0.53584229390681,
+        "normal": 0.7267833109017496
+      },
+      "test_macro_precision": 0.6760388273122655,
+      "test_macro_recall": 0.6808516095841627,
+      "support": {
+        "hate": 594,
+        "offensive": 548,
+        "normal": 782
+      },
+      "confusion": [
+        [
+          479,
+          83,
+          32
+        ],
+        [
+          117,
+          299,
+          132
+        ],
+        [
+          56,
+          186,
+          540
+        ]
+      ]
+    }
+  },
+  "cc_ladder": [
+    {
+      "config": "baseline",
+      "seed": 42,
+      "dataset": "counter_context",
+      "train_minutes": 2.27,
+      "best_epoch": 3,
+      "val_macro_f1": 0.5470627264137589,
+      "test_accuracy": 0.5722300140252454,
+      "test_macro_f1": 0.5386442104662444,
+      "test_weighted_f1": 0.5738204843019781,
+      "test_per_class_f1": {
+        "hate_speech": 0.5284090909090909,
+        "counter_speech": 0.4180790960451977,
+        "neither": 0.6694444444444444
+      },
+      "test_confusion": [
+        [
+          93,
+          43,
+          48
+        ],
+        [
+          24,
+          74,
+          70
+        ],
+        [
+          51,
+          69,
+          241
+        ]
+      ],
+      "support": {
+        "hate_speech": 184,
+        "counter_speech": 168,
+        "neither": 361
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\cc_baseline_s42\\best.pt",
+      "tag": "cc_baseline_s42",
+      "variant": "cc_baseline"
+    },
+    {
+      "config": "baseline",
+      "seed": 1,
+      "dataset": "counter_context",
+      "train_minutes": 2.43,
+      "best_epoch": 3,
+      "val_macro_f1": 0.5311664846721476,
+      "test_accuracy": 0.5568022440392707,
+      "test_macro_f1": 0.5302715167166135,
+      "test_weighted_f1": 0.5588350252817531,
+      "test_per_class_f1": {
+        "hate_speech": 0.4986149584487535,
+        "counter_speech": 0.453781512605042,
+        "neither": 0.6384180790960452
+      },
+      "test_confusion": [
+        [
+          90,
+          36,
+          58
+        ],
+        [
+          24,
+          81,
+          63
+        ],
+        [
+          63,
+          72,
+          226
+        ]
+      ],
+      "support": {
+        "hate_speech": 184,
+        "counter_speech": 168,
+        "neither": 361
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\cc_baseline_s1\\best.pt",
+      "tag": "cc_baseline_s1",
+      "variant": "cc_baseline"
+    },
+    {
+      "config": "baseline",
+      "seed": 2,
+      "dataset": "counter_context",
+      "train_minutes": 2.46,
+      "best_epoch": 3,
+      "val_macro_f1": 0.5597721182136767,
+      "test_accuracy": 0.5666199158485273,
+      "test_macro_f1": 0.5303076583198209,
+      "test_weighted_f1": 0.5653862139647876,
+      "test_per_class_f1": {
+        "hate_speech": 0.5363128491620112,
+        "counter_speech": 0.39520958083832336,
+        "neither": 0.659400544959128
+      },
+      "test_confusion": [
+        [
+          96,
+          31,
+          57
+        ],
+        [
+          28,
+          66,
+          74
+        ],
+        [
+          50,
+          69,
+          242
+        ]
+      ],
+      "support": {
+        "hate_speech": 184,
+        "counter_speech": 168,
+        "neither": 361
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\cc_baseline_s2\\best.pt",
+      "tag": "cc_baseline_s2",
+      "variant": "cc_baseline"
+    },
+    {
+      "config": "context",
+      "seed": 42,
+      "dataset": "counter_context",
+      "train_minutes": 4.8,
+      "best_epoch": 3,
+      "val_macro_f1": 0.5432999258011775,
+      "test_accuracy": 0.5918653576437588,
+      "test_macro_f1": 0.5593036752327016,
+      "test_weighted_f1": 0.5916106843791417,
+      "test_per_class_f1": {
+        "hate_speech": 0.5391304347826087,
+        "counter_speech": 0.4584527220630373,
+        "neither": 0.680327868852459
+      },
+      "test_confusion": [
+        [
+          93,
+          37,
+          54
+        ],
+        [
+          20,
+          80,
+          68
+        ],
+        [
+          48,
+          64,
+          249
+        ]
+      ],
+      "support": {
+        "hate_speech": 184,
+        "counter_speech": 168,
+        "neither": 361
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\cc_concat_s42\\best.pt",
+      "tag": "cc_concat_s42",
+      "variant": "cc_concat"
+    },
+    {
+      "config": "context",
+      "seed": 1,
+      "dataset": "counter_context",
+      "train_minutes": 3.73,
+      "best_epoch": 3,
+      "val_macro_f1": 0.5576265894022904,
+      "test_accuracy": 0.5806451612903226,
+      "test_macro_f1": 0.5454163074827775,
+      "test_weighted_f1": 0.5808645818200443,
+      "test_per_class_f1": {
+        "hate_speech": 0.5295774647887324,
+        "counter_speech": 0.4289855072463768,
+        "neither": 0.6776859504132231
+      },
+      "test_confusion": [
+        [
+          94,
+          38,
+          52
+        ],
+        [
+          27,
+          74,
+          67
+        ],
+        [
+          50,
+          65,
+          246
+        ]
+      ],
+      "support": {
+        "hate_speech": 184,
+        "counter_speech": 168,
+        "neither": 361
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\cc_concat_s1\\best.pt",
+      "tag": "cc_concat_s1",
+      "variant": "cc_concat"
+    },
+    {
+      "config": "context",
+      "seed": 2,
+      "dataset": "counter_context",
+      "train_minutes": 4.22,
+      "best_epoch": 3,
+      "val_macro_f1": 0.5628323644742338,
+      "test_accuracy": 0.5778401122019635,
+      "test_macro_f1": 0.5454269806197841,
+      "test_weighted_f1": 0.579276219790508,
+      "test_per_class_f1": {
+        "hate_speech": 0.5356125356125356,
+        "counter_speech": 0.4293785310734463,
+        "neither": 0.6712898751733704
+      },
+      "test_confusion": [
+        [
+          94,
+          41,
+          49
+        ],
+        [
+          23,
+          76,
+          69
+        ],
+        [
+          50,
+          69,
+          242
+        ]
+      ],
+      "support": {
+        "hate_speech": 184,
+        "counter_speech": 168,
+        "neither": 361
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\cc_concat_s2\\best.pt",
+      "tag": "cc_concat_s2",
+      "variant": "cc_concat"
+    },
+    {
+      "config": "context",
+      "seed": 42,
+      "dataset": "counter_context",
+      "train_minutes": 4.95,
+      "best_epoch": 3,
+      "val_macro_f1": 0.5665515546527113,
+      "test_accuracy": 0.6086956521739131,
+      "test_macro_f1": 0.5684818815659937,
+      "test_weighted_f1": 0.605625384826077,
+      "test_per_class_f1": {
+        "hate_speech": 0.5454545454545454,
+        "counter_speech": 0.4523809523809524,
+        "neither": 0.7076101468624834
+      },
+      "test_confusion": [
+        [
+          93,
+          38,
+          53
+        ],
+        [
+          22,
+          76,
+          70
+        ],
+        [
+          42,
+          54,
+          265
+        ]
+      ],
+      "support": {
+        "hate_speech": 184,
+        "counter_speech": 168,
+        "neither": 361
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\cc_inter_s42\\best.pt",
+      "tag": "cc_inter_s42",
+      "variant": "cc_inter"
+    },
+    {
+      "config": "context",
+      "seed": 1,
+      "dataset": "counter_context",
+      "train_minutes": 3.82,
+      "best_epoch": 2,
+      "val_macro_f1": 0.5848856960260873,
+      "test_accuracy": 0.5946704067321178,
+      "test_macro_f1": 0.5654864939190106,
+      "test_weighted_f1": 0.5982701561414595,
+      "test_per_class_f1": {
+        "hate_speech": 0.5321637426900585,
+        "counter_speech": 0.47493403693931396,
+        "neither": 0.6893617021276596
+      },
+      "test_confusion": [
+        [
+          91,
+          46,
+          47
+        ],
+        [
+          24,
+          90,
+          54
+        ],
+        [
+          43,
+          75,
+          243
+        ]
+      ],
+      "support": {
+        "hate_speech": 184,
+        "counter_speech": 168,
+        "neither": 361
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\cc_inter_s1\\best.pt",
+      "tag": "cc_inter_s1",
+      "variant": "cc_inter"
+    },
+    {
+      "config": "context",
+      "seed": 2,
+      "dataset": "counter_context",
+      "train_minutes": 3.67,
+      "best_epoch": 1,
+      "val_macro_f1": 0.5509934752131888,
+      "test_accuracy": 0.605890603085554,
+      "test_macro_f1": 0.5270430961168824,
+      "test_weighted_f1": 0.5773496067022388,
+      "test_per_class_f1": {
+        "hate_speech": 0.5342019543973942,
+        "counter_speech": 0.3346303501945525,
+        "neither": 0.7122969837587007
+      },
+      "test_confusion": [
+        [
+          82,
+          20,
+          82
+        ],
+        [
+          13,
+          43,
+          112
+        ],
+        [
+          28,
+          26,
+          307
+        ]
+      ],
+      "support": {
+        "hate_speech": 184,
+        "counter_speech": 168,
+        "neither": 361
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\cc_inter_s2\\best.pt",
+      "tag": "cc_inter_s2",
+      "variant": "cc_inter"
+    },
+    {
+      "config": "cc_context",
+      "seed": 42,
+      "dataset": "counter_context",
+      "train_minutes": 7.01,
+      "best_epoch": 2,
+      "val_macro_f1": 0.5517191263255966,
+      "test_accuracy": 0.6157082748948106,
+      "test_macro_f1": 0.5630130285418198,
+      "test_weighted_f1": 0.6062812421142568,
+      "test_per_class_f1": {
+        "hate_speech": 0.5465116279069767,
+        "counter_speech": 0.41830065359477125,
+        "neither": 0.7242268041237113
+      },
+      "test_confusion": [
+        [
+          94,
+          35,
+          55
+        ],
+        [
+          25,
+          64,
+          79
+        ],
+        [
+          41,
+          39,
+          281
+        ]
+      ],
+      "support": {
+        "hate_speech": 184,
+        "counter_speech": 168,
+        "neither": 361
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\cc_nce_s42\\best.pt",
+      "tag": "cc_nce_s42",
+      "variant": "cc_nce"
+    },
+    {
+      "config": "cc_context",
+      "seed": 1,
+      "dataset": "counter_context",
+      "train_minutes": 5.16,
+      "best_epoch": 1,
+      "val_macro_f1": 0.5681296276839266,
+      "test_accuracy": 0.6227208976157083,
+      "test_macro_f1": 0.5786073507812638,
+      "test_weighted_f1": 0.6189366292250614,
+      "test_per_class_f1": {
+        "hate_speech": 0.5476923076923077,
+        "counter_speech": 0.4579710144927536,
+        "neither": 0.7301587301587301
+      },
+      "test_confusion": [
+        [
+          89,
+          43,
+          52
+        ],
+        [
+          22,
+          79,
+          67
+        ],
+        [
+          30,
+          55,
+          276
+        ]
+      ],
+      "support": {
+        "hate_speech": 184,
+        "counter_speech": 168,
+        "neither": 361
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\cc_nce_s1\\best.pt",
+      "tag": "cc_nce_s1",
+      "variant": "cc_nce"
+    },
+    {
+      "config": "cc_context",
+      "seed": 2,
+      "dataset": "counter_context",
+      "train_minutes": 5.2,
+      "best_epoch": 3,
+      "val_macro_f1": 0.5487067387824057,
+      "test_accuracy": 0.5932678821879382,
+      "test_macro_f1": 0.5497477105320242,
+      "test_weighted_f1": 0.5889489772420223,
+      "test_per_class_f1": {
+        "hate_speech": 0.5352941176470588,
+        "counter_speech": 0.41818181818181815,
+        "neither": 0.6957671957671958
+      },
+      "test_confusion": [
+        [
+          91,
+          38,
+          55
+        ],
+        [
+          22,
+          69,
+          77
+        ],
+        [
+          43,
+          55,
+          263
+        ]
+      ],
+      "support": {
+        "hate_speech": 184,
+        "counter_speech": 168,
+        "neither": 361
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\cc_nce_s2\\best.pt",
+      "tag": "cc_nce_s2",
+      "variant": "cc_nce"
+    }
+  ],
+  "cross_encoder": [
+    {
+      "seed": 42,
+      "train_minutes": 1.98,
+      "best_epoch": 2,
+      "val_macro_f1": 0.5581385006941747,
+      "test_accuracy": 0.6086956521739131,
+      "test_macro_f1": 0.580450303615987,
+      "test_weighted_f1": 0.611739277704816,
+      "test_per_class_f1": {
+        "hate_speech": 0.5394736842105263,
+        "neither": 0.699438202247191,
+        "counter_speech": 0.5024390243902439
+      },
+      "test_confusion": [
+        [
+          82,
+          50,
+          52
+        ],
+        [
+          25,
+          249,
+          87
+        ],
+        [
+          13,
+          52,
+          103
+        ]
+      ],
+      "variant": "cross_encoder",
+      "tag": "xe_s42"
+    },
+    {
+      "seed": 1,
+      "train_minutes": 1.98,
+      "best_epoch": 3,
+      "val_macro_f1": 0.5484740591596474,
+      "test_accuracy": 0.6129032258064516,
+      "test_macro_f1": 0.5756017152777407,
+      "test_weighted_f1": 0.6112368282626687,
+      "test_per_class_f1": {
+        "hate_speech": 0.5672514619883041,
+        "neither": 0.7079407806191117,
+        "counter_speech": 0.45161290322580644
+      },
+      "test_confusion": [
+        [
+          97,
+          51,
+          36
+        ],
+        [
+          38,
+          263,
+          60
+        ],
+        [
+          23,
+          68,
+          77
+        ]
+      ],
+      "variant": "cross_encoder",
+      "tag": "xe_s1"
+    },
+    {
+      "seed": 2,
+      "train_minutes": 1.98,
+      "best_epoch": 2,
+      "val_macro_f1": 0.5599045261669023,
+      "test_accuracy": 0.6072931276297335,
+      "test_macro_f1": 0.5815860669148255,
+      "test_weighted_f1": 0.6117761745713034,
+      "test_per_class_f1": {
+        "hate_speech": 0.5689149560117303,
+        "neither": 0.6941678520625889,
+        "counter_speech": 0.4816753926701571
+      },
+      "test_confusion": [
+        [
+          97,
+          43,
+          44
+        ],
+        [
+          39,
+          244,
+          78
+        ],
+        [
+          21,
+          55,
+          92
+        ]
+      ],
+      "variant": "cross_encoder",
+      "tag": "xe_s2"
+    }
+  ],
+  "hx_seeds": [
+    {
+      "tag": "hx_full_s42",
+      "seed": 42,
+      "dataset": "hatexplain",
+      "best_epoch": 1,
+      "val_macro_f1": 0.6815860837216322,
+      "test_accuracy": 0.6923076923076923,
+      "test_macro_f1": 0.6767342443112813,
+      "test_weighted_f1": 0.6878709673319718,
+      "test_per_class_f1": {
+        "hate": 0.7657873701039168,
+        "offensive": 0.5136186770428015,
+        "normal": 0.7507966857871256
+      },
+      "test_confusion": [
+        [
+          479,
+          81,
+          34
+        ],
+        [
+          120,
+          264,
+          164
+        ],
+        [
+          58,
+          135,
+          589
+        ]
+      ],
+      "support": {
+        "hate": 594,
+        "offensive": 548,
+        "normal": 782
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\hx_full\\best.pt",
+      "config": "hx_full",
+      "train_minutes": null
+    },
+    {
+      "config": "hx_full",
+      "seed": 1,
+      "dataset": "hatexplain",
+      "train_minutes": 3.29,
+      "best_epoch": 1,
+      "val_macro_f1": 0.6858289263259629,
+      "test_accuracy": 0.6959459459459459,
+      "test_macro_f1": 0.6842962367868527,
+      "test_weighted_f1": 0.6943155574834531,
+      "test_per_class_f1": {
+        "hate": 0.7699680511182109,
+        "offensive": 0.5330848089468779,
+        "normal": 0.7498358502954695
+      },
+      "test_confusion": [
+        [
+          482,
+          83,
+          29
+        ],
+        [
+          121,
+          286,
+          141
+        ],
+        [
+          55,
+          156,
+          571
+        ]
+      ],
+      "support": {
+        "hate": 594,
+        "offensive": 548,
+        "normal": 782
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\hx_full_s1\\best.pt",
+      "tag": "hx_full_s1"
+    },
+    {
+      "config": "hx_full",
+      "seed": 2,
+      "dataset": "hatexplain",
+      "train_minutes": 3.31,
+      "best_epoch": 1,
+      "val_macro_f1": 0.6911186009625077,
+      "test_accuracy": 0.6876299376299376,
+      "test_macro_f1": 0.6758674850407506,
+      "test_weighted_f1": 0.685173330164263,
+      "test_per_class_f1": {
+        "hate": 0.7678855325914149,
+        "offensive": 0.5254237288135594,
+        "normal": 0.7342931937172775
+      },
+      "test_confusion": [
+        [
+          483,
+          76,
+          35
+        ],
+        [
+          119,
+          279,
+          150
+        ],
+        [
+          62,
+          159,
+          561
+        ]
+      ],
+      "support": {
+        "hate": 594,
+        "offensive": 548,
+        "normal": 782
+      },
+      "checkpoint": "C:\\Users\\Haris\\OneDrive\\Desktop\\AIML_Project\\backend\\checkpoints\\hx_full_s2\\best.pt",
+      "tag": "hx_full_s2"
+    }
+  ]
+}

@@ -307,6 +307,7 @@ def evaluate_evidence(
             bundle.tokenizer,
             top_k=settings.evidence_top_k,
             min_score_frac=settings.evidence_min_score,
+            original_text=example.current_text,
         )
         predicted_mask = [0] * len(attribution.tokens)
         for span in spans:

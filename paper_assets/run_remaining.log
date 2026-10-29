@@ -1,0 +1,61 @@
+[19:40:24] device candidates ready; cuda=True
+[19:40:24] === STAGE cc ===
+[19:40:24] skip eval cc_inter_s1
+[19:40:24] skip eval cc_inter_s42
+[19:40:24] skip train cc_inter_s42
+[19:40:24] skip train cc_inter_s1
+[19:40:24] skip train cc_inter_s2
+[19:40:24] skip train cc_nce_s42
+[19:40:24] TRAIN cc_nce_s1
+2026-10-29 19:40:28.988596: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-29 19:40:32.171471: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+C:\Users\Haris\anaconda3\envs\ml-gpu\lib\site-packages\torch\optim\lr_scheduler.py:224: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+  warnings.warn(
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[19:45:50] DONE cc_nce_s1 acc=0.6227 mf1=0.5786
+[19:45:50] TRAIN cc_nce_s2
+C:\Users\Haris\anaconda3\envs\ml-gpu\lib\site-packages\torch\optim\lr_scheduler.py:224: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+  warnings.warn(
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[19:51:10] DONE cc_nce_s2 acc=0.5933 mf1=0.5497
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[19:51:10] === STAGE xe ===
+[19:51:12] TRAIN cross-encoder seed=42
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+[19:51:42]   xe seed42 epoch0: loss=1.0347 val_macroF1=0.3800
+[19:52:11]   xe seed42 epoch1: loss=0.8920 val_macroF1=0.5485
+[19:52:41]   xe seed42 epoch2: loss=0.6514 val_macroF1=0.5581
+[19:53:10]   xe seed42 epoch3: loss=0.4587 val_macroF1=0.5528
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[19:53:11] DONE xe s42 acc=0.6087 mf1=0.5805
+[19:53:11] TRAIN cross-encoder seed=1
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+[19:53:41]   xe seed1 epoch0: loss=1.0919 val_macroF1=0.2615
+[19:54:11]   xe seed1 epoch1: loss=0.8961 val_macroF1=0.4763
+[19:54:40]   xe seed1 epoch2: loss=0.6864 val_macroF1=0.5361
+[19:55:10]   xe seed1 epoch3: loss=0.4879 val_macroF1=0.5485
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[19:55:11] DONE xe s1 acc=0.6129 mf1=0.5756
+[19:55:11] TRAIN cross-encoder seed=2
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+[19:55:41]   xe seed2 epoch0: loss=1.0289 val_macroF1=0.4080
+[19:56:11]   xe seed2 epoch1: loss=0.8539 val_macroF1=0.5291
+[19:56:40]   xe seed2 epoch2: loss=0.6265 val_macroF1=0.5599
+[19:57:10]   xe seed2 epoch3: loss=0.4453 val_macroF1=0.5537
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[19:57:11] DONE xe s2 acc=0.6073 mf1=0.5816
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[19:57:11] === STAGE hx_seeds ===
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[19:57:17] eval existing hx_full_s42 acc=0.6923076923076923
+[19:57:17] TRAIN hx_full_s1
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[20:00:44] DONE hx_full_s1 acc=0.6959 mf1=0.6843
+[20:00:44] TRAIN hx_full_s2
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[20:04:11] DONE hx_full_s2 acc=0.6876 mf1=0.6759
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[20:04:11] ALL STAGES FINISHED

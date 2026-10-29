@@ -1,0 +1,165 @@
+== structured prediction ==
+2026-10-29 13:23:57,480 | INFO    | services.inference | No MODEL_CHECKPOINT set — auto-detected trained checkpoint: C:\Users\Haris\OneDrive\Desktop\AIML_Project\backend\checkpoints\cc_context\best.pt
+2026-10-29 13:23:57,480 | INFO    | services.inference | Loading trained checkpoint: C:\Users\Haris\OneDrive\Desktop\AIML_Project\backend\checkpoints\cc_context\best.pt
+2026-10-29 13:24:14,492 | INFO    | services.inference | Model loaded. Trained heads: ['hate']
+{
+  "prediction": {
+    "label": "hate_speech",
+    "confidence": 0.7574401497840881,
+    "probabilities": {
+      "hate_speech": 0.7574401497840881,
+      "counter_speech": 0.057060979306697845,
+      "neither": 0.18549884855747223
+    }
+  },
+  "prediction_available": true,
+  "target": null,
+  "target_available": false,
+  "reason": null,
+  "reason_available": false,
+  "evidence": [
+    {
+      "text": "kicked",
+      "score": 1.0,
+      "start": 19,
+      "end": 25,
+      "token_start": 5,
+      "token_end": 5
+    },
+    {
+      "text": "They should",
+      "score": 0.6590106326790633,
+      "start": 0,
+      "end": 11,
+      "token_start": 1,
+      "token_end": 2
+    }
+  ],
+  "reason_explanation": null,
+  "reasoning": {
+    "summary": "The current comment uses \"They\" to refer to \"group of immigrants\" from the previous comment and expresses hostile or exclusionary language. The contextual reference matters: on its own, \"They\" does not identify who or what is being referred to. Strongest evidence: the phrase 'kicked' and 'They should'.",
+    "method": "deterministic evidence + context-reference analysis",
+    "context_used": true,
+    "context_available": true,
+    "links": [
+      {
+        "from_text": "They",
+        "from_start": 0,
+        "from_end": 4,
+        "to_text": "group of immigrants",
+        "to_start": 8,
+        "to_end": 27,
+        "pronoun": "they",
+        "relation": "refers_to"
+      }
+    ],
+    "evidence": [
+      {
+        "text": "kicked",
+        "source": "current_comment",
+        "type": "current_span",
+        "reason": "Strongest attribution signal (score 1.00) for the predicted classification.",
+        "score": 1.0,
+        "start": 19,
+        "end": 25
+      },
+      {
+        "text": "They should",
+        "source": "current_comment",
+        "type": "current_span",
+        "reason": "Strongest attribution signal (score 0.66) for the predicted classification.",
+        "score": 0.6590106326790633,
+        "start": 0,
+        "end": 11
+      },
+      {
+        "text": "group of immigrants",
+        "source": "previous_comment",
+        "type": "context_target",
+        "reason": "Identified by the reference analysis as the phrase \"They\" refers to.",
+        "start": 8,
+        "end": 27
+      }
+    ]
+  },
+  "context_used": true,
+  "evidence_available": true
+}
+== attribution details ==
+{
+  "available": true,
+  "message": null,
+  "target": "hate",
+  "method": "integrated_gradients",
+  "steps": 32,
+  "predicted_label": "hate_speech",
+  "predicted_confidence": 0.7574401497840881,
+  "explained_label": "hate_speech",
+  "context_used": true,
+  "tokens": [
+    {
+      "index": 0,
+      "token": "[CLS]",
+      "score": 0.0
+    },
+    {
+      "index": 1,
+      "token": "they",
+      "score": 0.8443989753723145
+    },
+    {
+      "index": 2,
+      "token": "should",
+      "score": 0.6923919916152954
+    },
+    {
+      "index": 3,
+      "token": "all",
+      "score": -0.48578253388404846
+    },
+    {
+      "index": 4,
+      "token": "be",
+      "score": -0.18692532181739807
+    },
+    {
+      "index": 5,
+      "token": "kicked",
+      "score": 1.1659834384918213
+    },
+    {
+      "index": 6,
+      "token": "out",
+      "score": -0.03447539359331131
+    },
+    {
+      "index": 7,
+      "token": ".",
+      "score": -0.3805004358291626
+    },
+    {
+      "index": 8,
+      "token": "[SEP]",
+      "score": 0.0
+    }
+  ],
+  "spans": [
+    {
+      "text": "kicked",
+      "score": 1.0,
+      "start": 19,
+      "end": 25,
+      "token_start": 5,
+      "token_end": 5
+    },
+    {
+      "text": "They should",
+      "score": 0.6590106326790633,
+      "start": 0,
+      "end": 11,
+      "token_start": 1,
+      "token_end": 2
+    }
+  ],
+  "reason_explanation": null
+}

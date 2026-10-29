@@ -1,0 +1,21 @@
+# Comment-only (no context) baseline on the Counter Context corpus.
+# Addresses the missing most-basic ablation for the context experiments:
+# same corpus, same labels, same seed/optimiser as cc_context, but the
+# interaction module is switched off. Does NOT overwrite checkpoints/baseline.
+#
+# Train:    python scripts/train.py --config cc_baseline
+# Evaluate: python scripts/evaluate.py --config cc_baseline
+
+mode: baseline
+dataset: counter_context
+
+model:
+  use_context: false
+  use_contrastive: false
+  use_target: false
+  use_reason: false
+  use_evidence: false
+
+training:
+  epochs: 5
+  output_dir: checkpoints/cc_baseline

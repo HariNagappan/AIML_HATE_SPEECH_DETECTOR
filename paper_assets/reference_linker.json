@@ -1,0 +1,42 @@
+{
+  "n_pairs": 713,
+  "pairs_with_link": 118,
+  "coverage": 0.1655,
+  "total_links": 141,
+  "links_per_pair": 0.198,
+  "prev_with_antecedent_candidate": 712,
+  "antecedent_candidate_rate": 0.9986,
+  "pronoun_counts": {
+    "him": 11,
+    "she": 26,
+    "their": 14,
+    "them": 15,
+    "her": 24,
+    "they": 32,
+    "he": 15,
+    "his": 4
+  },
+  "relations": {
+    "refers_to": 141
+  },
+  "examples": [
+    {
+      "cur": "Rand Paul thinks so too. Maybe you should vote for him.",
+      "prev": "She has no trouble using Feminism to help her, let's see how she likes turning i",
+      "from": "him.",
+      "to": "it's"
+    },
+    {
+      "cur": "*There's always those people that she literally rapes.",
+      "prev": "You wish. You damn well know Schumer is gorging herself on dick too. There's alw",
+      "from": "she",
+      "to": "There's"
+    },
+    {
+      "cur": "I completely agree. She lied and must accept the punishment.",
+      "prev": "Those two guys lost their scholarships and were suspended. Fuck this liar.",
+      "from": "She",
+      "to": "scholarships"
+    }
+  ]
+}

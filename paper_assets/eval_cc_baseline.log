@@ -1,0 +1,53 @@
+2026-10-29 09:48:48.588784: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-29 09:48:50.773609: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+{
+  "hate": {
+    "accuracy": 0.5876577840112202,
+    "macro_precision": 0.5581289786116236,
+    "macro_recall": 0.555933598297804,
+    "macro_f1": 0.5565054144343514,
+    "weighted_precision": 0.58774533360831,
+    "weighted_recall": 0.5876577840112202,
+    "weighted_f1": 0.5872974446084673,
+    "per_class_precision": {
+      "hate_speech": 0.5357142857142857,
+      "counter_speech": 0.4692737430167598,
+      "neither": 0.6693989071038251
+    },
+    "per_class_recall": {
+      "hate_speech": 0.4891304347826087,
+      "counter_speech": 0.5,
+      "neither": 0.6786703601108033
+    },
+    "per_class_f1": {
+      "hate_speech": 0.5113636363636364,
+      "counter_speech": 0.484149855907781,
+      "neither": 0.6740027510316369
+    },
+    "support": {
+      "hate_speech": 184,
+      "counter_speech": 168,
+      "neither": 361
+    },
+    "confusion_matrix": [
+      [
+        90,
+        34,
+        60
+      ],
+      [
+        23,
+        84,
+        61
+      ],
+      [
+        55,
+        61,
+        245
+      ]
+    ]
+  },
+  "num_examples": 713
+}
+evidence metrics: not available (no rationales / no trained hate head)
+Metrics written to C:\Users\Haris\OneDrive\Desktop\AIML_Project\backend\checkpoints\cc_baseline\best.metrics.json

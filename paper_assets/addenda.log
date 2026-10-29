@@ -1,0 +1,60 @@
+=== HateCheck on hx_full ===
+hatecheck rows 3728
+2026-10-29 13:33:25.832666: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-29 13:33:28.810972: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+{
+  "n": 1493,
+  "checkpoint": "hx_full",
+  "hateful_recall": 7.814,
+  "hateful_n": 328,
+  "nonhateful_pred_normal": 866,
+  "nonhateful_pred_offensive": 236,
+  "nonhateful_pred_hate": 63,
+  "nonhateful_n": 1165,
+  "nonhateful_overflag_rate": 0.2567
+}
+top functionalities: {
+  "slur_h": {
+    "recall": 0.438,
+    "n": 144
+  },
+  "derog_dehum_h": {
+    "recall": 0.186,
+    "n": 140
+  },
+  "threat_norm_h": {
+    "recall": 0.186,
+    "n": 140
+  },
+  "threat_dir_h": {
+    "recall": 0.188,
+    "n": 133
+  },
+  "spell_space_del_h": {
+    "recall": 0.156,
+    "n": 141
+  },
+  "profanity_h": {
+    "recall": 0.15,
+    "n": 140
+  },
+  "phrase_opinion_h": {
+    "recall": 0.128,
+    "n": 133
+  },
+  "spell_char_del_h": {
+    "recall": 0.121,
+    "n": 140
+  }
+}
+=== IG comprehensiveness/sufficiency (hx_full, 100 examples) ===
+Traceback (most recent call last):
+  File "C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\run_addenda_experiments.py", line 124, in <module>
+    attr = compute_attributions(
+  File "C:\Users\Haris\OneDrive\Desktop\AIML_Project\backend\app\reasoning\attribution.py", line 189, in compute_attributions
+    grads = torch.autograd.grad(select_scalar(outputs), interpolated)[0]
+  File "C:\Users\Haris\anaconda3\envs\ml-gpu\lib\site-packages\torch\autograd\__init__.py", line 496, in grad
+    result = _engine_run_backward(
+  File "C:\Users\Haris\anaconda3\envs\ml-gpu\lib\site-packages\torch\autograd\graph.py", line 825, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn

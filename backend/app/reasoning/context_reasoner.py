@@ -417,7 +417,7 @@ def _compose_summary(
             parts.append(
                 f'The current comment uses "{link.from_text}" to refer to '
                 f'"{link.to_text}" from the previous comment and expresses hostile '
-                "or exclusionary language toward that target."
+                "or exclusionary language."
             )
             parts.append(
                 f'The contextual reference matters: on its own, "{link.from_text}" '

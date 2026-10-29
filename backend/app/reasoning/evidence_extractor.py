@@ -79,6 +79,7 @@ def extract_evidence(
     merge_adjacent: bool = True,
     use_negative_scores: bool = False,
     offsets: Optional[Sequence[Tuple[int, int]]] = None,
+    original_text: Optional[str] = None,
 ) -> List[EvidenceSpan]:
     """Extract ranked evidence spans from an :class:`AttributionResult`.
 
@@ -132,9 +133,18 @@ def extract_evidence(
             continue
         raw_score = sum(magnitudes[index] for index in group) / len(group)
         span_start, span_end = _span_character_range(group, offsets)
+        text_out = text
+        if (
+            original_text
+            and span_start is not None
+            and span_end is not None
+            and 0 <= span_start < span_end <= len(original_text)
+        ):
+            # Prefer the original casing/spacing: uncased BERT decodes to lowercase.
+            text_out = original_text[span_start:span_end].strip() or text
         spans.append(
             EvidenceSpan(
-                text=text,
+                text=text_out,
                 score=raw_score / max_magnitude,
                 raw_score=raw_score,
                 token_indices=group,

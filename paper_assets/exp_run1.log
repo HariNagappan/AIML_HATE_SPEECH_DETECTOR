@@ -1,0 +1,35 @@
+[08:52:04] device=cuda
+[08:52:04] === STAGE eval_existing ===
+2026-10-29 08:52:17.566269: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-29 08:52:21.800179: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[08:52:34] eval_existing baseline: acc=0.6611 macroF1=0.6538
+[08:52:42] eval_existing context: acc=0.5582 macroF1=0.5336
+[08:52:52] eval_existing full: acc=0.6850 macroF1=0.6772
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[08:52:52] === STAGE cc ===
+[08:52:52] TRAIN cc_baseline_s42
+C:\Users\Haris\anaconda3\envs\ml-gpu\lib\site-packages\torch\optim\lr_scheduler.py:224: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+  warnings.warn(
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[08:55:15] DONE cc_baseline_s42 acc=0.5722 macroF1=0.5386
+[08:55:15] TRAIN cc_baseline_s1
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[08:57:50] DONE cc_baseline_s1 acc=0.5568 macroF1=0.5303
+[08:57:50] TRAIN cc_baseline_s2
+C:\Users\Haris\anaconda3\envs\ml-gpu\lib\site-packages\torch\optim\lr_scheduler.py:224: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+  warnings.warn(
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[09:00:25] DONE cc_baseline_s2 acc=0.5666 macroF1=0.5303
+[09:00:25] TRAIN cc_concat_s42
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[09:05:25] DONE cc_concat_s42 acc=0.5919 macroF1=0.5593
+[09:05:25] TRAIN cc_concat_s1
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[09:09:21] DONE cc_concat_s1 acc=0.5806 macroF1=0.5454
+[09:09:21] TRAIN cc_concat_s2
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[09:13:47] DONE cc_concat_s2 acc=0.5778 macroF1=0.5454
+[09:13:47] TRAIN cc_inter_s42
+SAVED C:\Users\Haris\OneDrive\Desktop\AIML_Project\paper_assets\experiment_results.json
+[09:19:16] DONE cc_inter_s42 acc=0.6087 macroF1=0.5685
+[09:19:16] TRAIN cc_inter_s1
